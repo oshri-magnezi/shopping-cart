@@ -1,0 +1,40 @@
+/* Signature element: each category is an aisle sign — a solid enamel band
+   with the aisle name in the display face and its tally in ledger mono. */
+.category-section {
+  margin-bottom: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  overflow: hidden;
+}
+
+.category-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-band);
+  color: var(--color-on-band);
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.category-section-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--color-accent);
+}
+
+.category-section-count {
+  margin-inline-start: auto;
+  min-width: 28px;
+  padding: 2px var(--space-2);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-on-band);
+}

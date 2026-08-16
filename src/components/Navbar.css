@@ -1,0 +1,145 @@
+/* The masthead is a solid enamel band, the way a market hall hangs its
+   signage — not a white bar with a colored pill inside it. */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background-color: var(--color-band);
+  border-bottom: 3px solid var(--color-accent);
+}
+
+.navbar-inner {
+  max-width: var(--content-width);
+  margin-inline: auto;
+  min-height: var(--navbar-height);
+  padding-inline: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--color-on-band);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+}
+
+.navbar-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+}
+
+.navbar-name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.navbar-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-1);
+  margin-inline-start: auto;
+  align-self: stretch;
+}
+
+/* Tabs read as signage labels: no chips, just a thick ochre underline on the
+   current one. */
+.tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding-inline: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-on-band-muted);
+  white-space: nowrap;
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.tab::after {
+  content: '';
+  position: absolute;
+  inset-inline: var(--space-2);
+  bottom: 0;
+  height: 3px;
+  background-color: transparent;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.tab:hover {
+  color: var(--color-on-band);
+}
+
+.tab-active {
+  color: var(--color-on-band);
+  font-weight: 700;
+}
+
+.tab-active::after {
+  background-color: var(--color-accent);
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+}
+
+/* Controls sitting on the band get their own inverted treatment. */
+.navbar-actions .icon-btn,
+.lang-toggle {
+  color: var(--color-on-band-muted);
+}
+
+.navbar-actions .icon-btn:hover,
+.lang-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-on-band);
+}
+
+.lang-toggle {
+  min-width: 44px;
+  height: 44px;
+  padding-inline: var(--space-2);
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  transition: background-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+@media (max-width: 640px) {
+  .navbar-inner {
+    gap: var(--space-2);
+    padding-inline: var(--space-3);
+  }
+
+  .navbar-name {
+    display: none;
+  }
+
+  .tab span {
+    display: none;
+  }
+
+  .tab {
+    width: 44px;
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .tab::after {
+    inset-inline: 6px;
+  }
+}

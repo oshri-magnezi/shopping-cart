@@ -1,0 +1,77 @@
+.list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+  transition: opacity var(--duration-base) var(--ease);
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.item-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+}
+
+/* A square box, checked off the way you cross a paper list. */
+.item-check-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 21px;
+  height: 21px;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-on-primary);
+  transition: background-color var(--duration-base) var(--ease),
+    border-color var(--duration-base) var(--ease);
+}
+
+.item-check:hover .item-check-box {
+  border-color: var(--color-primary);
+}
+
+.list-item-purchased .item-check-box {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.item-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-weight: 500;
+  transition: color var(--duration-base) var(--ease);
+}
+
+.list-item-purchased .item-name {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  color: var(--color-text-subtle);
+}
+
+.list-item-purchased {
+  opacity: 0.7;
+}
+
+@media (max-width: 480px) {
+  .list-item {
+    flex-wrap: wrap;
+    padding-block: var(--space-3);
+  }
+
+  .item-name {
+    flex-basis: calc(100% - 100px);
+  }
+
+  .list-item .stepper {
+    margin-inline-start: 44px;
+  }
+}

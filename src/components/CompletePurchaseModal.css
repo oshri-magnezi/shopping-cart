@@ -1,0 +1,47 @@
+.complete-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.complete-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.complete-subtitle {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.amount-input {
+  position: relative;
+}
+
+.amount-currency {
+  position: absolute;
+  inset-inline-start: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-accent-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.amount-input .text-input {
+  padding-inline-start: var(--space-8);
+  font-family: var(--font-mono);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}

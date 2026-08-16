@@ -1,0 +1,59 @@
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.stepper-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--color-text-subtle);
+  transition: background-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.stepper-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stepper-value {
+  min-width: 30px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  border-inline: 1.5px solid var(--color-border);
+  align-self: stretch;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepper-md .stepper-btn {
+  width: 46px;
+  height: 46px;
+}
+
+.stepper-md .stepper-value {
+  min-width: 46px;
+  font-size: var(--text-base);
+}
+
+/* On touch screens even the compact stepper gets full-size targets. */
+@media (pointer: coarse), (max-width: 640px) {
+  .stepper-btn {
+    width: 44px;
+    height: 44px;
+  }
+}
