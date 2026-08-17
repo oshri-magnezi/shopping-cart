@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { ChevronDown, Receipt, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronDown, Copy, Receipt, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
@@ -11,9 +12,17 @@ import './HistoryPage.css';
 export function HistoryPage() {
   const { t, language, locale } = useTranslation();
   const { history, customCategories, dispatch } = useAppData();
+  const navigate = useNavigate();
 
   const [expandedId, setExpandedId] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+
+  // Copying lands the items on the list page, so the result is visible
+  // straight away instead of silently happening on another screen.
+  function handleCopy(entry) {
+    dispatch({ type: 'copy-purchase', items: entry.items });
+    navigate('/');
+  }
 
   const categories = useMemo(
     () => getAllCategories(customCategories, language),
@@ -72,6 +81,9 @@ export function HistoryPage() {
                         <ChevronDown size={18} strokeWidth={2} aria-hidden="true" />
                       </span>
                       <span className="history-entry-info">
+                        {entry.name ? (
+                          <span className="history-entry-label">{entry.name}</span>
+                        ) : null}
                         <span className="history-entry-date">
                           {formatDateTime(entry.completedAt, locale)}
                         </span>
@@ -89,6 +101,16 @@ export function HistoryPage() {
                           ? t('history.noAmount')
                           : formatCurrency(entry.totalCost, locale)}
                       </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="icon-btn"
+                      onClick={() => handleCopy(entry)}
+                      aria-label={t('history.copy')}
+                      title={t('history.copy')}
+                    >
+                      <Copy size={18} strokeWidth={2} />
                     </button>
 
                     <button

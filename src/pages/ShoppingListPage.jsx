@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ClipboardList, Plus } from 'lucide-react';
+import { ClipboardList, Pencil, Plus } from 'lucide-react';
 import { CategoryPickerModal } from '../components/CategoryPickerModal.jsx';
 import { CategorySection } from '../components/CategorySection.jsx';
 import { CompletePurchaseModal } from '../components/CompletePurchaseModal.jsx';
@@ -77,8 +77,29 @@ export function ShoppingListPage() {
   return (
     <main className="page">
       <div className="list-header">
-        <div>
-          <h1 className="list-title">{t('list.title')}</h1>
+        <div className="list-heading">
+          {/* The title doubles as the input, so naming a basket needs no extra
+              control and an unnamed list still reads as a heading. The wrapper
+              carries a copy of the text so the field — and its underline —
+              stop at the end of the name instead of spanning the row. */}
+          <span
+            className="list-title-field"
+            data-value={activeList.name || t('list.title')}
+          >
+            <input
+              type="text"
+              className="list-title-input"
+              value={activeList.name ?? ''}
+              placeholder={t('list.title')}
+              aria-label={t('list.nameLabel')}
+              maxLength={60}
+              // Without this the input's default 20-character intrinsic width
+              // would size the grid cell instead of the text copy behind it.
+              size={1}
+              onChange={(event) => dispatch({ type: 'rename-list', name: event.target.value })}
+            />
+            <Pencil className="list-title-pencil" size={16} strokeWidth={2} aria-hidden="true" />
+          </span>
           <p className="list-meta">
             {t('list.createdAt', { date: formatDateTime(activeList.createdAt, locale) })}
           </p>

@@ -5,6 +5,9 @@ const AppDataContext = createContext(null);
 
 function reducer(state, action) {
   switch (action.type) {
+    case 'rename-list':
+      return { ...state, activeList: { ...state.activeList, name: action.name } };
+
     case 'add-item': {
       const item = {
         id: createId(),
@@ -47,6 +50,21 @@ function reducer(state, action) {
       return { ...state, activeList: { ...state.activeList, items } };
     }
 
+    // Re-adds a past purchase to the active list. Ids are regenerated so the
+    // copies are independent of the archived ones (and of each other, if the
+    // same purchase is copied twice), and everything starts unchecked.
+    case 'copy-purchase': {
+      const copied = action.items.map((item) => ({
+        ...item,
+        id: createId(),
+        purchased: false,
+      }));
+      return {
+        ...state,
+        activeList: { ...state.activeList, items: [...state.activeList.items, ...copied] },
+      };
+    }
+
     case 'add-custom-category': {
       const category = { id: action.id, nameHe: action.name, nameEn: action.name };
       return { ...state, customCategories: [...state.customCategories, category] };
@@ -56,6 +74,7 @@ function reducer(state, action) {
     case 'complete-purchase': {
       const purchase = {
         id: state.activeList.id,
+        name: state.activeList.name ?? '',
         createdAt: state.activeList.createdAt,
         completedAt: Date.now(),
         totalCost: action.totalCost,

@@ -5,7 +5,7 @@
   top: 0;
   z-index: 40;
   background-color: var(--color-band);
-  border-bottom: 3px solid var(--color-accent);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .navbar-inner {
@@ -24,6 +24,13 @@
   align-items: center;
   gap: var(--space-2);
   flex: none;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--duration-fast) var(--ease);
+}
+
+.navbar-brand:hover {
+  opacity: 0.85;
 }
 
 .navbar-logo {
@@ -64,12 +71,15 @@
   transition: color var(--duration-fast) var(--ease);
 }
 
+/* The active marker sits just above the bar's own edge rather than merging
+   into it, so the two lines stay legible as separate things. */
 .tab::after {
   content: '';
   position: absolute;
   inset-inline: var(--space-2);
-  bottom: 0;
-  height: 3px;
+  bottom: 6px;
+  height: 2px;
+  border-radius: 2px;
   background-color: transparent;
   transition: background-color var(--duration-fast) var(--ease);
 }

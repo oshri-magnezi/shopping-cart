@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { History, Moon, ShoppingCart, Sun } from 'lucide-react';
+import { History, Moon, Scale, ShoppingCart, Sun } from 'lucide-react';
 import { useSettings } from '../context/SettingsContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import './Navbar.css';
@@ -12,17 +12,24 @@ export function Navbar() {
   return (
     <header className="navbar">
       <div className="navbar-inner">
-        <div className="navbar-brand">
+        <NavLink to="/" className="navbar-brand" aria-label={t('nav.home')}>
           <span className="navbar-logo" aria-hidden="true">
             <ShoppingCart size={20} strokeWidth={2} />
           </span>
           <span className="navbar-name">{t('app.name')}</span>
-        </div>
+        </NavLink>
 
         <nav className="navbar-tabs" aria-label={t('app.name')}>
           <NavLink to="/" end className={({ isActive }) => `tab${isActive ? ' tab-active' : ''}`}>
             <ShoppingCart size={18} strokeWidth={2} aria-hidden="true" />
             <span>{t('nav.list')}</span>
+          </NavLink>
+          <NavLink
+            to="/compare"
+            className={({ isActive }) => `tab${isActive ? ' tab-active' : ''}`}
+          >
+            <Scale size={18} strokeWidth={2} aria-hidden="true" />
+            <span>{t('nav.compare')}</span>
           </NavLink>
           <NavLink
             to="/history"

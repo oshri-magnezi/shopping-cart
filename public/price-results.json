@@ -1,0 +1,3145 @@
+{
+  "generatedAt": "2026-08-16T18:14:52.387Z",
+  "city": "תל אביב",
+  "matchThreshold": 0.55,
+  "items": [
+    {
+      "name": "חלב תנובה 3% 1 ליטר",
+      "quantity": 2
+    },
+    {
+      "name": "לחם אחיד פרוס",
+      "quantity": 1
+    },
+    {
+      "name": "קוטג 5%",
+      "quantity": 2
+    },
+    {
+      "name": "ביצים L",
+      "quantity": 1
+    },
+    {
+      "name": "שמן זית",
+      "quantity": 1
+    },
+    {
+      "name": "קורנפלקס",
+      "quantity": 1
+    },
+    {
+      "name": "טונה בשמן",
+      "quantity": 4
+    },
+    {
+      "name": "מוצר בדיוני 999",
+      "quantity": 1
+    }
+  ],
+  "chains": [
+    {
+      "key": "shufersal",
+      "displayName": "שופרסל",
+      "ok": true,
+      "storeId": "001",
+      "storeName": "1 - שלי ת\"א- בן יהודה",
+      "fromCache": true,
+      "productCount": 6504,
+      "matches": [
+        {
+          "product": {
+            "code": "7290004131074",
+            "name": "חלב בקרטון 3% שומן 1 ל",
+            "manufacturer": "תנובה בע\"מ",
+            "price": 7.35,
+            "unitQty": "1.00 ליטר",
+            "unitPrice": 7.35,
+            "tokens": [
+              {
+                "value": "חלב",
+                "numeric": false
+              },
+              {
+                "value": "בקרטון",
+                "numeric": false
+              },
+              {
+                "value": "3%",
+                "numeric": true
+              },
+              {
+                "value": "שומן",
+                "numeric": false
+              },
+              {
+                "value": "1",
+                "numeric": true
+              },
+              {
+                "value": "ל",
+                "numeric": false
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "בעמ",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.725,
+          "alternatives": [
+            {
+              "name": "חלב וניל2% 1ליטר תנובה",
+              "price": 9.9,
+              "score": 0.8
+            },
+            {
+              "name": "חלב 3% מהדרין 2ל תנובה",
+              "price": 14.7,
+              "score": 0.785
+            },
+            {
+              "name": "חלב עמיד הומוגני 3% 1 ל",
+              "price": 9.9,
+              "score": 0.725
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290000497112",
+            "name": "לחם פרוס אחיד 750גר 207",
+            "manufacturer": "י.את.א.ברמן בע\\\"מ",
+            "price": 8.38,
+            "unitQty": "750.00 גרם",
+            "unitPrice": 1.12,
+            "tokens": [
+              {
+                "value": "לחם",
+                "numeric": false
+              },
+              {
+                "value": "פרוס",
+                "numeric": false
+              },
+              {
+                "value": "אחיד",
+                "numeric": false
+              },
+              {
+                "value": "750גר",
+                "numeric": false
+              },
+              {
+                "value": "207",
+                "numeric": true
+              },
+              {
+                "value": "יאתאברמן",
+                "numeric": false
+              },
+              {
+                "value": "בע\\מ",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.85,
+          "alternatives": [
+            {
+              "name": "לחם פרוס אחיד 750גר 207",
+              "price": 8.38,
+              "score": 0.85
+            },
+            {
+              "name": "לחם אחיד פרוס 900 גרם",
+              "price": 10.05,
+              "score": 0.829
+            },
+            {
+              "name": "לחם אחיד 750 גרם",
+              "price": 7.36,
+              "score": 0.617
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290110321277",
+            "name": "קוטג בקטנה 5% 100 גרם",
+            "manufacturer": "תנובה בע\"מ",
+            "price": 3.3,
+            "unitQty": "100.00 גרם",
+            "unitPrice": 3.3,
+            "tokens": [
+              {
+                "value": "קוטג",
+                "numeric": false
+              },
+              {
+                "value": "בקטנה",
+                "numeric": false
+              },
+              {
+                "value": "5%",
+                "numeric": true
+              },
+              {
+                "value": "100גרם",
+                "numeric": true
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "בעמ",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.831,
+          "alternatives": [
+            {
+              "name": "קוטג 5% 250 גרם",
+              "price": 6.7,
+              "score": 0.887
+            },
+            {
+              "name": "קוטג 5% שומן 250ג טרה",
+              "price": 6.7,
+              "score": 0.831
+            },
+            {
+              "name": "קוטג בקטנה 5% 100 גרם",
+              "price": 3.3,
+              "score": 0.831
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7296073484417",
+            "name": "ביצים אומגה L שופרסל 6יח",
+            "manufacturer": "ביו אומגה",
+            "price": 17.5,
+            "unitQty": "1.00 יחידות",
+            "unitPrice": 17.5,
+            "tokens": [
+              {
+                "value": "ביצים",
+                "numeric": false
+              },
+              {
+                "value": "אומגה",
+                "numeric": false
+              },
+              {
+                "value": "L",
+                "numeric": false
+              },
+              {
+                "value": "שופרסל",
+                "numeric": false
+              },
+              {
+                "value": "6יח",
+                "numeric": false
+              },
+              {
+                "value": "ביו",
+                "numeric": false
+              },
+              {
+                "value": "אומגה",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.786,
+          "alternatives": [
+            {
+              "name": "ביצים אומגה3 12יחידות L",
+              "price": 25.9,
+              "score": 0.85
+            },
+            {
+              "name": "ביצים אומגה L שופרסל 6יח",
+              "price": 17.5,
+              "score": 0.786
+            },
+            {
+              "name": "ביצי חופש 12יח L",
+              "price": 23.9,
+              "score": 0.765
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "8410179100043",
+            "name": "שמן זית כתית750מ BORGES",
+            "manufacturer": "בורחס",
+            "price": 39.9,
+            "unitQty": "750.00 מיליליטר",
+            "unitPrice": 5.32,
+            "tokens": [
+              {
+                "value": "שמן",
+                "numeric": false
+              },
+              {
+                "value": "זית",
+                "numeric": false
+              },
+              {
+                "value": "כתית750מ",
+                "numeric": false
+              },
+              {
+                "value": "BORGES",
+                "numeric": false
+              },
+              {
+                "value": "בורחס",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "שמן זית ארומה פירותית750",
+              "price": 51.9,
+              "score": 0.82
+            },
+            {
+              "name": "שמן זית כתית750מ BORGES",
+              "price": 39.9,
+              "score": 0.82
+            },
+            {
+              "name": "שמן זית ארבקינה750 בורחס",
+              "price": 39.9,
+              "score": 0.82
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290116530482",
+            "name": "מארז קורנפלקס אלופים5*30",
+            "manufacturer": "יוניליוור שפע ישראל בע\"מ",
+            "price": 17.9,
+            "unitQty": "150.00 גרם",
+            "unitPrice": 11.93,
+            "tokens": [
+              {
+                "value": "קורנפלקס",
+                "numeric": false
+              },
+              {
+                "value": "אלופים5*30",
+                "numeric": false
+              },
+              {
+                "value": "יוניליוור",
+                "numeric": false
+              },
+              {
+                "value": "שפע",
+                "numeric": false
+              },
+              {
+                "value": "ישראל",
+                "numeric": false
+              },
+              {
+                "value": "בעמ",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.75,
+          "alternatives": [
+            {
+              "name": "קורנפלקס לל\"ג 500 גרם",
+              "price": 18.5,
+              "score": 0.8
+            },
+            {
+              "name": "קורנפלקס 750 גרם MONRO",
+              "price": 18.9,
+              "score": 0.8
+            },
+            {
+              "name": "קורנפלקס אורגני הרדוף375",
+              "price": 25.9,
+              "score": 0.775
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7296073707301",
+            "name": "טונה בשמן סוריניה 3*80",
+            "manufacturer": "פילטונה",
+            "price": 13.9,
+            "unitQty": "240.00 גרם",
+            "unitPrice": 5.79,
+            "tokens": [
+              {
+                "value": "טונה",
+                "numeric": false
+              },
+              {
+                "value": "בשמן",
+                "numeric": false
+              },
+              {
+                "value": "סוריניה",
+                "numeric": false
+              },
+              {
+                "value": "3*80",
+                "numeric": false
+              },
+              {
+                "value": "פילטונה",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.868,
+          "alternatives": [
+            {
+              "name": "טונה בשמן צמחי פילטונה4",
+              "price": 28.5,
+              "score": 0.88
+            },
+            {
+              "name": "טונה בשמן קנולה פילטונה4",
+              "price": 28.5,
+              "score": 0.88
+            },
+            {
+              "name": "טונה בשמן סוריניה 3*80",
+              "price": 13.9,
+              "score": 0.868
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "key": "hazihinam",
+      "displayName": "חצי חינם",
+      "ok": true,
+      "storeId": "103",
+      "storeName": "חצי חינם משלוחים",
+      "fromCache": true,
+      "productCount": 8548,
+      "matches": [
+        null,
+        {
+          "product": {
+            "code": "7290002037163",
+            "name": "לחם אחיד פרוס",
+            "manufacturer": "",
+            "price": 8.38,
+            "unitQty": "750 גרם",
+            "unitPrice": null,
+            "status": "1",
+            "tokens": [
+              {
+                "value": "לחם",
+                "numeric": false
+              },
+              {
+                "value": "אחיד",
+                "numeric": false
+              },
+              {
+                "value": "פרוס",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 1,
+          "alternatives": [
+            {
+              "name": "לחם אחיד פרוס",
+              "price": 8.38,
+              "score": 1
+            },
+            {
+              "name": "לחם אחיד כהה פרוס",
+              "price": 8.38,
+              "score": 0.925
+            },
+            {
+              "name": "לחם שיפון פרוס בסגנון סקנדינבי",
+              "price": 13.1,
+              "score": 0.587
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290004127329",
+            "name": "קוטג' 5% מהדרין",
+            "manufacturer": "",
+            "price": 6.1,
+            "unitQty": "250 גרם",
+            "unitPrice": null,
+            "status": "1",
+            "tokens": [
+              {
+                "value": "קוטג",
+                "numeric": false
+              },
+              {
+                "value": "5%",
+                "numeric": true
+              }
+            ]
+          },
+          "score": 1,
+          "alternatives": [
+            {
+              "name": "קוטג' 5% מהדרין",
+              "price": 6.1,
+              "score": 1
+            },
+            {
+              "name": "קוטג' 5% טרה",
+              "price": 6.9,
+              "score": 0.887
+            },
+            {
+              "name": "קוטג' 5% שומן",
+              "price": 7.1,
+              "score": 0.887
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290001201589",
+            "name": "מארז 12 ביצים L",
+            "manufacturer": "",
+            "price": 14.24,
+            "unitQty": "12 יחידות",
+            "unitPrice": null,
+            "status": "1",
+            "tokens": [
+              {
+                "value": "12",
+                "numeric": true
+              },
+              {
+                "value": "ביצים",
+                "numeric": false
+              },
+              {
+                "value": "L",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 1,
+          "alternatives": [
+            {
+              "name": "מארז 12 ביצים L",
+              "price": 14.24,
+              "score": 1
+            },
+            {
+              "name": "מארז 18 ביצים L",
+              "price": 21.36,
+              "score": 1
+            },
+            {
+              "name": "מארז 12 ביצים אורגניות L",
+              "price": 27.3,
+              "score": 0.9
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290119379200",
+            "name": "שמן זית קלאסי בקבוק לחיץ",
+            "manufacturer": "",
+            "price": 14.9,
+            "unitQty": "280 מיליליטר",
+            "unitPrice": null,
+            "status": "1",
+            "tokens": [
+              {
+                "value": "שמן",
+                "numeric": false
+              },
+              {
+                "value": "זית",
+                "numeric": false
+              },
+              {
+                "value": "קלאסי",
+                "numeric": false
+              },
+              {
+                "value": "בקבוק",
+                "numeric": false
+              },
+              {
+                "value": "לחיץ",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "שמן זית כתית מעולה קלאסי 2",
+              "price": 36.9,
+              "score": 0.82
+            },
+            {
+              "name": "שמן זית כתית מעולה קלאסי 2",
+              "price": 31.4,
+              "score": 0.82
+            },
+            {
+              "name": "זיתי קלמטה עם שמן זית כתית מעולה",
+              "price": 15.1,
+              "score": 0.82
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290112494351",
+            "name": "קורנפלקס של אלופים בד\"ץ",
+            "manufacturer": "",
+            "price": 21.9,
+            "unitQty": "850 גרם",
+            "unitPrice": null,
+            "status": "1",
+            "tokens": [
+              {
+                "value": "קורנפלקס",
+                "numeric": false
+              },
+              {
+                "value": "של",
+                "numeric": false
+              },
+              {
+                "value": "אלופים",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.8,
+          "alternatives": [
+            {
+              "name": "קורנפלקס דבש",
+              "price": 23,
+              "score": 0.85
+            },
+            {
+              "name": "קורנפלקס של אלופים בד\"ץ",
+              "price": 21.9,
+              "score": 0.8
+            },
+            {
+              "name": "קורנפלקס מצופה דבש ללא גלוטן",
+              "price": 30.2,
+              "score": 0.76
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290002842163",
+            "name": "טונה בהירה בשמן צמחי ומלח",
+            "manufacturer": "",
+            "price": 11,
+            "unitQty": "185 גרם",
+            "unitPrice": null,
+            "status": "1",
+            "tokens": [
+              {
+                "value": "טונה",
+                "numeric": false
+              },
+              {
+                "value": "בהירה",
+                "numeric": false
+              },
+              {
+                "value": "בשמן",
+                "numeric": false
+              },
+              {
+                "value": "צמחי",
+                "numeric": false
+              },
+              {
+                "value": "ומלח",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "טונה בהירה בשמן צמחי ומלח",
+              "price": 11,
+              "score": 0.82
+            },
+            {
+              "name": "טונה בהירה בשמן זית- מארז 3 יח'",
+              "price": 25.9,
+              "score": 0.82
+            },
+            {
+              "name": "טונה בשמן זית עם מיץ לימון ופלפל שחור - מארז 3 יח'",
+              "price": 25.9,
+              "score": 0.767
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "key": "ramilevi",
+      "displayName": "רמי לוי",
+      "ok": true,
+      "storeId": "055",
+      "storeName": "רמת החייל",
+      "fromCache": true,
+      "productCount": 14754,
+      "matches": [
+        {
+          "product": {
+            "code": "7290004131074",
+            "name": "חלב תנובה 3% שומן 1",
+            "manufacturer": "תנובה",
+            "price": 7.2,
+            "unitQty": "1.00 ליטר",
+            "unitPrice": 7.2,
+            "tokens": [
+              {
+                "value": "חלב",
+                "numeric": false
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "3%",
+                "numeric": true
+              },
+              {
+                "value": "שומן",
+                "numeric": false
+              },
+              {
+                "value": "1",
+                "numeric": true
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.819,
+          "alternatives": [
+            {
+              "name": "חלב תנובה 3% שומן 1.",
+              "price": 10.8,
+              "score": 0.819
+            },
+            {
+              "name": "חלב תנובה 3% שומן 1",
+              "price": 7.2,
+              "score": 0.819
+            },
+            {
+              "name": "חלב תנובה עמיד 3% שו",
+              "price": 7.9,
+              "score": 0.785
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290000497112",
+            "name": "לחם אחיד פרוס ברמן",
+            "manufacturer": "לא ידוע",
+            "price": 8.2,
+            "unitQty": "750.00 גרם",
+            "unitPrice": 1.09,
+            "tokens": [
+              {
+                "value": "לחם",
+                "numeric": false
+              },
+              {
+                "value": "אחיד",
+                "numeric": false
+              },
+              {
+                "value": "פרוס",
+                "numeric": false
+              },
+              {
+                "value": "ברמן",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.85,
+          "alternatives": [
+            {
+              "name": "לחם אחיד פרוס אנג'ל",
+              "price": 8.3,
+              "score": 0.85
+            },
+            {
+              "name": "לחם אחיד פרוס 900 ג",
+              "price": 8.3,
+              "score": 0.85
+            },
+            {
+              "name": "לחם אחיד פרוס ברמן",
+              "price": 8.2,
+              "score": 0.85
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290110321277",
+            "name": "קוטג' תנובה בקטנה 5%",
+            "manufacturer": "לא ידוע",
+            "price": 2.8,
+            "unitQty": "100.00 גרם",
+            "unitPrice": 2.8,
+            "tokens": [
+              {
+                "value": "קוטג",
+                "numeric": false
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "בקטנה",
+                "numeric": false
+              },
+              {
+                "value": "5%",
+                "numeric": true
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "קוטג 5% 250 גר",
+              "price": 6.2,
+              "score": 0.831
+            },
+            {
+              "name": "קוטג' תנובה 5% שומן",
+              "price": 5.9,
+              "score": 0.831
+            },
+            {
+              "name": "קוטג' תנובה 5% שומן",
+              "price": 5.9,
+              "score": 0.831
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290001201589",
+            "name": "ביצים 12 יח L",
+            "manufacturer": "לא ידוע",
+            "price": 14.2,
+            "unitQty": "1.00 יחידות",
+            "unitPrice": 14.2,
+            "tokens": [
+              {
+                "value": "ביצים",
+                "numeric": false
+              },
+              {
+                "value": "12",
+                "numeric": true
+              },
+              {
+                "value": "יח",
+                "numeric": false
+              },
+              {
+                "value": "L",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "ביצים L 18 יחידות",
+              "price": 21.2,
+              "score": 0.85
+            },
+            {
+              "name": "ביצים 12 יח L",
+              "price": 14.2,
+              "score": 0.82
+            },
+            {
+              "name": "ביצים 12 יח גדול L",
+              "price": 14.2,
+              "score": 0.8
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "8410660105977",
+            "name": "שמן זית ספריי 200 מל",
+            "manufacturer": "לא ידוע",
+            "price": 17.9,
+            "unitQty": "200.00 מיליליטר",
+            "unitPrice": 8.95,
+            "tokens": [
+              {
+                "value": "שמן",
+                "numeric": false
+              },
+              {
+                "value": "זית",
+                "numeric": false
+              },
+              {
+                "value": "ספריי",
+                "numeric": false
+              },
+              {
+                "value": "200מל",
+                "numeric": true
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "שמן זית 500 מ\"ל",
+              "price": 24.9,
+              "score": 0.9
+            },
+            {
+              "name": "שמן זית כתית מעולה ט",
+              "price": 34.9,
+              "score": 0.84
+            },
+            {
+              "name": "שמן זית ספריי 200 מל",
+              "price": 17.9,
+              "score": 0.82
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290116530482",
+            "name": "קורנפלקס אלופים 5*30",
+            "manufacturer": "לא ידוע",
+            "price": 13.9,
+            "unitQty": "150.00 גרם",
+            "unitPrice": 9.27,
+            "tokens": [
+              {
+                "value": "קורנפלקס",
+                "numeric": false
+              },
+              {
+                "value": "אלופים",
+                "numeric": false
+              },
+              {
+                "value": "5*30",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.76,
+          "alternatives": [
+            {
+              "name": "קורנפלקס דליפקאן 400",
+              "price": 22.9,
+              "score": 0.775
+            },
+            {
+              "name": "קורנפלקס 750 גרם רמי",
+              "price": 14.9,
+              "score": 0.775
+            },
+            {
+              "name": "קורנפלקס אורגני ללא",
+              "price": 20.9,
+              "score": 0.76
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290119671021",
+            "name": "טונה בשמן 56 ג",
+            "manufacturer": "לא ידוע",
+            "price": 4,
+            "unitQty": "0.00 יחידות",
+            "unitPrice": null,
+            "tokens": [
+              {
+                "value": "טונה",
+                "numeric": false
+              },
+              {
+                "value": "בשמן",
+                "numeric": false
+              },
+              {
+                "value": "56",
+                "numeric": true
+              },
+              {
+                "value": "ג",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "טונה סטארקיסט בשמן 1",
+              "price": 6.4,
+              "score": 0.85
+            },
+            {
+              "name": "טונה בשמן רביעייה 11",
+              "price": 22.9,
+              "score": 0.82
+            },
+            {
+              "name": "טונה בשמן 56 ג",
+              "price": 4,
+              "score": 0.82
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "key": "yohananof",
+      "displayName": "יוחננוף",
+      "ok": true,
+      "storeId": "032",
+      "storeName": "בן צבי תל אביב",
+      "fromCache": true,
+      "productCount": 11450,
+      "matches": [
+        {
+          "product": {
+            "code": "7290116936307",
+            "name": "חלב 3% מהדרין תנובה",
+            "manufacturer": "תנובה",
+            "price": 14.7,
+            "unitQty": "2.00 ליטר",
+            "unitPrice": 7.35,
+            "tokens": [
+              {
+                "value": "חלב",
+                "numeric": false
+              },
+              {
+                "value": "3%",
+                "numeric": true
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.875,
+          "alternatives": [
+            {
+              "name": "חלב 3% מהדרין תנובה",
+              "price": 14.7,
+              "score": 0.875
+            },
+            {
+              "name": "חלב תנובה טרי שקית 1",
+              "price": 6.41,
+              "score": 0.66
+            },
+            {
+              "name": "חלב תנובה טרי1ל קרטו",
+              "price": 7.35,
+              "score": 0.66
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290000574035",
+            "name": "לחם אחיד פרוס 750 גר",
+            "manufacturer": "דגנית עין בר",
+            "price": 7.6,
+            "unitQty": "750.00 גרם",
+            "unitPrice": 1.01,
+            "tokens": [
+              {
+                "value": "לחם",
+                "numeric": false
+              },
+              {
+                "value": "אחיד",
+                "numeric": false
+              },
+              {
+                "value": "פרוס",
+                "numeric": false
+              },
+              {
+                "value": "750",
+                "numeric": true
+              },
+              {
+                "value": "גר",
+                "numeric": false
+              },
+              {
+                "value": "דגנית",
+                "numeric": false
+              },
+              {
+                "value": "עין",
+                "numeric": false
+              },
+              {
+                "value": "בר",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.829,
+          "alternatives": [
+            {
+              "name": "לחם אחיד פרוס אנגל 9",
+              "price": 8.4,
+              "score": 0.85
+            },
+            {
+              "name": "לחם אחיד פרוס 750 גר",
+              "price": 7.6,
+              "score": 0.829
+            },
+            {
+              "name": "לחם אחיד כהה 750 גרם",
+              "price": 4.9,
+              "score": 0.617
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290002868996",
+            "name": "קוטג 5% 250 גרם נעם",
+            "manufacturer": "טרה",
+            "price": 6.2,
+            "unitQty": "250.00 גרם",
+            "unitPrice": 2.48,
+            "tokens": [
+              {
+                "value": "קוטג",
+                "numeric": false
+              },
+              {
+                "value": "5%",
+                "numeric": true
+              },
+              {
+                "value": "250גרם",
+                "numeric": true
+              },
+              {
+                "value": "נעם",
+                "numeric": false
+              },
+              {
+                "value": "טרה",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.85,
+          "alternatives": [
+            {
+              "name": "קוטג 5% 250 גרם נעם",
+              "price": 6.2,
+              "score": 0.85
+            },
+            {
+              "name": "קוטג 5% 250 גרם",
+              "price": 6.7,
+              "score": 0.85
+            },
+            {
+              "name": "קוטג 5% 250 גרם נעם",
+              "price": 6.2,
+              "score": 0.85
+            }
+          ]
+        },
+        null,
+        {
+          "product": {
+            "code": "7290020396501",
+            "name": "שמן זית פריאולי 0.5%",
+            "manufacturer": "פריאולי",
+            "price": 24.9,
+            "unitQty": "750.00 מיליליטר",
+            "unitPrice": 3.32,
+            "tokens": [
+              {
+                "value": "שמן",
+                "numeric": false
+              },
+              {
+                "value": "זית",
+                "numeric": false
+              },
+              {
+                "value": "פריאולי",
+                "numeric": false
+              },
+              {
+                "value": "05%",
+                "numeric": true
+              },
+              {
+                "value": "פריאולי",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.85,
+          "alternatives": [
+            {
+              "name": "שמן זית אליעד 750 מל",
+              "price": 46.9,
+              "score": 0.85
+            },
+            {
+              "name": "שמן זית אליעד 750 מל",
+              "price": 46.9,
+              "score": 0.85
+            },
+            {
+              "name": "שמן זית אליעד 750 מל",
+              "price": 46.9,
+              "score": 0.85
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290020505286",
+            "name": "קורנפלקס ללא גלוטן י",
+            "manufacturer": "לא ידוע",
+            "price": 11.9,
+            "unitQty": "500.00 גרם",
+            "unitPrice": 2.38,
+            "tokens": [
+              {
+                "value": "קורנפלקס",
+                "numeric": false
+              },
+              {
+                "value": "ללא",
+                "numeric": false
+              },
+              {
+                "value": "גלוטן",
+                "numeric": false
+              },
+              {
+                "value": "י",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.75,
+          "alternatives": [
+            {
+              "name": "קורנפלקס פיטנס 500 ג",
+              "price": 13.9,
+              "score": 0.775
+            },
+            {
+              "name": "קורנפלקס צהוב אלופים",
+              "price": 19.9,
+              "score": 0.775
+            },
+            {
+              "name": "מארז קורנפלקס של אלו",
+              "price": 13.9,
+              "score": 0.775
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290000450209",
+            "name": "טונה פוסידון בשמן 10",
+            "manufacturer": "פוסידון",
+            "price": 6.6,
+            "unitQty": "108.00 גרם",
+            "unitPrice": 6.11,
+            "tokens": [
+              {
+                "value": "טונה",
+                "numeric": false
+              },
+              {
+                "value": "פוסידון",
+                "numeric": false
+              },
+              {
+                "value": "בשמן",
+                "numeric": false
+              },
+              {
+                "value": "10",
+                "numeric": true
+              },
+              {
+                "value": "פוסידון",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.85,
+          "alternatives": [
+            {
+              "name": "טונה פוסידון בשמן 10",
+              "price": 6.6,
+              "score": 0.85
+            },
+            {
+              "name": "טונה רביעייה בשמן",
+              "price": 22.9,
+              "score": 0.85
+            },
+            {
+              "name": "טונה בשמן צמחי שלישי",
+              "price": 12.9,
+              "score": 0.84
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "key": "osherad",
+      "displayName": "אושר עד",
+      "ok": true,
+      "storeId": "024",
+      "storeName": "תל אביב",
+      "fromCache": true,
+      "productCount": 6635,
+      "matches": [
+        {
+          "product": {
+            "code": "7290004131074",
+            "name": "חלב 3% תנובה 1 ליטר",
+            "manufacturer": "תנובה מרכז שיתופי לש",
+            "price": 7.2,
+            "unitQty": "1.00 ליטר",
+            "unitPrice": 7.2,
+            "tokens": [
+              {
+                "value": "חלב",
+                "numeric": false
+              },
+              {
+                "value": "3%",
+                "numeric": true
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "1ליטר",
+                "numeric": true
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "מרכז",
+                "numeric": false
+              },
+              {
+                "value": "שיתופי",
+                "numeric": false
+              },
+              {
+                "value": "לש",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.887,
+          "alternatives": [
+            {
+              "name": "חלב 3% תנובה 1 ליטר",
+              "price": 7.2,
+              "score": 0.887
+            },
+            {
+              "name": "חלב 3% תנובה 1.5 ליט",
+              "price": 10.8,
+              "score": 0.772
+            },
+            {
+              "name": "חלב 3% תנובה 1.5 ליט",
+              "price": 10.8,
+              "score": 0.772
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290002079477",
+            "name": "לחם אחיד פרוס דוידוב",
+            "manufacturer": "דוידוביץ",
+            "price": 6.7,
+            "unitQty": "750.00 גרם",
+            "unitPrice": 0.89,
+            "tokens": [
+              {
+                "value": "לחם",
+                "numeric": false
+              },
+              {
+                "value": "אחיד",
+                "numeric": false
+              },
+              {
+                "value": "פרוס",
+                "numeric": false
+              },
+              {
+                "value": "דוידוב",
+                "numeric": false
+              },
+              {
+                "value": "דוידוביץ",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.88,
+          "alternatives": [
+            {
+              "name": "לחם אחיד פרוס דוידוב",
+              "price": 6.7,
+              "score": 0.88
+            },
+            {
+              "name": "לחם אחיד פרוס אנגל 9",
+              "price": 8.3,
+              "score": 0.85
+            },
+            {
+              "name": "לחם קלאסי קל  פרוס ד",
+              "price": 10.9,
+              "score": 0.567
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290004127329",
+            "name": "קוטג 5% תנובה 250 גר",
+            "manufacturer": "תנובה מרכז שיתופי לש",
+            "price": 5.9,
+            "unitQty": "250.00 גרם",
+            "unitPrice": 2.36,
+            "tokens": [
+              {
+                "value": "קוטג",
+                "numeric": false
+              },
+              {
+                "value": "5%",
+                "numeric": true
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "250",
+                "numeric": true
+              },
+              {
+                "value": "גר",
+                "numeric": false
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "מרכז",
+                "numeric": false
+              },
+              {
+                "value": "שיתופי",
+                "numeric": false
+              },
+              {
+                "value": "לש",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.807,
+          "alternatives": [
+            {
+              "name": "קוטג 5% טרה 250 גרם",
+              "price": 6,
+              "score": 0.85
+            },
+            {
+              "name": "קוטג 5% טרה 250 גרם",
+              "price": 6,
+              "score": 0.85
+            },
+            {
+              "name": "קוטג 5% שטראוס 250 ג",
+              "price": 6.7,
+              "score": 0.831
+            }
+          ]
+        },
+        null,
+        {
+          "product": {
+            "code": "7290120341814",
+            "name": "שמן זית מזוכך פילד ג",
+            "manufacturer": "אומאי זיתיניא דוש",
+            "price": 14.9,
+            "unitQty": "750.00 לא ידוע",
+            "unitPrice": 0.02,
+            "tokens": [
+              {
+                "value": "שמן",
+                "numeric": false
+              },
+              {
+                "value": "זית",
+                "numeric": false
+              },
+              {
+                "value": "מזוכך",
+                "numeric": false
+              },
+              {
+                "value": "פילד",
+                "numeric": false
+              },
+              {
+                "value": "ג",
+                "numeric": false
+              },
+              {
+                "value": "אומאי",
+                "numeric": false
+              },
+              {
+                "value": "זיתיניא",
+                "numeric": false
+              },
+              {
+                "value": "דוש",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.805,
+          "alternatives": [
+            {
+              "name": "שמן זית כתית מעולה ז",
+              "price": 44.9,
+              "score": 0.84
+            },
+            {
+              "name": "שמן זית מזוכך פילד ג",
+              "price": 14.9,
+              "score": 0.805
+            },
+            {
+              "name": "שמן זית כתית מעולה ק",
+              "price": 19.9,
+              "score": 0.8
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290018978313",
+            "name": "קורנפלקס מצופה שוקול",
+            "manufacturer": "נטורל קייקס",
+            "price": 6.5,
+            "unitQty": "64.00 גרם",
+            "unitPrice": 10.16,
+            "tokens": [
+              {
+                "value": "קורנפלקס",
+                "numeric": false
+              },
+              {
+                "value": "מצופה",
+                "numeric": false
+              },
+              {
+                "value": "שוקול",
+                "numeric": false
+              },
+              {
+                "value": "נטורל",
+                "numeric": false
+              },
+              {
+                "value": "קייקס",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.76,
+          "alternatives": [
+            {
+              "name": "קורנפלקס דבש 448 גרם",
+              "price": 17.9,
+              "score": 0.8
+            },
+            {
+              "name": "קורנפלקס קלוגס 1 ק\"ג",
+              "price": 29.9,
+              "score": 0.8
+            },
+            {
+              "name": "קורנפלקס דבש 448 גרם",
+              "price": 17.9,
+              "score": 0.8
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290005287534",
+            "name": "טונה בשמן עישון טבעי",
+            "manufacturer": "סטארקיסט",
+            "price": 6.9,
+            "unitQty": "160.00 גרם",
+            "unitPrice": 4.31,
+            "tokens": [
+              {
+                "value": "טונה",
+                "numeric": false
+              },
+              {
+                "value": "בשמן",
+                "numeric": false
+              },
+              {
+                "value": "עישון",
+                "numeric": false
+              },
+              {
+                "value": "טבעי",
+                "numeric": false
+              },
+              {
+                "value": "סטארקיסט",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "טונה בשמן פילטונה 6*",
+              "price": 29.9,
+              "score": 0.88
+            },
+            {
+              "name": "טונה בשמן חריף בטעם",
+              "price": 12.9,
+              "score": 0.868
+            },
+            {
+              "name": "טונה בשמן סטארקיסט 9",
+              "price": 31.9,
+              "score": 0.85
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "key": "tivtaam",
+      "displayName": "טיב טעם",
+      "ok": true,
+      "storeId": "019",
+      "storeName": "רמת החייל",
+      "fromCache": true,
+      "productCount": 20964,
+      "matches": [
+        {
+          "product": {
+            "code": "7290004131074",
+            "name": "חלב קרטון+פקק 3% תנובה 1 ליטר",
+            "manufacturer": "לא ידוע",
+            "price": 7.35,
+            "unitQty": "1000.00 מיליליטר",
+            "unitPrice": 0.74,
+            "tokens": [
+              {
+                "value": "חלב",
+                "numeric": false
+              },
+              {
+                "value": "קרטון+פקק",
+                "numeric": false
+              },
+              {
+                "value": "3%",
+                "numeric": true
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "1ליטר",
+                "numeric": true
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.865,
+          "alternatives": [
+            {
+              "name": "חלב קרטון+פקק 3% תנובה 1 ליטר",
+              "price": 7.35,
+              "score": 0.865
+            },
+            {
+              "name": "חלב עמיד 3% 1 ליטר",
+              "price": 10.7,
+              "score": 0.569
+            },
+            {
+              "name": "חלב טרי מהגולן 3% בקרטון 1 ליטר",
+              "price": 7.35,
+              "score": 0.55
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290002037163",
+            "name": "לחם אחיד פרוס",
+            "manufacturer": "לא ידוע",
+            "price": 8.38,
+            "unitQty": "750.00 גרם",
+            "unitPrice": 1.12,
+            "tokens": [
+              {
+                "value": "לחם",
+                "numeric": false
+              },
+              {
+                "value": "אחיד",
+                "numeric": false
+              },
+              {
+                "value": "פרוס",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.88,
+          "alternatives": [
+            {
+              "name": "לחם אחיד פרוס",
+              "price": 8.38,
+              "score": 0.88
+            },
+            {
+              "name": "לחם בריוש פרוס 500 גרם",
+              "price": 28.9,
+              "score": 0.587
+            },
+            {
+              "name": "לחם שחור פרוס 900 גרם",
+              "price": 10,
+              "score": 0.587
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290110321277",
+            "name": "קוטג בקטנה 5% 100 גר",
+            "manufacturer": "לא ידוע",
+            "price": 3.2,
+            "unitQty": "100.00 גרם",
+            "unitPrice": 3.2,
+            "tokens": [
+              {
+                "value": "קוטג",
+                "numeric": false
+              },
+              {
+                "value": "בקטנה",
+                "numeric": false
+              },
+              {
+                "value": "5%",
+                "numeric": true
+              },
+              {
+                "value": "100",
+                "numeric": true
+              },
+              {
+                "value": "גר",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "קוטג 5% 250 גרם",
+              "price": 6.5,
+              "score": 0.85
+            },
+            {
+              "name": "קוטג 5% מועשר 250 גרם",
+              "price": 6.5,
+              "score": 0.831
+            },
+            {
+              "name": "קוטג 5% 250 גר",
+              "price": 6.7,
+              "score": 0.831
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7296082000134",
+            "name": "ביצים רגילות 12 יח L",
+            "manufacturer": "לא ידוע",
+            "price": 14.24,
+            "unitQty": "1.00 יחידות",
+            "unitPrice": 14.24,
+            "tokens": [
+              {
+                "value": "ביצים",
+                "numeric": false
+              },
+              {
+                "value": "רגילות",
+                "numeric": false
+              },
+              {
+                "value": "12",
+                "numeric": true
+              },
+              {
+                "value": "יח",
+                "numeric": false
+              },
+              {
+                "value": "L",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.8,
+          "alternatives": [
+            {
+              "name": "ביצים רגילות 12 יח L",
+              "price": 14.24,
+              "score": 0.8
+            },
+            {
+              "name": "ביצים רגילות 18 יח L",
+              "price": 21.36,
+              "score": 0.8
+            },
+            {
+              "name": "L ביצי חופש יולק חלמון כתום 18 יחידות",
+              "price": 39.9,
+              "score": 0.698
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "8004275058775",
+            "name": "שמן זית כתית מעולה 500 מל CIRIO",
+            "manufacturer": "לא ידוע",
+            "price": 35.9,
+            "unitQty": "500.00 מיליליטר",
+            "unitPrice": 7.18,
+            "tokens": [
+              {
+                "value": "שמן",
+                "numeric": false
+              },
+              {
+                "value": "זית",
+                "numeric": false
+              },
+              {
+                "value": "כתית",
+                "numeric": false
+              },
+              {
+                "value": "מעולה",
+                "numeric": false
+              },
+              {
+                "value": "500מל",
+                "numeric": true
+              },
+              {
+                "value": "CIRIO",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.786,
+          "alternatives": [
+            {
+              "name": "שמן זית 750 מ\"ל",
+              "price": 68.9,
+              "score": 0.85
+            },
+            {
+              "name": "שמן זית ארבוסנה 750 מ\"ל",
+              "price": 59.9,
+              "score": 0.82
+            },
+            {
+              "name": "שמן זית ארבקינה 750 מ\"ל",
+              "price": 59.9,
+              "score": 0.82
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290116530482",
+            "name": "מארז קורנפלקס של אלופים 5*30 גרם",
+            "manufacturer": "לא ידוע",
+            "price": 18.5,
+            "unitQty": "150.00 גרם",
+            "unitPrice": 12.33,
+            "tokens": [
+              {
+                "value": "קורנפלקס",
+                "numeric": false
+              },
+              {
+                "value": "של",
+                "numeric": false
+              },
+              {
+                "value": "אלופים",
+                "numeric": false
+              },
+              {
+                "value": "5*30",
+                "numeric": false
+              },
+              {
+                "value": "גרם",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.743,
+          "alternatives": [
+            {
+              "name": "קורנפלקס בדבש 300 גרם",
+              "price": 35.9,
+              "score": 0.775
+            },
+            {
+              "name": "קורנפלקס דבש 448 גרם",
+              "price": 19.9,
+              "score": 0.775
+            },
+            {
+              "name": "קורנפלקס קלוגס 500 גר",
+              "price": 20.9,
+              "score": 0.76
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290002551003",
+            "name": "טונה סטארקיסט בשמן 160 גרם",
+            "manufacturer": "לא ידוע",
+            "price": 8.5,
+            "unitQty": "160.00 גרם",
+            "unitPrice": 5.31,
+            "tokens": [
+              {
+                "value": "טונה",
+                "numeric": false
+              },
+              {
+                "value": "סטארקיסט",
+                "numeric": false
+              },
+              {
+                "value": "בשמן",
+                "numeric": false
+              },
+              {
+                "value": "160גרם",
+                "numeric": true
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "טונה סטארקיסט בשמן 160 גרם",
+              "price": 8.5,
+              "score": 0.82
+            },
+            {
+              "name": "טונה בשמן רביעייה 560 גרם",
+              "price": 19.9,
+              "score": 0.82
+            },
+            {
+              "name": "טונה ספרדית בשמן חמניות 190 גרם",
+              "price": 26.9,
+              "score": 0.8
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "key": "doralon",
+      "displayName": "דור אלון",
+      "ok": true,
+      "storeId": "850",
+      "storeName": "אביב דרך נמיר",
+      "fromCache": true,
+      "productCount": 1573,
+      "matches": [
+        {
+          "product": {
+            "code": "7290004131074",
+            "name": "חלב 3% קרטון מהדרין",
+            "manufacturer": "תנובה",
+            "price": 7.35,
+            "unitQty": "1.00 ליטר",
+            "unitPrice": 7.35,
+            "tokens": [
+              {
+                "value": "חלב",
+                "numeric": false
+              },
+              {
+                "value": "3%",
+                "numeric": true
+              },
+              {
+                "value": "קרטון",
+                "numeric": false
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.8,
+          "alternatives": [
+            {
+              "name": "חלב 3% קרטון מהדרין",
+              "price": 7.35,
+              "score": 0.8
+            },
+            {
+              "name": "תנובה ח.חלבון עוגיות",
+              "price": 15.9,
+              "score": 0.574
+            },
+            {
+              "name": "תנובה ח.חלבון שוקולד",
+              "price": 15.9,
+              "score": 0.574
+            }
+          ]
+        },
+        null,
+        {
+          "product": {
+            "code": "7290110321277",
+            "name": "קוטג בקטנה 5% 100 גר",
+            "manufacturer": "תנובה, מחלבת אלון תב",
+            "price": 3.2,
+            "unitQty": "100.00 גרם",
+            "unitPrice": 3.2,
+            "tokens": [
+              {
+                "value": "קוטג",
+                "numeric": false
+              },
+              {
+                "value": "בקטנה",
+                "numeric": false
+              },
+              {
+                "value": "5%",
+                "numeric": true
+              },
+              {
+                "value": "100",
+                "numeric": true
+              },
+              {
+                "value": "גר",
+                "numeric": false
+              },
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "מחלבת",
+                "numeric": false
+              },
+              {
+                "value": "אלון",
+                "numeric": false
+              },
+              {
+                "value": "תב",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.807,
+          "alternatives": [
+            {
+              "name": "קוטג 5% סקי 250 גרם",
+              "price": 7.3,
+              "score": 0.82
+            },
+            {
+              "name": "קוטג 5% תנובה 250 גר",
+              "price": 6.9,
+              "score": 0.813
+            },
+            {
+              "name": "קוטג בקטנה 5% 100 גר",
+              "price": 3.2,
+              "score": 0.807
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290005271687",
+            "name": "ביצים L אומגה 3 לבן",
+            "manufacturer": "גליקסמן שיווק ביצים",
+            "price": 19.9,
+            "unitQty": "1.00 יחידות",
+            "unitPrice": 19.9,
+            "tokens": [
+              {
+                "value": "ביצים",
+                "numeric": false
+              },
+              {
+                "value": "L",
+                "numeric": false
+              },
+              {
+                "value": "אומגה",
+                "numeric": false
+              },
+              {
+                "value": "3",
+                "numeric": true
+              },
+              {
+                "value": "לבן",
+                "numeric": false
+              },
+              {
+                "value": "גליקסמן",
+                "numeric": false
+              },
+              {
+                "value": "שיווק",
+                "numeric": false
+              },
+              {
+                "value": "ביצים",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.829,
+          "alternatives": [
+            {
+              "name": "ביצים L אומגה 3 לבן",
+              "price": 19.9,
+              "score": 0.829
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290110555108",
+            "name": "לאבנה עם שמן זית וזע",
+            "manufacturer": "בר בכפר בע\"מ",
+            "price": 15.9,
+            "unitQty": "250.00 גרם",
+            "unitPrice": 6.36,
+            "tokens": [
+              {
+                "value": "לאבנה",
+                "numeric": false
+              },
+              {
+                "value": "עם",
+                "numeric": false
+              },
+              {
+                "value": "שמן",
+                "numeric": false
+              },
+              {
+                "value": "זית",
+                "numeric": false
+              },
+              {
+                "value": "וזע",
+                "numeric": false
+              },
+              {
+                "value": "בר",
+                "numeric": false
+              },
+              {
+                "value": "בכפר",
+                "numeric": false
+              },
+              {
+                "value": "בעמ",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.555,
+          "alternatives": [
+            {
+              "name": "לאבנה עם שמן זית וזע",
+              "price": 15.9,
+              "score": 0.555
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290112494351",
+            "name": "קורנפלקס תלמה 850 גר",
+            "manufacturer": "יוניליוור",
+            "price": 29.9,
+            "unitQty": "850.00 גרם",
+            "unitPrice": 3.52,
+            "tokens": [
+              {
+                "value": "קורנפלקס",
+                "numeric": false
+              },
+              {
+                "value": "תלמה",
+                "numeric": false
+              },
+              {
+                "value": "850",
+                "numeric": true
+              },
+              {
+                "value": "גר",
+                "numeric": false
+              },
+              {
+                "value": "יוניליוור",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.775,
+          "alternatives": [
+            {
+              "name": "קורנפלקס תלמה 850 גר",
+              "price": 29.9,
+              "score": 0.775
+            },
+            {
+              "name": "מאגדת שוגי קורנפלקס",
+              "price": 21.9,
+              "score": 0.555
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290002551003",
+            "name": "סטארקיסט  טונה בשמן",
+            "manufacturer": "טונה ויאטנם",
+            "price": 9.6,
+            "unitQty": "160.00 גרם",
+            "unitPrice": 6,
+            "tokens": [
+              {
+                "value": "סטארקיסט",
+                "numeric": false
+              },
+              {
+                "value": "טונה",
+                "numeric": false
+              },
+              {
+                "value": "בשמן",
+                "numeric": false
+              },
+              {
+                "value": "טונה",
+                "numeric": false
+              },
+              {
+                "value": "ויאטנם",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.66,
+          "alternatives": [
+            {
+              "name": "סטארקיסט  טונה בשמן",
+              "price": 9.6,
+              "score": 0.66
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "key": "keshet",
+      "displayName": "קשת טעמים",
+      "ok": false,
+      "error": "לא נמצא סניף של קשת טעמים בעיר \"תל אביב\". הרץ \"node src/index.js --list-stores keshet\" כדי לראות את רשימת הסניפים, ואז הגדר מזהה סניף ב-config.json תחת storeOverrides.keshet."
+    },
+    {
+      "key": "freshmarket",
+      "displayName": "פרש מרקט",
+      "ok": true,
+      "storeId": "004",
+      "storeName": "פרשמרקט אזורי חו",
+      "fromCache": true,
+      "productCount": 8403,
+      "matches": [
+        {
+          "product": {
+            "code": "7290110328887",
+            "name": "תנובה חלב כד 1 ליטר",
+            "manufacturer": "לא ידוע",
+            "price": 7.28,
+            "unitQty": "1000.00 לא ידוע",
+            "unitPrice": 0.01,
+            "tokens": [
+              {
+                "value": "תנובה",
+                "numeric": false
+              },
+              {
+                "value": "חלב",
+                "numeric": false
+              },
+              {
+                "value": "כד",
+                "numeric": false
+              },
+              {
+                "value": "1ליטר",
+                "numeric": true
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.74,
+          "alternatives": [
+            {
+              "name": "תנובה חלב כד 1 ליטר",
+              "price": 7.28,
+              "score": 0.74
+            },
+            {
+              "name": "חלב טרי 3% תנובה 1.5",
+              "price": 11.02,
+              "score": 0.74
+            },
+            {
+              "name": "חלב בקרטון תנובה 3%",
+              "price": 14.7,
+              "score": 0.74
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290000574035",
+            "name": "לחם אחיד פרוס 750גרם",
+            "manufacturer": "לא ידוע",
+            "price": 8.37,
+            "unitQty": "750.00 גרם",
+            "unitPrice": 1.12,
+            "tokens": [
+              {
+                "value": "לחם",
+                "numeric": false
+              },
+              {
+                "value": "אחיד",
+                "numeric": false
+              },
+              {
+                "value": "פרוס",
+                "numeric": false
+              },
+              {
+                "value": "750גרם",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.85,
+          "alternatives": [
+            {
+              "name": "לחם אחיד פרוס 750גרם",
+              "price": 8.37,
+              "score": 0.85
+            },
+            {
+              "name": "לחם אחיד פרוס ברמן",
+              "price": 8.37,
+              "score": 0.85
+            },
+            {
+              "name": "לחם שחור פרוס אנג'ל",
+              "price": 10.05,
+              "score": 0.567
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290110321277",
+            "name": "קוטג בקטנה 5% מהדרין",
+            "manufacturer": "קריות זול",
+            "price": 3.9,
+            "unitQty": "100.00 גרם",
+            "unitPrice": 3.9,
+            "tokens": [
+              {
+                "value": "קוטג",
+                "numeric": false
+              },
+              {
+                "value": "בקטנה",
+                "numeric": false
+              },
+              {
+                "value": "5%",
+                "numeric": true
+              },
+              {
+                "value": "קריות",
+                "numeric": false
+              },
+              {
+                "value": "זול",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.831,
+          "alternatives": [
+            {
+              "name": "קוטג בקטנה 5% מהדרין",
+              "price": 3.9,
+              "score": 0.831
+            },
+            {
+              "name": "קוטג 5% טרה 250גר",
+              "price": 7.3,
+              "score": 0.82
+            },
+            {
+              "name": "קוטג' 5% בדצ 250גר",
+              "price": 6.7,
+              "score": 0.82
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7296082000035",
+            "name": "ביצים אומגה 6יח L",
+            "manufacturer": "לא ידוע",
+            "price": 21.9,
+            "unitQty": "6.00 לא ידוע",
+            "unitPrice": 3.65,
+            "tokens": [
+              {
+                "value": "ביצים",
+                "numeric": false
+              },
+              {
+                "value": "אומגה",
+                "numeric": false
+              },
+              {
+                "value": "6יח",
+                "numeric": false
+              },
+              {
+                "value": "L",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.8,
+          "alternatives": [
+            {
+              "name": "ביצים אומגה 6יח L",
+              "price": 21.9,
+              "score": 0.8
+            },
+            {
+              "name": "ביצים אומגה 12 יח L",
+              "price": 28.9,
+              "score": 0.8
+            },
+            {
+              "name": "ביצים אומגה 30יח L",
+              "price": 51.9,
+              "score": 0.8
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290119379200",
+            "name": "שמן זית  לחיץ 280 מל",
+            "manufacturer": "לא ידוע",
+            "price": 21.9,
+            "unitQty": "280.00 לא ידוע",
+            "unitPrice": 0.08,
+            "tokens": [
+              {
+                "value": "שמן",
+                "numeric": false
+              },
+              {
+                "value": "זית",
+                "numeric": false
+              },
+              {
+                "value": "לחיץ",
+                "numeric": false
+              },
+              {
+                "value": "280מל",
+                "numeric": true
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.82,
+          "alternatives": [
+            {
+              "name": "שמן זית זיתא כתית מע",
+              "price": 47.9,
+              "score": 0.82
+            },
+            {
+              "name": "שמן זית פרימיום 750",
+              "price": 52.9,
+              "score": 0.82
+            },
+            {
+              "name": "שמן זית  לחיץ 280 מל",
+              "price": 21.9,
+              "score": 0.82
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290116530482",
+            "name": "מארז קורנפלקס של אלו",
+            "manufacturer": "לא ידוע",
+            "price": 18.9,
+            "unitQty": "0.00 יחידות",
+            "unitPrice": null,
+            "tokens": [
+              {
+                "value": "קורנפלקס",
+                "numeric": false
+              },
+              {
+                "value": "של",
+                "numeric": false
+              },
+              {
+                "value": "אלו",
+                "numeric": false
+              },
+              {
+                "value": "לא",
+                "numeric": false
+              },
+              {
+                "value": "ידוע",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.76,
+          "alternatives": [
+            {
+              "name": "מארז קורנפלקס של אלו",
+              "price": 18.9,
+              "score": 0.76
+            },
+            {
+              "name": "קורנפלקס ללא גלוטן 5",
+              "price": 29.9,
+              "score": 0.76
+            },
+            {
+              "name": "קורנפלקס דבש תלמה 44",
+              "price": 24.9,
+              "score": 0.76
+            }
+          ]
+        },
+        {
+          "product": {
+            "code": "7290005287510",
+            "name": "טונה סטארקיסט בשמן פ",
+            "manufacturer": "קריות זול",
+            "price": 9.9,
+            "unitQty": "160.00 גרם",
+            "unitPrice": 6.19,
+            "tokens": [
+              {
+                "value": "טונה",
+                "numeric": false
+              },
+              {
+                "value": "סטארקיסט",
+                "numeric": false
+              },
+              {
+                "value": "בשמן",
+                "numeric": false
+              },
+              {
+                "value": "פ",
+                "numeric": false
+              },
+              {
+                "value": "קריות",
+                "numeric": false
+              },
+              {
+                "value": "זול",
+                "numeric": false
+              }
+            ]
+          },
+          "score": 0.8,
+          "alternatives": [
+            {
+              "name": "טונה סטארקיס בשמן רב",
+              "price": 28.9,
+              "score": 0.8
+            },
+            {
+              "name": "טונה סטארקיסט בשמן פ",
+              "price": 9.9,
+              "score": 0.8
+            },
+            {
+              "name": "טונה סטארקיסט בשמן ל",
+              "price": 9.9,
+              "score": 0.8
+            }
+          ]
+        },
+        null
+      ]
+    },
+    {
+      "key": "salachd",
+      "displayName": "סאלח דבאח",
+      "ok": false,
+      "error": "לא נמצא סניף של סאלח דבאח בעיר \"תל אביב\". הרץ \"node src/index.js --list-stores salachd\" כדי לראות את רשימת הסניפים, ואז הגדר מזהה סניף ב-config.json תחת storeOverrides.salachd."
+    },
+    {
+      "key": "politzer",
+      "displayName": "פוליצר",
+      "ok": false,
+      "error": "לא נמצא סניף של פוליצר בעיר \"תל אביב\". הרץ \"node src/index.js --list-stores politzer\" כדי לראות את רשימת הסניפים, ואז הגדר מזהה סניף ב-config.json תחת storeOverrides.politzer."
+    }
+  ],
+  "comparison": {
+    "rows": [
+      {
+        "key": "shufersal",
+        "displayName": "שופרסל",
+        "ok": true,
+        "storeId": "001",
+        "storeName": "1 - שלי ת\"א- בן יהודה",
+        "fromCache": true,
+        "fullTotal": 160.58,
+        "sharedTotal": 120,
+        "foundCount": 7,
+        "itemCount": 8
+      },
+      {
+        "key": "hazihinam",
+        "displayName": "חצי חינם",
+        "ok": true,
+        "storeId": "103",
+        "storeName": "חצי חינם משלוחים",
+        "fromCache": true,
+        "fullTotal": 115.62,
+        "sharedTotal": 93,
+        "foundCount": 6,
+        "itemCount": 8
+      },
+      {
+        "key": "ramilevi",
+        "displayName": "רמי לוי",
+        "ok": true,
+        "storeId": "055",
+        "storeName": "רמת החייל",
+        "fromCache": true,
+        "fullTotal": 90.2,
+        "sharedTotal": 53.4,
+        "foundCount": 7,
+        "itemCount": 8
+      },
+      {
+        "key": "yohananof",
+        "displayName": "יוחננוף",
+        "ok": true,
+        "storeId": "032",
+        "storeName": "בן צבי תל אביב",
+        "fromCache": true,
+        "fullTotal": 112.6,
+        "sharedTotal": 75.6,
+        "foundCount": 6,
+        "itemCount": 8
+      },
+      {
+        "key": "osherad",
+        "displayName": "אושר עד",
+        "ok": true,
+        "storeId": "024",
+        "storeName": "תל אביב",
+        "fromCache": true,
+        "fullTotal": 81.9,
+        "sharedTotal": 60.8,
+        "foundCount": 6,
+        "itemCount": 8
+      },
+      {
+        "key": "tivtaam",
+        "displayName": "טיב טעם",
+        "ok": true,
+        "storeId": "019",
+        "storeName": "רמת החייל",
+        "fromCache": true,
+        "fullTotal": 132.12,
+        "sharedTotal": 94.8,
+        "foundCount": 7,
+        "itemCount": 8
+      },
+      {
+        "key": "doralon",
+        "displayName": "דור אלון",
+        "ok": true,
+        "storeId": "850",
+        "storeName": "אביב דרך נמיר",
+        "fromCache": true,
+        "fullTotal": 125.2,
+        "sharedTotal": 90.6,
+        "foundCount": 6,
+        "itemCount": 8
+      },
+      {
+        "key": "keshet",
+        "displayName": "קשת טעמים",
+        "ok": false,
+        "error": "לא נמצא סניף של קשת טעמים בעיר \"תל אביב\". הרץ \"node src/index.js --list-stores keshet\" כדי לראות את רשימת הסניפים, ואז הגדר מזהה סניף ב-config.json תחת storeOverrides.keshet."
+      },
+      {
+        "key": "freshmarket",
+        "displayName": "פרש מרקט",
+        "ok": true,
+        "storeId": "004",
+        "storeName": "פרשמרקט אזורי חו",
+        "fromCache": true,
+        "fullTotal": 133.03,
+        "sharedTotal": 88.2,
+        "foundCount": 7,
+        "itemCount": 8
+      },
+      {
+        "key": "salachd",
+        "displayName": "סאלח דבאח",
+        "ok": false,
+        "error": "לא נמצא סניף של סאלח דבאח בעיר \"תל אביב\". הרץ \"node src/index.js --list-stores salachd\" כדי לראות את רשימת הסניפים, ואז הגדר מזהה סניף ב-config.json תחת storeOverrides.salachd."
+      },
+      {
+        "key": "politzer",
+        "displayName": "פוליצר",
+        "ok": false,
+        "error": "לא נמצא סניף של פוליצר בעיר \"תל אביב\". הרץ \"node src/index.js --list-stores politzer\" כדי לראות את רשימת הסניפים, ואז הגדר מזהה סניף ב-config.json תחת storeOverrides.politzer."
+      }
+    ],
+    "ranked": [
+      {
+        "key": "ramilevi",
+        "displayName": "רמי לוי",
+        "ok": true,
+        "storeId": "055",
+        "storeName": "רמת החייל",
+        "fromCache": true,
+        "fullTotal": 90.2,
+        "sharedTotal": 53.4,
+        "foundCount": 7,
+        "itemCount": 8
+      },
+      {
+        "key": "osherad",
+        "displayName": "אושר עד",
+        "ok": true,
+        "storeId": "024",
+        "storeName": "תל אביב",
+        "fromCache": true,
+        "fullTotal": 81.9,
+        "sharedTotal": 60.8,
+        "foundCount": 6,
+        "itemCount": 8
+      },
+      {
+        "key": "yohananof",
+        "displayName": "יוחננוף",
+        "ok": true,
+        "storeId": "032",
+        "storeName": "בן צבי תל אביב",
+        "fromCache": true,
+        "fullTotal": 112.6,
+        "sharedTotal": 75.6,
+        "foundCount": 6,
+        "itemCount": 8
+      },
+      {
+        "key": "freshmarket",
+        "displayName": "פרש מרקט",
+        "ok": true,
+        "storeId": "004",
+        "storeName": "פרשמרקט אזורי חו",
+        "fromCache": true,
+        "fullTotal": 133.03,
+        "sharedTotal": 88.2,
+        "foundCount": 7,
+        "itemCount": 8
+      },
+      {
+        "key": "doralon",
+        "displayName": "דור אלון",
+        "ok": true,
+        "storeId": "850",
+        "storeName": "אביב דרך נמיר",
+        "fromCache": true,
+        "fullTotal": 125.2,
+        "sharedTotal": 90.6,
+        "foundCount": 6,
+        "itemCount": 8
+      },
+      {
+        "key": "hazihinam",
+        "displayName": "חצי חינם",
+        "ok": true,
+        "storeId": "103",
+        "storeName": "חצי חינם משלוחים",
+        "fromCache": true,
+        "fullTotal": 115.62,
+        "sharedTotal": 93,
+        "foundCount": 6,
+        "itemCount": 8
+      },
+      {
+        "key": "tivtaam",
+        "displayName": "טיב טעם",
+        "ok": true,
+        "storeId": "019",
+        "storeName": "רמת החייל",
+        "fromCache": true,
+        "fullTotal": 132.12,
+        "sharedTotal": 94.8,
+        "foundCount": 7,
+        "itemCount": 8
+      },
+      {
+        "key": "shufersal",
+        "displayName": "שופרסל",
+        "ok": true,
+        "storeId": "001",
+        "storeName": "1 - שלי ת\"א- בן יהודה",
+        "fromCache": true,
+        "fullTotal": 160.58,
+        "sharedTotal": 120,
+        "foundCount": 7,
+        "itemCount": 8
+      }
+    ],
+    "winner": {
+      "key": "ramilevi",
+      "displayName": "רמי לוי",
+      "ok": true,
+      "storeId": "055",
+      "storeName": "רמת החייל",
+      "fromCache": true,
+      "fullTotal": 90.2,
+      "sharedTotal": 53.4,
+      "foundCount": 7,
+      "itemCount": 8
+    },
+    "savings": 7.4,
+    "sharedIndexes": [
+      2,
+      4,
+      5,
+      6
+    ]
+  }
+}

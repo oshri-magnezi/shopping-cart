@@ -7,7 +7,7 @@ export function createId() {
 }
 
 export function createEmptyList() {
-  return { id: createId(), createdAt: Date.now(), items: [] };
+  return { id: createId(), name: '', createdAt: Date.now(), items: [] };
 }
 
 export function createInitialData() {
@@ -35,6 +35,8 @@ export function loadData() {
       parsed.activeList && Array.isArray(parsed.activeList.items)
         ? {
             id: parsed.activeList.id ?? createId(),
+            // Lists saved before naming existed simply have no name.
+            name: typeof parsed.activeList.name === 'string' ? parsed.activeList.name : '',
             createdAt: parsed.activeList.createdAt ?? Date.now(),
             items: parsed.activeList.items.filter((item) => item && typeof item.name === 'string'),
           }

@@ -5,12 +5,86 @@
   gap: var(--space-4);
   padding-bottom: var(--space-4);
   margin-bottom: var(--space-4);
-  border-bottom: 2px solid var(--color-text);
+  /* A rule, not a slab: --color-text is near-white in dark mode and reads as
+     a glaring white bar at 2px. */
+  border-bottom: 1px solid var(--color-border-strong);
 }
 
-.list-title {
+.list-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Grid trick: the ::after holds a copy of the text and sets the width, so the
+   input (stacked in the same cell) is exactly as wide as its content. */
+.list-title-field {
+  display: inline-grid;
+  align-items: center;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.list-title-field::after,
+.list-title-input {
+  grid-area: 1 / 1;
+  padding: 0;
+  padding-inline-end: 26px;
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
+  font-weight: 400;
+  line-height: 1.25;
   letter-spacing: 0.01em;
+}
+
+.list-title-field::after {
+  content: attr(data-value);
+  visibility: hidden;
+  white-space: pre;
+  overflow: hidden;
+}
+
+/* Looks like the page title until you click into it. */
+.list-title-input {
+  width: 100%;
+  min-width: 0;
+  border: none;
+  border-bottom: 1.5px solid transparent;
+  background: none;
+  color: var(--color-text);
+  transition: border-color var(--duration-fast) var(--ease);
+}
+
+.list-title-input::placeholder {
+  color: var(--color-text);
+  opacity: 1;
+}
+
+.list-title-field:hover .list-title-input {
+  border-bottom-color: var(--color-border-strong);
+}
+
+.list-title-input:focus {
+  outline: none;
+  border-bottom-color: var(--color-primary);
+}
+
+.list-title-input:focus::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.list-title-pencil {
+  grid-area: 1 / 1;
+  justify-self: end;
+  align-self: center;
+  margin-bottom: 4px;
+  color: var(--color-text-subtle);
+  pointer-events: none;
+  transition: color var(--duration-fast) var(--ease);
+}
+
+.list-title-field:hover .list-title-pencil,
+.list-title-field:focus-within .list-title-pencil {
+  color: var(--color-primary);
 }
 
 .list-meta {
