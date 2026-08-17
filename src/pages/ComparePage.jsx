@@ -7,9 +7,11 @@ import { formatCurrency, formatDateTime } from '../utils/format.js';
 import { buildIndex, findInChain } from '../utils/catalogIndex.js';
 import './ComparePage.css';
 
-// Written by the price bot: every chain's full product list.
-const CATALOG_FILE = `${import.meta.env.BASE_URL}price-catalog.json`;
+// Written by the price bot: an index of cities, each with its own catalogue
+// file. Prices are per branch, so the city decides which file to load.
+const INDEX_FILE = `${import.meta.env.BASE_URL}price-catalog-index.json`;
 const PREFS_KEY = 'shopping-cart-compare-prefs';
+const SORT_MODES = ['cheapest', 'dearest', 'found', 'name'];
 
 function loadPrefs() {
   try {
@@ -17,7 +19,7 @@ function loadPrefs() {
     return {
       city: typeof raw?.city === 'string' ? raw.city : '',
       excluded: Array.isArray(raw?.excluded) ? raw.excluded : [],
-      sortBy: ['cheapest', 'found', 'name'].includes(raw?.sortBy) ? raw.sortBy : 'cheapest',
+      sortBy: SORT_MODES.includes(raw?.sortBy) ? raw.sortBy : 'cheapest',
     };
   } catch {
     return { city: '', excluded: [], sortBy: 'cheapest' };
@@ -30,6 +32,7 @@ export function ComparePage() {
   const { t, locale } = useTranslation();
   const { activeList } = useAppData();
 
+  const [index, setIndex] = useState(null);
   const [catalog, setCatalog] = useState(null);
   const [status, setStatus] = useState('loading');
   const [prefs, setPrefs] = useState(loadPrefs);
@@ -42,48 +45,70 @@ export function ComparePage() {
     }
   }, [prefs]);
 
-  async function loadCatalog() {
+  async function loadIndex() {
     setStatus('loading');
     try {
-      const response = await fetch(CATALOG_FILE, { cache: 'no-store' });
+      const response = await fetch(INDEX_FILE, { cache: 'no-store' });
       if (!response.ok) throw new Error('missing');
       const data = await response.json();
-      if (!Array.isArray(data?.chains)) throw new Error('invalid');
-      setCatalog(data);
-      setStatus('ready');
+      if (!Array.isArray(data?.cities) || data.cities.length === 0) throw new Error('invalid');
+      setIndex(data);
+      setPrefs((prev) => ({
+        ...prev,
+        city: data.cities.some((entry) => entry.city === prev.city)
+          ? prev.city
+          : data.cities[0].city,
+      }));
     } catch {
-      setCatalog(null);
+      setIndex(null);
       setStatus('missing');
     }
   }
 
   useEffect(() => {
-    loadCatalog();
+    loadIndex();
   }, []);
 
-  // Indexing 78k products takes a moment, so it happens once per catalogue.
+  // Each city is a separate download, fetched only when it is chosen.
+  useEffect(() => {
+    if (!index || !prefs.city) return;
+    const entry = index.cities.find((city) => city.city === prefs.city);
+    if (!entry) return;
+
+    let cancelled = false;
+    setStatus('loading');
+    setCatalog(null);
+
+    fetch(`${import.meta.env.BASE_URL}${entry.file}`)
+      .then((response) => {
+        if (!response.ok) throw new Error('missing');
+        return response.json();
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setCatalog(data);
+        setStatus('ready');
+      })
+      .catch(() => {
+        if (!cancelled) setStatus('missing');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [index, prefs.city]);
+
+  // Indexing tens of thousands of products takes a moment, so it happens once
+  // per city catalogue rather than on every render.
   const indexed = useMemo(() => (catalog ? buildIndex(catalog) : []), [catalog]);
 
-  const cities = useMemo(() => {
-    const all = new Set();
-    for (const chain of indexed) for (const city of chain.cities ?? []) all.add(city);
-    return [...all].sort((a, b) => a.localeCompare(b, 'he'));
-  }, [indexed]);
+  const cities = useMemo(() => (index ? index.cities.map((entry) => entry.city) : []), [index]);
 
   const excluded = useMemo(() => new Set(prefs.excluded), [prefs.excluded]);
 
-  // A city narrows the field to chains that actually have a branch there.
-  const inCity = useMemo(
-    () =>
-      prefs.city
-        ? indexed.filter((chain) => (chain.cities ?? []).includes(prefs.city))
-        : indexed,
-    [indexed, prefs.city],
-  );
-
   const selected = useMemo(
-    () => inCity.filter((chain) => !excluded.has(chain.key)),
-    [inCity, excluded],
+    () => indexed.filter((chain) => !excluded.has(chain.key)),
+    [indexed, excluded],
   );
 
   const items = activeList.items;
@@ -165,7 +190,7 @@ export function ComparePage() {
             <span className="tabular">
               {t('compare.updatedAt', { date: formatDateTime(catalog.generatedAt, locale) })}
             </span>
-            <button type="button" className="compare-refresh" onClick={loadCatalog}>
+            <button type="button" className="compare-refresh" onClick={loadIndex}>
               <RefreshCw size={14} strokeWidth={2} aria-hidden="true" />
               {t('compare.refreshData')}
             </button>
@@ -181,7 +206,6 @@ export function ComparePage() {
                 value={prefs.city}
                 onChange={(event) => setPrefs((prev) => ({ ...prev, city: event.target.value }))}
               >
-                <option value="">{t('compare.allCities')}</option>
                 {cities.map((city) => (
                   <option key={city} value={city}>
                     {city}
@@ -191,7 +215,7 @@ export function ComparePage() {
             </label>
 
             <div className="chain-chips" role="group" aria-label={t('compare.filterTitle')}>
-              {inCity.map((chain) => {
+              {indexed.map((chain) => {
                 const active = !excluded.has(chain.key);
                 return (
                   <button
@@ -227,6 +251,7 @@ export function ComparePage() {
                   }
                 >
                   <option value="cheapest">{t('compare.sortCheapest')}</option>
+                  <option value="dearest">{t('compare.sortDearest')}</option>
                   <option value="found">{t('compare.sortMostFound')}</option>
                   <option value="name">{t('compare.sortName')}</option>
                 </select>
@@ -277,6 +302,7 @@ function sortTotals(totals, sortBy) {
   const copy = [...totals];
   if (sortBy === 'name') return copy.sort((a, b) => a.displayName.localeCompare(b.displayName, 'he'));
   if (sortBy === 'found') return copy.sort((a, b) => b.foundCount - a.foundCount);
+  if (sortBy === 'dearest') return copy.sort((a, b) => b.sharedTotal - a.sharedTotal);
   return copy.sort((a, b) => a.sharedTotal - b.sharedTotal);
 }
 

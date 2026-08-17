@@ -103,6 +103,7 @@
   "compare.hideUnavailable": "הסתרת רשתות ללא נתונים",
   "compare.sortBy": "מיון",
   "compare.sortCheapest": "מהזול ליקר",
+  "compare.sortDearest": "מהיקר לזול",
   "compare.sortMostFound": "לפי כמות פריטים שנמצאו",
   "compare.sortName": "לפי שם הרשת",
   "compare.selectedCount": "{count} רשתות נבחרו",

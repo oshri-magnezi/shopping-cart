@@ -103,6 +103,7 @@
   "compare.hideUnavailable": "Hide chains without data",
   "compare.sortBy": "Sort",
   "compare.sortCheapest": "Cheapest first",
+  "compare.sortDearest": "Most expensive first",
   "compare.sortMostFound": "Most items found",
   "compare.sortName": "Chain name",
   "compare.selectedCount": "{count} chains selected",
