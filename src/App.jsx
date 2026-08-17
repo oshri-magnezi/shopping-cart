@@ -2,6 +2,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/Navbar.jsx';
 import { SettingsProvider } from './context/SettingsContext.jsx';
 import { AppDataProvider } from './context/AppDataContext.jsx';
+import { CatalogProvider } from './context/CatalogContext.jsx';
 import { ShoppingListPage } from './pages/ShoppingListPage.jsx';
 import { HistoryPage } from './pages/HistoryPage.jsx';
 import { ComparePage } from './pages/ComparePage.jsx';
@@ -10,6 +11,7 @@ export default function App() {
   return (
     <SettingsProvider>
       <AppDataProvider>
+        <CatalogProvider>
         <HashRouter>
           <div className="app-shell">
             <Navbar />
@@ -21,6 +23,7 @@ export default function App() {
             </Routes>
           </div>
         </HashRouter>
+        </CatalogProvider>
       </AppDataProvider>
     </SettingsProvider>
   );

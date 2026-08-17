@@ -5,6 +5,7 @@ import { CategorySection } from '../components/CategorySection.jsx';
 import { CompletePurchaseModal } from '../components/CompletePurchaseModal.jsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { ProductSuggest } from '../components/ProductSuggest.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { getAllCategories, FALLBACK_CATEGORY_ID } from '../utils/categories.js';
@@ -51,11 +52,18 @@ export function ShoppingListPage() {
     if (allPurchased) setCompleting(true);
   }, [allPurchased]);
 
+  function openPicker(name) {
+    setPicker({
+      mode: 'add',
+      item: { name, categoryId: FALLBACK_CATEGORY_ID, quantity: 1 },
+    });
+  }
+
   function handleAddSubmit(event) {
     event.preventDefault();
     const trimmed = draftName.trim();
     if (!trimmed) return;
-    setPicker({ mode: 'add', item: { name: trimmed, categoryId: FALLBACK_CATEGORY_ID, quantity: 1 } });
+    openPicker(trimmed);
   }
 
   function handlePickerConfirm(values) {
@@ -133,15 +141,19 @@ export function ShoppingListPage() {
       ) : null}
 
       <form className="add-form" onSubmit={handleAddSubmit}>
-        <input
-          ref={inputRef}
-          type="text"
-          className="text-input"
+        <ProductSuggest
           value={draftName}
-          onChange={(event) => setDraftName(event.target.value)}
-          placeholder={t('list.addPlaceholder')}
-          aria-label={t('list.addPlaceholder')}
-          autoComplete="off"
+          onChange={setDraftName}
+          onPick={(name) => {
+            setDraftName(name);
+            openPicker(name);
+          }}
+          inputRef={inputRef}
+          inputProps={{
+            className: 'text-input',
+            placeholder: t('list.addPlaceholder'),
+            'aria-label': t('list.addPlaceholder'),
+          }}
         />
         <button type="submit" className="btn btn-primary" disabled={!draftName.trim()}>
           <Plus size={18} strokeWidth={2.5} aria-hidden="true" />

@@ -13,6 +13,7 @@
 
   "list.title": "My list",
   "list.nameLabel": "Basket name",
+  "suggest.loading": "Loading products…",
   "list.createdAt": "Started {date}",
   "list.progress": "{done} of {total} picked up",
   "list.addPlaceholder": "What should we add?",
@@ -97,6 +98,8 @@
   "compare.basketOf": "Based on {count} shared items",
   "compare.noSharedNote": "No item was found at every selected chain, so only each chain's full basket is shown. Select fewer chains for a direct comparison.",
   "compare.notFoundAnywhere": "Not found at any chain",
+  "compare.suspect": "Unusual price spread",
+  "compare.suspectHint": "The gap between chains is too wide — different products may have been matched. Try naming the item more precisely.",
   "compare.filterTitle": "Chains to compare",
   "compare.selectAll": "Select all",
   "compare.clearAll": "Clear",

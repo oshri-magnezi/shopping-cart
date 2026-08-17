@@ -5,11 +5,9 @@ import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { formatCurrency, formatDateTime } from '../utils/format.js';
 import { buildIndex, findInChain } from '../utils/catalogIndex.js';
+import { useCatalog } from '../context/CatalogContext.jsx';
 import './ComparePage.css';
 
-// Written by the price bot: an index of cities, each with its own catalogue
-// file. Prices are per branch, so the city decides which file to load.
-const INDEX_FILE = `${import.meta.env.BASE_URL}price-catalog-index.json`;
 const PREFS_KEY = 'shopping-cart-compare-prefs';
 const SORT_MODES = ['cheapest', 'dearest', 'found', 'name'];
 
@@ -17,12 +15,11 @@ function loadPrefs() {
   try {
     const raw = JSON.parse(localStorage.getItem(PREFS_KEY));
     return {
-      city: typeof raw?.city === 'string' ? raw.city : '',
       excluded: Array.isArray(raw?.excluded) ? raw.excluded : [],
       sortBy: SORT_MODES.includes(raw?.sortBy) ? raw.sortBy : 'cheapest',
     };
   } catch {
-    return { city: '', excluded: [], sortBy: 'cheapest' };
+    return { excluded: [], sortBy: 'cheapest' };
   }
 }
 
@@ -32,10 +29,13 @@ export function ComparePage() {
   const { t, locale } = useTranslation();
   const { activeList } = useAppData();
 
-  const [index, setIndex] = useState(null);
-  const [catalog, setCatalog] = useState(null);
-  const [status, setStatus] = useState('loading');
+  const { cities, city, setCity, catalog, status, request, reload } = useCatalog();
   const [prefs, setPrefs] = useState(loadPrefs);
+
+  // The comparison always needs product data, unlike the add-item box.
+  useEffect(() => {
+    request();
+  }, [request]);
 
   useEffect(() => {
     try {
@@ -45,64 +45,9 @@ export function ComparePage() {
     }
   }, [prefs]);
 
-  async function loadIndex() {
-    setStatus('loading');
-    try {
-      const response = await fetch(INDEX_FILE, { cache: 'no-store' });
-      if (!response.ok) throw new Error('missing');
-      const data = await response.json();
-      if (!Array.isArray(data?.cities) || data.cities.length === 0) throw new Error('invalid');
-      setIndex(data);
-      setPrefs((prev) => ({
-        ...prev,
-        city: data.cities.some((entry) => entry.city === prev.city)
-          ? prev.city
-          : data.cities[0].city,
-      }));
-    } catch {
-      setIndex(null);
-      setStatus('missing');
-    }
-  }
-
-  useEffect(() => {
-    loadIndex();
-  }, []);
-
-  // Each city is a separate download, fetched only when it is chosen.
-  useEffect(() => {
-    if (!index || !prefs.city) return;
-    const entry = index.cities.find((city) => city.city === prefs.city);
-    if (!entry) return;
-
-    let cancelled = false;
-    setStatus('loading');
-    setCatalog(null);
-
-    fetch(`${import.meta.env.BASE_URL}${entry.file}`)
-      .then((response) => {
-        if (!response.ok) throw new Error('missing');
-        return response.json();
-      })
-      .then((data) => {
-        if (cancelled) return;
-        setCatalog(data);
-        setStatus('ready');
-      })
-      .catch(() => {
-        if (!cancelled) setStatus('missing');
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [index, prefs.city]);
-
   // Indexing tens of thousands of products takes a moment, so it happens once
   // per city catalogue rather than on every render.
   const indexed = useMemo(() => (catalog ? buildIndex(catalog) : []), [catalog]);
-
-  const cities = useMemo(() => (index ? index.cities.map((entry) => entry.city) : []), [index]);
 
   const excluded = useMemo(() => new Set(prefs.excluded), [prefs.excluded]);
 
@@ -117,11 +62,18 @@ export function ComparePage() {
   const table = useMemo(() => {
     if (selected.length === 0 || items.length === 0) return null;
 
-    const lines = items.map((item) => ({
-      name: item.name,
-      quantity: item.quantity,
-      prices: selected.map((chain) => findInChain(chain, item.name)),
-    }));
+    const lines = items.map((item) => {
+      const prices = selected.map((chain) => findInChain(chain, item.name));
+
+      // A threefold spread across chains for one product almost always means
+      // different products were matched, not a real price gap — so the line
+      // is flagged rather than quietly trusted.
+      const values = prices.filter(Boolean).map((match) => match.price);
+      const spread =
+        values.length > 1 ? Math.max(...values) / Math.min(...values) : 1;
+
+      return { name: item.name, quantity: item.quantity, prices, suspect: spread >= 3 };
+    });
 
     const sharedFlags = lines.map((line) => line.prices.every(Boolean));
 
@@ -190,7 +142,7 @@ export function ComparePage() {
             <span className="tabular">
               {t('compare.updatedAt', { date: formatDateTime(catalog.generatedAt, locale) })}
             </span>
-            <button type="button" className="compare-refresh" onClick={loadIndex}>
+            <button type="button" className="compare-refresh" onClick={reload}>
               <RefreshCw size={14} strokeWidth={2} aria-hidden="true" />
               {t('compare.refreshData')}
             </button>
@@ -202,10 +154,7 @@ export function ComparePage() {
                 <MapPin size={16} strokeWidth={2} aria-hidden="true" />
                 {t('compare.cityLabel')}
               </span>
-              <select
-                value={prefs.city}
-                onChange={(event) => setPrefs((prev) => ({ ...prev, city: event.target.value }))}
-              >
+              <select value={city} onChange={(event) => setCity(event.target.value)}>
                 {cities.map((city) => (
                   <option key={city} value={city}>
                     {city}
@@ -393,6 +342,11 @@ function Breakdown({ table, locale, t }) {
                 ) : null}
                 {found.length === 0 ? (
                   <span className="breakdown-none">{t('compare.notFoundAnywhere')}</span>
+                ) : null}
+                {line.suspect ? (
+                  <span className="breakdown-warn" title={t('compare.suspectHint')}>
+                    {t('compare.suspect')}
+                  </span>
                 ) : null}
               </div>
 

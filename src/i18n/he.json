@@ -13,6 +13,7 @@
 
   "list.title": "הרשימה שלי",
   "list.nameLabel": "שם הסל",
+  "suggest.loading": "טוען מוצרים...",
   "list.createdAt": "נפתחה ב־{date}",
   "list.progress": "{done} מתוך {total} נרכשו",
   "list.addPlaceholder": "מה להוסיף לרשימה?",
@@ -97,6 +98,8 @@
   "compare.basketOf": "על בסיס {count} פריטים משותפים",
   "compare.noSharedNote": "אין פריט שנמצא בכל הרשתות שנבחרו, ולכן מוצג רק הסל המלא של כל רשת. בחרו פחות רשתות כדי לקבל השוואה ישירה.",
   "compare.notFoundAnywhere": "לא נמצא באף רשת",
+  "compare.suspect": "פערי מחיר חריגים",
+  "compare.suspectHint": "ההפרש בין הרשתות גדול מדי — ייתכן שהותאמו מוצרים שונים. נסו לנסח את הפריט מדויק יותר.",
   "compare.filterTitle": "רשתות להשוואה",
   "compare.selectAll": "בחירת הכל",
   "compare.clearAll": "ניקוי",
