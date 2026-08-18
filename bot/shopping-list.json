@@ -1,0 +1,12 @@
+{
+  "items": [
+    { "name": "חלב תנובה 3% 1 ליטר", "quantity": 2 },
+    { "name": "לחם אחיד פרוס", "quantity": 1 },
+    { "name": "קוטג 5%", "quantity": 2 },
+    { "name": "ביצים L", "quantity": 1 },
+    { "name": "שמן זית", "quantity": 1 },
+    { "name": "קורנפלקס", "quantity": 1 },
+    { "name": "טונה בשמן", "quantity": 4 },
+    { "name": "מוצר בדיוני 999", "quantity": 1 }
+  ]
+}

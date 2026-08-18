@@ -4,7 +4,7 @@ import { EmptyState } from '../components/EmptyState.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { formatCurrency, formatDateTime } from '../utils/format.js';
-import { buildIndex, findInChain } from '../utils/catalogIndex.js';
+import { findByCode, findInChain } from '../utils/catalogIndex.js';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import './ComparePage.css';
 
@@ -29,7 +29,7 @@ export function ComparePage() {
   const { t, locale } = useTranslation();
   const { activeList } = useAppData();
 
-  const { cities, city, setCity, catalog, status, request, reload } = useCatalog();
+  const { cities, city, setCity, catalog, chains: indexed, status, request, reload } = useCatalog();
   const [prefs, setPrefs] = useState(loadPrefs);
 
   // The comparison always needs product data, unlike the add-item box.
@@ -45,10 +45,6 @@ export function ComparePage() {
     }
   }, [prefs]);
 
-  // Indexing tens of thousands of products takes a moment, so it happens once
-  // per city catalogue rather than on every render.
-  const indexed = useMemo(() => (catalog ? buildIndex(catalog) : []), [catalog]);
-
   const excluded = useMemo(() => new Set(prefs.excluded), [prefs.excluded]);
 
   const selected = useMemo(
@@ -63,16 +59,30 @@ export function ComparePage() {
     if (selected.length === 0 || items.length === 0) return null;
 
     const lines = items.map((item) => {
-      const prices = selected.map((chain) => findInChain(chain, item.name));
+      // A barcode identifies the same product at every chain, so it is looked
+      // up directly. Only free text has to be guessed.
+      const prices = selected.map((chain) => {
+        // With a barcode the answer is exact, and a miss means the chain
+        // genuinely does not stock it — unless the catalogue predates
+        // barcodes entirely, in which case text is all we have.
+        if (item.code && chain.hasCodes) return findByCode(chain, item.code);
+        return findInChain(chain, item.name);
+      });
+      const exact = Boolean(item.code) && selected.every((chain) => chain.hasCodes) && prices.some(Boolean);
 
-      // A threefold spread across chains for one product almost always means
-      // different products were matched, not a real price gap — so the line
-      // is flagged rather than quietly trusted.
+      // A threefold spread for one product usually means different products
+      // were matched — but only when matching was by wording. With a barcode
+      // the gap is a genuine price difference and must not be flagged.
       const values = prices.filter(Boolean).map((match) => match.price);
-      const spread =
-        values.length > 1 ? Math.max(...values) / Math.min(...values) : 1;
+      const spread = values.length > 1 ? Math.max(...values) / Math.min(...values) : 1;
 
-      return { name: item.name, quantity: item.quantity, prices, suspect: spread >= 3 };
+      return {
+        name: item.name,
+        quantity: item.quantity,
+        prices,
+        exact,
+        suspect: !exact && spread >= 3,
+      };
     });
 
     const sharedFlags = lines.map((line) => line.prices.every(Boolean));
@@ -130,7 +140,11 @@ export function ComparePage() {
         </div>
       </div>
 
-      {status === 'loading' ? <p className="compare-loading">{t('compare.loading')}</p> : null}
+      {/* 'idle' still means work is pending — the index has not arrived yet —
+          so it must show progress rather than an empty page. */}
+      {!catalog && status !== 'missing' ? (
+        <p className="compare-loading">{t('compare.loading')}</p>
+      ) : null}
 
       {status === 'missing' ? (
         <EmptyState icon={Scale} title={t('compare.emptyTitle')} text={t('compare.emptyText')} />
@@ -277,7 +291,7 @@ function ChainTable({ table, items, locale, t }) {
               {t('compare.sharedBasket')}
             </span>
           ) : null}
-          <span role="columnheader" className="col-num">
+          <span role="columnheader" className="col-num col-full">
             {t('compare.fullBasket')}
           </span>
           <span role="columnheader" className="col-num">
@@ -304,7 +318,7 @@ function ChainTable({ table, items, locale, t }) {
                 {formatCurrency(row.sharedTotal, locale)}
               </span>
             ) : null}
-            <span role="cell" className="col-num tabular">
+            <span role="cell" className="col-num col-full tabular">
               {formatCurrency(row.fullTotal, locale)}
             </span>
             <span role="cell" className="col-num tabular chain-cell-found">
@@ -343,6 +357,11 @@ function Breakdown({ table, locale, t }) {
                 {found.length === 0 ? (
                   <span className="breakdown-none">{t('compare.notFoundAnywhere')}</span>
                 ) : null}
+                {line.exact ? (
+                  <span className="breakdown-exact" title={t('compare.exactMatchHint')}>
+                    {t('compare.exactMatch')}
+                  </span>
+                ) : null}
                 {line.suspect ? (
                   <span className="breakdown-warn" title={t('compare.suspectHint')}>
                     {t('compare.suspect')}
@@ -362,7 +381,17 @@ function Breakdown({ table, locale, t }) {
                         className={`breakdown-price${best ? ' breakdown-price-best' : ''}`}
                       >
                         <span className="breakdown-chain">{chain.displayName}</span>
-                        <span className="breakdown-product">{match.name}</span>
+                        <span className="breakdown-product">
+                          {match.name}
+                          {match.promo ? (
+                            <span
+                              className="promo-tag"
+                              title={t(match.promo === 1 ? 'compare.promoPriceHint' : 'compare.promoHint')}
+                            >
+                              {t(match.promo === 1 ? 'compare.promoPrice' : 'compare.promo')}
+                            </span>
+                          ) : null}
+                        </span>
                         <span className="breakdown-amount tabular">
                           {formatCurrency(match.price, locale)}
                         </span>

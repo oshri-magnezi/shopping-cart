@@ -42,7 +42,10 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
   function handleSubmit(event) {
     event.preventDefault();
     if (!trimmedName) return;
-    onConfirm({ name: trimmedName, categoryId, quantity });
+    // Editing the name by hand no longer identifies a specific product, so the
+    // barcode is dropped and matching falls back to the text engine.
+    const code = trimmedName === initialItem.name ? (initialItem.code ?? '') : '';
+    onConfirm({ name: trimmedName, code, categoryId, quantity });
   }
 
   return (

@@ -19,27 +19,6 @@
   font-size: var(--text-sm);
 }
 
-.compare-actions {
-  display: flex;
-  gap: var(--space-2);
-  flex: none;
-}
-
-.compare-actions .btn {
-  min-height: 44px;
-  padding-inline: var(--space-4);
-  font-size: var(--text-sm);
-}
-
-.compare-error {
-  margin-bottom: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border-inline-start: 3px solid var(--color-destructive);
-  background-color: var(--color-destructive-soft);
-  color: var(--color-destructive);
-  font-size: var(--text-sm);
-}
-
 .compare-meta {
   display: flex;
   align-items: center;
@@ -170,7 +149,6 @@
   text-underline-offset: 4px;
 }
 
-.compare-check,
 .compare-sort {
   display: inline-flex;
   align-items: center;
@@ -180,15 +158,8 @@
   cursor: pointer;
 }
 
-.compare-check input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--color-primary);
-  cursor: pointer;
-}
-
 .compare-sort select {
-  min-height: 40px;
+  min-height: 44px;
   padding-inline: var(--space-2);
   border: 1.5px solid var(--color-border-strong);
   border-radius: var(--radius-sm);
@@ -204,17 +175,6 @@
   border-radius: var(--radius-md);
   text-align: center;
   color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}
-
-.compare-stale {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: var(--space-5);
-  padding: var(--space-3) var(--space-4);
-  border-inline-start: 3px solid var(--color-accent);
-  background-color: var(--color-accent-soft);
   font-size: var(--text-sm);
 }
 
@@ -494,6 +454,20 @@
   color: var(--color-text-subtle);
 }
 
+/* Barcode-identified lines are the trustworthy ones; the badge says so. */
+.breakdown-exact {
+  margin-inline-start: auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  cursor: help;
+}
+
 .breakdown-warn {
   margin-inline-start: auto;
   padding: 2px var(--space-2);
@@ -542,6 +516,22 @@
   font-size: var(--text-xs);
 }
 
+/* A deal exists on this product. When the price itself is the deal the tag is
+   solid; when the deal depends on quantity the tag only points it out. */
+.promo-tag {
+  display: inline-block;
+  margin-inline-start: var(--space-2);
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent-text);
+  font-family: var(--font-body);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: help;
+}
+
 .breakdown-amount {
   font-weight: 600;
   white-space: nowrap;
@@ -559,12 +549,16 @@
     gap: var(--space-3);
   }
 
-  .compare-actions .btn {
-    flex: 1;
+  /* The full-basket column is the first to go when space is tight. It is
+     targeted by class, not position, because the shared column disappears
+     when nothing is common to every chain. */
+  .col-full {
+    display: none;
   }
 
-  .compare-row-full {
-    display: none;
+  .chain-table-head,
+  .chain-table-row {
+    grid-template-columns: 1fr auto auto;
   }
 
   .breakdown-price {
@@ -579,7 +573,4 @@
   }
 
   .breakdown-amount,
-  .breakdown-missing {
-    margin-inline-start: auto;
   }
-}

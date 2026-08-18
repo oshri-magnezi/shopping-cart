@@ -12,6 +12,9 @@ function reducer(state, action) {
       const item = {
         id: createId(),
         name: action.name,
+        // Set when the shopper picked a real product from the catalogue; it is
+        // what lets the comparison match exactly instead of by wording.
+        code: action.code ?? '',
         categoryId: action.categoryId,
         quantity: action.quantity,
         purchased: false,

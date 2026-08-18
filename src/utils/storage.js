@@ -38,7 +38,10 @@ export function loadData() {
             // Lists saved before naming existed simply have no name.
             name: typeof parsed.activeList.name === 'string' ? parsed.activeList.name : '',
             createdAt: parsed.activeList.createdAt ?? Date.now(),
-            items: parsed.activeList.items.filter((item) => item && typeof item.name === 'string'),
+            items: parsed.activeList.items
+              .filter((item) => item && typeof item.name === 'string')
+              // Lists saved before barcodes existed simply carry no code.
+              .map((item) => ({ ...item, code: typeof item.code === 'string' ? item.code : '' })),
           }
         : createEmptyList();
 

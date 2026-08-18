@@ -1,4 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { buildIndex } from '../utils/catalogIndex.js';
+import { buildSuggestionPool } from '../utils/suggest.js';
 
 const INDEX_FILE = `${import.meta.env.BASE_URL}price-catalog-index.json`;
 const CITY_KEY = 'shopping-cart-city';
@@ -26,6 +28,7 @@ export function CatalogProvider({ children }) {
   const [wanted, setWanted] = useState(false);
 
   const loadIndex = useCallback(async () => {
+    setCatalog(null);
     try {
       const response = await fetch(INDEX_FILE, { cache: 'no-store' });
       if (!response.ok) throw new Error('missing');
@@ -68,7 +71,7 @@ export function CatalogProvider({ children }) {
     setStatus('loading');
     setCatalog(null);
 
-    fetch(`${import.meta.env.BASE_URL}${entry.file}`)
+    fetch(`${import.meta.env.BASE_URL}${entry.file}?v=${index.generatedAt ?? ''}`)
       .then((response) => {
         if (!response.ok) throw new Error('missing');
         return response.json();
@@ -87,6 +90,12 @@ export function CatalogProvider({ children }) {
     };
   }, [index, city, wanted]);
 
+  // Tokenizing ~80k product names is the expensive part, and both the
+  // comparison and the autocomplete need it. Doing it once here means the
+  // work happens on load rather than twice, on two different screens.
+  const chains = useMemo(() => (catalog ? buildIndex(catalog) : []), [catalog]);
+  const suggestions = useMemo(() => (catalog ? buildSuggestionPool(catalog) : null), [catalog]);
+
   const value = useMemo(
     () => ({
       index,
@@ -94,11 +103,13 @@ export function CatalogProvider({ children }) {
       city,
       setCity: setCityState,
       catalog,
+      chains,
+      suggestions,
       status,
       request,
       reload: loadIndex,
     }),
-    [index, city, catalog, status, request, loadIndex],
+    [index, city, catalog, chains, suggestions, status, request, loadIndex],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

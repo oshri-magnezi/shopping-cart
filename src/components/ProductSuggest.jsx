@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Store } from 'lucide-react';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
-import { buildSuggestionPool, suggest } from '../utils/suggest.js';
+import { suggest } from '../utils/suggest.js';
 import { formatCurrency } from '../utils/format.js';
 import './ProductSuggest.css';
 
@@ -13,15 +13,15 @@ import './ProductSuggest.css';
  * guesswork from the comparison entirely: "חלב" can mean 3% in a carton or
  * goat's milk, and no amount of scoring can tell which was meant.
  */
-export function ProductSuggest({ value, onChange, onPick, inputProps, inputRef }) {
+export function ProductSuggest({ value, onChange, onPick, onSubmit = () => {}, inputProps, inputRef }) {
   const { t, locale } = useTranslation();
-  const { catalog, status, request } = useCatalog();
+  const { suggestions: pool, status, request } = useCatalog();
 
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
+  // -1 means "nothing chosen yet", so Enter submits what was actually typed
+  // instead of silently swapping in the first suggestion.
+  const [active, setActive] = useState(-1);
   const containerRef = useRef(null);
-
-  const pool = useMemo(() => (catalog ? buildSuggestionPool(catalog) : null), [catalog]);
 
   const options = useMemo(() => {
     if (!pool || value.trim().length < 2) return [];
@@ -29,7 +29,7 @@ export function ProductSuggest({ value, onChange, onPick, inputProps, inputRef }
   }, [pool, value]);
 
   useEffect(() => {
-    setActive(0);
+    setActive(-1);
   }, [value]);
 
   // Typing is the reliable signal that products are needed — focus events are
@@ -49,7 +49,8 @@ export function ProductSuggest({ value, onChange, onPick, inputProps, inputRef }
   const visible = open && options.length > 0;
 
   function choose(option) {
-    onPick(option.name);
+    // The barcode travels with the name: it is what makes the comparison exact.
+    onPick({ name: option.name, code: option.code });
     setOpen(false);
   }
 
@@ -61,12 +62,15 @@ export function ProductSuggest({ value, onChange, onPick, inputProps, inputRef }
       setActive((current) => (current + 1) % options.length);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setActive((current) => (current - 1 + options.length) % options.length);
+      setActive((current) => (current <= 0 ? options.length : current) - 1);
     } else if (event.key === 'Enter') {
-      // Enter takes the highlighted suggestion; the raw text still submits
-      // when the list is closed.
+      // Enter is handled explicitly rather than left to implicit form
+      // submission, which the open listbox suppresses. A highlighted
+      // suggestion wins; otherwise the shopper's own wording is submitted.
       event.preventDefault();
-      choose(options[active]);
+      setOpen(false);
+      if (active >= 0) choose(options[active]);
+      else onSubmit();
     } else if (event.key === 'Escape') {
       setOpen(false);
     }

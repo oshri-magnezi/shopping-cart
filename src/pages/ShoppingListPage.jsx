@@ -52,10 +52,10 @@ export function ShoppingListPage() {
     if (allPurchased) setCompleting(true);
   }, [allPurchased]);
 
-  function openPicker(name) {
+  function openPicker(name, code = '') {
     setPicker({
       mode: 'add',
-      item: { name, categoryId: FALLBACK_CATEGORY_ID, quantity: 1 },
+      item: { name, code, categoryId: FALLBACK_CATEGORY_ID, quantity: 1 },
     });
   }
 
@@ -144,9 +144,13 @@ export function ShoppingListPage() {
         <ProductSuggest
           value={draftName}
           onChange={setDraftName}
-          onPick={(name) => {
+          onPick={({ name, code }) => {
             setDraftName(name);
-            openPicker(name);
+            openPicker(name, code);
+          }}
+          onSubmit={() => {
+            const trimmed = draftName.trim();
+            if (trimmed) openPicker(trimmed);
           }}
           inputRef={inputRef}
           inputProps={{

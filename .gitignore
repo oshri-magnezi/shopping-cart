@@ -3,5 +3,10 @@ dist
 *.local
 .DS_Store
 .claude
-.vscode/*
-!.vscode/extensions.json
+
+# Bot runtime artefacts — the catalogues it produces live in public/ and are
+# committed; everything below is regenerated on each run.
+bot/node_modules
+bot/cache
+bot/output
+bot/*.log

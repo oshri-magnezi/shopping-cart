@@ -1,0 +1,21 @@
+{
+  "name": "super-price-bot",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Compares a shopping list's total across Israeli supermarket chains using the official price-transparency files",
+  "scripts": {
+    "start": "node src/index.js",
+    "catalog": "node src/index.js --catalog ../public --cities \"תל אביב,ראשון לציון,חיפה,ירושלים\"",
+    "watch": "node src/index.js --watch 30",
+    "import-list": "node src/export-list.js",
+    "stores": "node src/index.js --list-stores"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.5.0",
+    "puppeteer": "^23.0.0"
+  }
+}

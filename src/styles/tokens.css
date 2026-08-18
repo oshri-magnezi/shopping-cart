@@ -27,7 +27,7 @@
   /* Text */
   --color-text: #0e1f1d;
   --color-text-muted: #51625c;
-  --color-text-subtle: #62726c;
+  --color-text-subtle: #5b6b65;
 
   /* Lines & states */
   --color-border: #d2dcd7;
@@ -101,7 +101,7 @@
 
   --color-text: #e6ede9;
   --color-text-muted: #9fb1aa;
-  --color-text-subtle: #82948d;
+  --color-text-subtle: #93a5a0;
 
   --color-border: #24403b;
   --color-border-strong: #375953;

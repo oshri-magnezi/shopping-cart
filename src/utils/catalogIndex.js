@@ -10,8 +10,14 @@ import { tokenize, similarity, MATCH_THRESHOLD } from './textMatch.js';
  */
 export function indexChain(chain) {
   const byToken = new Map();
+  // Barcodes are the exact path: the same code is the same product at every
+  // chain, so a product the shopper picked never has to be guessed again.
+  const byCode = new Map();
 
   chain.products.forEach((product, index) => {
+    const code = product[2];
+    if (code && !byCode.has(code)) byCode.set(code, index);
+
     for (const token of tokenize(product[0])) {
       let bucket = byToken.get(token);
       if (!bucket) {
@@ -22,7 +28,20 @@ export function indexChain(chain) {
     }
   });
 
-  return { ...chain, byToken };
+  // A catalogue built before barcodes existed has none at all. Knowing that
+  // lets the comparison fall back to text instead of reporting every item as
+  // missing when a stale file is deployed.
+  return { ...chain, byToken, byCode, hasCodes: byCode.size > 0 };
+}
+
+/** Exact lookup by barcode, or null when this chain does not stock it. */
+export function findByCode(indexed, code) {
+  if (!code) return null;
+  const index = indexed.byCode.get(code);
+  if (index === undefined) return null;
+
+  const [name, price, , promo] = indexed.products[index];
+  return { name, price, promo: promo ?? 0, score: 1, exact: true };
 }
 
 export function buildIndex(catalog) {
@@ -58,15 +77,19 @@ export function findInChain(indexed, query) {
     }
   }
 
-  let best = null;
+  // Collect first, decide after: comparing as we go made the winner depend on
+  // the order candidates happened to be visited, so the same query could
+  // return different products on different runs.
+  const scored = [];
   for (const index of candidates) {
-    const [name, price] = indexed.products[index];
+    const [name, price, , promo] = indexed.products[index];
     const score = similarity(query, name);
-    if (score < MATCH_THRESHOLD) continue;
-    if (!best || score > best.score + NEAR_TIE || (score > best.score - NEAR_TIE && price < best.price)) {
-      best = { name, price, score };
-    }
+    if (score >= MATCH_THRESHOLD) scored.push({ name, price, promo: promo ?? 0, score });
   }
+  if (scored.length === 0) return null;
 
-  return best;
+  const bestScore = scored.reduce((max, entry) => Math.max(max, entry.score), 0);
+  return scored
+    .filter((entry) => entry.score >= bestScore - NEAR_TIE)
+    .reduce((cheapest, entry) => (entry.price < cheapest.price ? entry : cheapest));
 }

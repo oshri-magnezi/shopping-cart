@@ -1,0 +1,20 @@
+{
+  "city": "תל אביב",
+  "chains": [
+    { "key": "shufersal", "displayName": "שופרסל", "portal": "shufersal" },
+    { "key": "hazihinam", "displayName": "חצי חינם", "portal": "hazihinam" },
+    { "key": "ramilevi", "displayName": "רמי לוי", "portal": "cerberus", "username": "RamiLevi" },
+    { "key": "yohananof", "displayName": "יוחננוף", "portal": "cerberus", "username": "yohananof" },
+    { "key": "osherad", "displayName": "אושר עד", "portal": "cerberus", "username": "osherad" },
+    { "key": "tivtaam", "displayName": "טיב טעם", "portal": "cerberus", "username": "TivTaam" },
+    { "key": "doralon", "displayName": "דור אלון", "portal": "cerberus", "username": "doralon" },
+    { "key": "keshet", "displayName": "קשת טעמים", "portal": "cerberus", "username": "Keshet" },
+    { "key": "freshmarket", "displayName": "פרש מרקט", "portal": "cerberus", "username": "freshmarket" },
+    { "key": "salachd", "displayName": "סאלח דבאח", "portal": "cerberus", "username": "SalachD" },
+    { "key": "politzer", "displayName": "פוליצר", "portal": "cerberus", "username": "politzer" }
+  ],
+  "storeOverrides": {},
+  "matchThreshold": 0.55,
+  "cacheHours": 1,
+  "headless": true
+}
