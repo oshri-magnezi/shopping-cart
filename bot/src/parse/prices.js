@@ -24,6 +24,10 @@ export async function parsePricesFile(filePath, chainName) {
         price,
         unitQty: [quantity, unit].filter(Boolean).join(' '),
         unitPrice: Number(findValue(item, 'UnitOfMeasurePrice')) || null,
+        // Sold loose at the counter, so `price` is per kilogram rather than
+        // per item. One spelling covers the chains' variations because
+        // findValue compares case-insensitively.
+        weighted: findValue(item, 'BisWeighted') === '1',
         status: findValue(item, 'ItemStatus'),
       };
     })

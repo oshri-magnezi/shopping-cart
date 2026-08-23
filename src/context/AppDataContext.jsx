@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
-import { createEmptyList, createId, loadData, saveData } from '../utils/storage.js';
+import { createEmptyList, createId, loadData, saveData, DEFAULT_WEIGHT } from '../utils/storage.js';
+import { FALLBACK_CATEGORY_ID } from '../utils/categories.js';
 
 const AppDataContext = createContext(null);
 
@@ -17,6 +18,10 @@ function reducer(state, action) {
         code: action.code ?? '',
         categoryId: action.categoryId,
         quantity: action.quantity,
+        // Loose goods are bought by weight, so the amount lives in `weight`
+        // (kilograms) and `quantity` stays at 1 rather than meaning two of it.
+        unit: action.unit ?? 'unit',
+        weight: action.weight ?? DEFAULT_WEIGHT,
         purchased: false,
       };
       return {
@@ -48,6 +53,15 @@ function reducer(state, action) {
       return { ...state, activeList: { ...state.activeList, items } };
     }
 
+    // Weight is set outright rather than nudged by a delta: the stepper
+    // already clamps it, and a delta would drift with floating point.
+    case 'change-weight': {
+      const items = state.activeList.items.map((item) =>
+        item.id === action.id ? { ...item, weight: action.weight } : item,
+      );
+      return { ...state, activeList: { ...state.activeList, items } };
+    }
+
     case 'delete-item': {
       const items = state.activeList.items.filter((item) => item.id !== action.id);
       return { ...state, activeList: { ...state.activeList, items } };
@@ -65,6 +79,23 @@ function reducer(state, action) {
       return {
         ...state,
         activeList: { ...state.activeList, items: [...state.activeList.items, ...copied] },
+      };
+    }
+
+    /**
+     * Removes a category the shopper created and moves anything filed under it
+     * back to "other", so no item is left pointing at a category that is gone.
+     * History keeps its own copies and is deliberately untouched — a past
+     * purchase should still read the way it did on the day.
+     */
+    case 'delete-custom-category': {
+      const items = state.activeList.items.map((item) =>
+        item.categoryId === action.id ? { ...item, categoryId: FALLBACK_CATEGORY_ID } : item,
+      );
+      return {
+        ...state,
+        activeList: { ...state.activeList, items },
+        customCategories: state.customCategories.filter((category) => category.id !== action.id),
       };
     }
 

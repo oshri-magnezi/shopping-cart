@@ -291,6 +291,29 @@
   min-width: 76px;
 }
 
+/* Repeats the column header inside the cell. Hidden wherever the header is
+   actually on screen, and revealed once the row collapses into a card. */
+.cell-label {
+  display: none;
+}
+
+.cell-figure {
+  display: block;
+}
+
+/* What the shopper would actually pay at this chain: the figure the whole
+   page exists to produce, so it outranks everything else in the row. */
+.col-total .cell-figure {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.col-shared .cell-figure {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
 .chain-cell {
   display: flex;
   flex-direction: column;
@@ -307,12 +330,7 @@
   color: var(--color-text-subtle);
 }
 
-.chain-cell-shared {
-  font-size: var(--text-lg);
-  font-weight: 600;
-}
-
-.chain-cell-found {
+.col-found {
   min-width: 52px;
   font-size: var(--text-sm);
   color: var(--color-text-muted);
@@ -549,16 +567,61 @@
     gap: var(--space-3);
   }
 
-  /* The full-basket column is the first to go when space is tight. It is
-     targeted by class, not position, because the shared column disappears
-     when nothing is common to every chain. */
-  .col-full {
+  /* Hiding a column is the one thing a comparison table cannot afford, and
+     the total is exactly what a shopper opens this page for. So the row folds
+     into a card and keeps every figure, with the in-cell labels standing in
+     for the header that no longer fits. */
+  .chain-table-head {
     display: none;
   }
 
-  .chain-table-head,
+  .chain-table {
+    gap: var(--space-2);
+  }
+
   .chain-table-row {
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'name  total'
+      'found shared';
+    row-gap: var(--space-2);
+    align-items: start;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .chain-table-row:last-child {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .col-name {
+    grid-area: name;
+  }
+
+  .col-total {
+    grid-area: total;
+  }
+
+  .col-shared {
+    grid-area: shared;
+  }
+
+  .col-found {
+    grid-area: found;
+    text-align: start;
+  }
+
+  .cell-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-text-subtle);
+  }
+
+  .col-total .cell-figure {
+    font-size: var(--text-xl);
   }
 
   .breakdown-price {
@@ -572,5 +635,13 @@
     color: var(--color-text-muted);
   }
 
-  .breakdown-amount,
   }
+
+/* A chain that stocks nothing from the list states so, rather than showing a
+   zero that reads as a price. */
+.cell-figure-empty {
+  display: block;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-subtle);
+}

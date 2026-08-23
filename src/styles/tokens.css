@@ -74,6 +74,10 @@
   /* Layout */
   --content-width: 720px;
   --navbar-height: 64px;
+  /* The band plus its rule. Anything sticking below the masthead has to clear
+     both, or a 1px strip of scrolling content shows through the seam. */
+  --navbar-rule: 1px;
+  --navbar-total: calc(var(--navbar-height) + var(--navbar-rule));
 
   /* Fonts: signage display, neutral UI body, ledger mono for every figure */
   --font-display: 'Secular One', 'Segoe UI', system-ui, sans-serif;

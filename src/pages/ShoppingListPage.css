@@ -131,10 +131,22 @@
   color: var(--color-text-muted);
 }
 
+/* Stays put as the list scrolls. A full shop runs well past one screen, and
+   having to scroll back to the top to add the next thing is the difference
+   between using this in the aisle and not. The negative inline margin plus
+   matching padding lets the background reach the edge of the page gutter, so
+   rows pass behind it rather than beside it. */
 .add-form {
+  position: sticky;
+  top: var(--navbar-total);
+  z-index: 20;
   display: flex;
   gap: var(--space-2);
+  margin-inline: calc(var(--space-4) * -1);
   margin-bottom: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .add-form .btn {

@@ -12,15 +12,28 @@ import { cityMatches } from './fetch/shared.js';
  * website price *any* basket the shopper types, instead of only the items the
  * bot happened to run on.
  *
- * Products are stored as [name, price, barcode] triples, with a fourth `1`
- * appended when the price is a promotion. The barcode is the real prize: the
- * same code means the same product at every chain, so once a shopper picks a
- * product the site can look it up exactly instead of guessing from Hebrew
- * names eight times over.
+ * Products are stored as [name, price, barcode], optionally followed by a
+ * promotion flag and then a unit flag:
+ *
+ *   [name, price, code]           an ordinary item, priced per unit
+ *   [name, price, code, 1]        `price` is already the promotion price
+ *   [name, price, code, 2]        a deal exists but cannot be priced per unit
+ *   [name, price, code, 0, 1]     sold by weight, so `price` is per kilogram
+ *
+ * The barcode is the real prize: the same code means the same product at every
+ * chain, so once a shopper picks a product the site can look it up exactly
+ * instead of guessing from Hebrew names eight times over.
+ *
+ * The unit flag matters just as much for honesty. Roughly one product in
+ * twenty is sold loose, and for those the published price is per kilogram —
+ * quoting it as the price of one item both overstates a basket and makes the
+ * comparison meaningless when one chain sells loose and another sells packed.
+ * Trailing elements are omitted when they are zero, so the ~95% of rows that
+ * are neither promoted nor weighed stay three elements long.
  */
 // Bumped whenever the product tuple changes shape, so the site can tell a
 // stale catalogue from a current one.
-export const CATALOG_SCHEMA = 2;
+export const CATALOG_SCHEMA = 3;
 
 export async function buildCatalog({
   fetched,
@@ -58,21 +71,29 @@ export async function buildCatalog({
 
     let discounted = 0;
     let flagged = 0;
+    let weighed = 0;
     const rows = products.map((product) => {
       const code = product.code ?? '';
       const promo = code ? promos.prices.get(code) : undefined;
 
       // 1 = this price is the promotion price. 2 = a deal exists but depends
       // on quantity or the rest of the basket, so the shelf price stands.
+      let price = product.price;
+      let flag = 0;
       if (promo !== undefined && promo < product.price) {
+        price = promo;
+        flag = 1;
         discounted += 1;
-        return [product.name, promo, code, 1];
-      }
-      if (code && promos.promoted.has(code)) {
+      } else if (code && promos.promoted.has(code)) {
+        flag = 2;
         flagged += 1;
-        return [product.name, product.price, code, 2];
       }
-      return [product.name, product.price, code];
+
+      if (product.weighted) {
+        weighed += 1;
+        return [product.name, price, code, flag, 1];
+      }
+      return flag ? [product.name, price, code, flag] : [product.name, price, code];
     });
 
     entries.push({
@@ -87,6 +108,7 @@ export async function buildCatalog({
     const parts = [];
     if (discounted > 0) parts.push(`${discounted} במחיר מבצע`);
     if (flagged > 0) parts.push(`${flagged} עם מבצע`);
+    if (weighed > 0) parts.push(`${weighed} לפי משקל`);
     const suffix = parts.length > 0 ? `, ${parts.join(', ')}` : '';
     log(`${chain.displayName}: ${products.length} מוצרים לקטלוג${suffix}`);
   }

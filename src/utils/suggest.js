@@ -12,7 +12,7 @@ export function buildSuggestionPool(catalog) {
   const byName = new Map();
 
   for (const chain of catalog.chains) {
-    for (const [name, price, code] of chain.products) {
+    for (const [name, price, code, , unit] of chain.products) {
       const normalized = normalize(name);
       if (!normalized) continue;
       const key = code || normalized;
@@ -23,6 +23,9 @@ export function buildSuggestionPool(catalog) {
           name,
           key,
           code: code || '',
+          // Loose goods are priced per kilogram, so the range below is a
+          // per-kilogram range and has to be labelled as one.
+          unit: unit ?? 0,
           chainKeys: new Set(),
           min: price,
           max: price,
@@ -92,9 +95,11 @@ export function suggest({ pool, byToken, vocabulary, maxChains }, query, limit =
   const last = words[words.length - 1];
   const candidates = new Set();
 
-  // Prefix matching only. "חלב" must not pull in "חלבה" (halva) or "חלבון"
-  // (protein) — in Hebrew a short root sits inside unrelated words. Sorted
-  // order means the matching tokens are one contiguous run.
+  // Prefix matching, never substring: "לב" must not pull in "חלב", because in
+  // Hebrew a short root sits inside plenty of unrelated words. A prefix does
+  // still admit "חלבה" (halva) for "חלב" (milk), which is right while someone
+  // is mid-word — ranking below, not filtering here, is what floats the staple
+  // to the top. Sorted order means the matching words are one contiguous run.
   for (let i = lowerBound(vocabulary, last); i < vocabulary.length; i += 1) {
     const token = vocabulary[i];
     if (!token.startsWith(last)) break;
@@ -138,6 +143,7 @@ export function suggest({ pool, byToken, vocabulary, maxChains }, query, limit =
   return scored.slice(0, limit).map(({ entry }) => ({
     name: entry.name,
     code: entry.code,
+    unit: entry.unit,
     chains: entry.chains,
     min: entry.min,
     max: entry.max,

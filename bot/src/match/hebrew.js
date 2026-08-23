@@ -31,6 +31,8 @@ const NOISE_WORDS = new Set([
   'עם',
   'טרי',
   'פרימיום',
+  'מאגדת',
+  'מארזי',
 ]);
 
 // Same product, different spelling. Both sides normalize to the first form.
@@ -86,6 +88,18 @@ const CATEGORY_WORDS = new Set([
   'תבלין',
   'משחת',
   'מרכך',
+  'לאבנה',
+  'מחית',
+  'נוזל',
+  'קפסולות',
+  'דאודורנט',
+  'מסטיק',
+  'בייגלה',
+  'פריכיות',
+  'מברשת',
+  'וופל',
+  'קרקר',
+  'קרקרים',
 ]);
 
 // Brands help when present and never hurt when absent.
@@ -112,6 +126,17 @@ const BASE_SIZE = /^([\d.]+)(מל|גרם)$/;
 export function normalize(text) {
   let result = String(text ?? '');
   result = result.replace(/[()[\]{}]/g, ' ').replace(/[/\-_,]/g, ' ');
+  // Pack counts are written both ways — "6*330" and "20 * 15". Closing the
+  // gaps first means one rule recognises both, and stops a 20-bag multipack
+  // being offered as the single bag someone asked for.
+  result = result.replace(/(\d)\s*\*\s*(\d)/g, '$1*$2');
+
+  // Chains decorate promoted lines as "*מבצע*", and the stars stopped that
+  // ever matching the noise word. Strip those, but keep the star that means
+  // multiplication in a pack count like 6*330 — the tokenizer relies on it.
+  result = result.replace(/\*/g, (star, at, text) =>
+    /\d/.test(text[at - 1] ?? '') && /\d/.test(text[at + 1] ?? '') ? star : ' ',
+  );
   for (const [pattern, replacement] of UNIT_REPLACEMENTS) {
     result = result.replace(pattern, replacement);
   }
@@ -195,8 +220,12 @@ export function sizesOf(tokens) {
  * Prefix credit is limited to long words. Hebrew roots are short and densely
  * packed: "חלב" (milk) is a prefix of "חלבון" (protein) and "חלבה" (halva),
  * and no length or morphology rule separates those from a real inflection. A
- * five-letter floor keeps the useful cases ("מסקרפונה"/"מסקרפונת") without
+ * five-letter floor keeps plain suffix growth ("שוקולד"/"שוקולדים") without
  * letting three-letter roots collide with unrelated words.
+ *
+ * This credits an *added* suffix only, never a substituted letter, so
+ * "גבינה"/"גבינות" and "מלפפון"/"מלפפונים" score nothing here — that
+ * is what SYNONYMS is for.
  */
 const MIN_PREFIX_LENGTH = 5;
 

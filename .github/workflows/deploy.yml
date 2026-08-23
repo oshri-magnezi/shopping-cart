@@ -26,6 +26,11 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # A failing test stops the deploy. The bug that made every hand-typed
+      # item read "not found" at every chain shipped because nothing checked.
+      - run: npm test
+
       - run: npm run build
 
       - uses: actions/configure-pages@v5

@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Copy, Receipt, Trash2 } from 'lucide-react';
+import { ChevronDown, Copy, Trash2 } from 'lucide-react';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { ReceiptArt } from '../components/EmptyArt.jsx';
+import { SpendingTrend } from '../components/SpendingTrend.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { categoryLabel, findCategory, getAllCategories } from '../utils/categories.js';
@@ -46,7 +48,7 @@ export function HistoryPage() {
       <p className="history-subtitle">{t('history.subtitle')}</p>
 
       {history.length === 0 ? (
-        <EmptyState icon={Receipt} title={t('history.emptyTitle')} text={t('history.emptyText')} />
+        <EmptyState art={ReceiptArt} title={t('history.emptyTitle')} text={t('history.emptyText')} />
       ) : (
         <>
           <div className="stats-grid">
@@ -63,6 +65,8 @@ export function HistoryPage() {
               <span className="stat-value tabular">{formatCurrency(stats.average, locale)}</span>
             </div>
           </div>
+
+          <SpendingTrend history={history} locale={locale} />
 
           <ul className="history-list">
             {history.map((entry) => {

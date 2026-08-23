@@ -49,8 +49,10 @@ export function ProductSuggest({ value, onChange, onPick, onSubmit = () => {}, i
   const visible = open && options.length > 0;
 
   function choose(option) {
-    // The barcode travels with the name: it is what makes the comparison exact.
-    onPick({ name: option.name, code: option.code });
+    // The barcode travels with the name: it is what makes the comparison
+    // exact. The unit travels with it too, so a product the shop sells loose
+    // opens on the weight box instead of asking for a count.
+    onPick({ name: option.name, code: option.code, unit: option.unit });
     setOpen(false);
   }
 
@@ -119,10 +121,14 @@ export function ProductSuggest({ value, onChange, onPick, onSubmit = () => {}, i
                     <Store size={13} strokeWidth={2} aria-hidden="true" />
                     {option.chains}
                   </span>
-                  <span className="suggest-price tabular">
-                    {option.min === option.max
-                      ? formatCurrency(option.min, locale)
-                      : `${formatCurrency(option.min, locale)}–${formatCurrency(option.max, locale)}`}
+                  <span className="suggest-price tabular" dir="ltr">
+                    {(() => {
+                      const range =
+                        option.min === option.max
+                          ? formatCurrency(option.min, locale)
+                          : `${formatCurrency(option.min, locale)}–${formatCurrency(option.max, locale)}`;
+                      return option.unit === 1 ? t('compare.perKg', { price: range }) : range;
+                    })()}
                   </span>
                 </span>
               </button>

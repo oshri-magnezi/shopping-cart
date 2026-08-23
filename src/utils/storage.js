@@ -1,6 +1,12 @@
 const DATA_KEY = 'shopping-cart-data';
 const DATA_VERSION = 1;
 
+/**
+ * Half a kilo: the amount most counter purchases land on, and a figure the
+ * shopper adjusts rather than one that pretends to know.
+ */
+export const DEFAULT_WEIGHT = 0.5;
+
 export function createId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
@@ -40,8 +46,18 @@ export function loadData() {
             createdAt: parsed.activeList.createdAt ?? Date.now(),
             items: parsed.activeList.items
               .filter((item) => item && typeof item.name === 'string')
-              // Lists saved before barcodes existed simply carry no code.
-              .map((item) => ({ ...item, code: typeof item.code === 'string' ? item.code : '' })),
+              .map((item) => ({
+                ...item,
+                // Lists saved before barcodes existed simply carry no code.
+                code: typeof item.code === 'string' ? item.code : '',
+                // Likewise, everything saved before weighed items existed was
+                // counted in whole units.
+                unit: item.unit === 'kg' ? 'kg' : 'unit',
+                weight:
+                  Number.isFinite(item.weight) && item.weight > 0
+                    ? item.weight
+                    : DEFAULT_WEIGHT,
+              })),
           }
         : createEmptyList();
 

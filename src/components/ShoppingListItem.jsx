@@ -1,5 +1,6 @@
 import { Check, Pencil, Trash2 } from 'lucide-react';
 import { QuantityStepper } from './QuantityStepper.jsx';
+import { WeightStepper } from './WeightStepper.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import './ShoppingListItem.css';
@@ -24,13 +25,21 @@ export function ShoppingListItem({ item, onEdit, onDelete }) {
 
       <span className="item-name">{item.name}</span>
 
-      <QuantityStepper
-        value={item.quantity}
-        size="sm"
-        onChange={(next) =>
-          dispatch({ type: 'change-quantity', id: item.id, delta: next - item.quantity })
-        }
-      />
+      {item.unit === 'kg' ? (
+        <WeightStepper
+          value={item.weight}
+          size="sm"
+          onChange={(weight) => dispatch({ type: 'change-weight', id: item.id, weight })}
+        />
+      ) : (
+        <QuantityStepper
+          value={item.quantity}
+          size="sm"
+          onChange={(next) =>
+            dispatch({ type: 'change-quantity', id: item.id, delta: next - item.quantity })
+          }
+        />
+      )}
 
       <button
         type="button"

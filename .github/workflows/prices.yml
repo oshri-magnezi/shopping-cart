@@ -1,0 +1,65 @@
+name: Refresh prices
+
+# 04:30 Israel time, after the chains have published the night's files.
+# Cron is UTC, and Israel is UTC+3 in summer and UTC+2 in winter, so the local
+# hour drifts by one across the year — harmless for a nightly refresh.
+on:
+  schedule:
+    - cron: '30 1 * * *'
+  workflow_dispatch:
+
+# One refresh at a time. Two overlapping runs would both rewrite the same
+# catalogue files and race each other to push.
+concurrency:
+  group: prices
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # Nine portals, four cities, several hundred megabytes of XML. A normal
+    # run is well inside this; the cap is here so a hung portal cannot burn
+    # the whole job allowance.
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: bot/package-lock.json
+
+      - name: Install bot dependencies
+        working-directory: bot
+        run: npm ci
+
+      - name: Install Chrome for Puppeteer
+        working-directory: bot
+        run: npx puppeteer browsers install chrome
+
+      - name: Check the bot still parses correctly
+        working-directory: bot
+        run: npm test
+
+      # The bot is fail-soft by design: a chain that will not answer is logged
+      # and skipped, and the other chains still produce a catalogue.
+      - name: Build the catalogues
+        working-directory: bot
+        run: node src/index.js --catalog ../public --cities "תל אביב,ראשון לציון,חיפה,ירושלים"
+
+      - name: Commit the refreshed catalogues
+        run: |
+          if git diff --quiet -- public/; then
+            echo "Prices are unchanged; nothing to commit."
+            exit 0
+          fi
+          git config user.name  'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/
+          git commit -m "chore: refresh price catalogues"
+          git push

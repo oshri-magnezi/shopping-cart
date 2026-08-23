@@ -1,0 +1,84 @@
+/* Placeholder rows in the shape of the chain table, so nothing shifts when the
+   real figures arrive. */
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.skeleton-row:last-child {
+  border-bottom: none;
+}
+
+.skeleton-bar {
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-surface-sunken);
+  background-image: linear-gradient(
+    90deg,
+    var(--color-surface-sunken) 0%,
+    var(--color-border) 50%,
+    var(--color-surface-sunken) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.4s var(--ease) infinite;
+}
+
+/* Staggered so the rows read as one sweep down the table rather than four
+   separate things blinking at once. */
+.skeleton-row:nth-child(2) .skeleton-bar {
+  animation-delay: 0.1s;
+}
+.skeleton-row:nth-child(3) .skeleton-bar {
+  animation-delay: 0.2s;
+}
+.skeleton-row:nth-child(4) .skeleton-bar {
+  animation-delay: 0.3s;
+}
+
+/* Chain names vary in length; matching that is what keeps it from looking like
+   a loading graphic. */
+.skeleton-name {
+  width: 40%;
+  max-width: 180px;
+}
+
+.skeleton-row:nth-child(2) .skeleton-name {
+  width: 55%;
+}
+.skeleton-row:nth-child(3) .skeleton-name {
+  width: 33%;
+}
+
+.skeleton-figure {
+  width: 76px;
+}
+
+@keyframes skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* A sweeping gradient is exactly the kind of motion people turn off. The
+   shape still does its job standing still. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-bar {
+    background-image: none;
+    animation: none;
+  }
+}

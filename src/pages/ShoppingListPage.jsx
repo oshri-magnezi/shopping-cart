@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ClipboardList, Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 import { CategoryPickerModal } from '../components/CategoryPickerModal.jsx';
 import { CategorySection } from '../components/CategorySection.jsx';
 import { CompletePurchaseModal } from '../components/CompletePurchaseModal.jsx';
 import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { LiveRegion } from '../components/LiveRegion.jsx';
+import { ShelfTicketArt } from '../components/EmptyArt.jsx';
 import { ProductSuggest } from '../components/ProductSuggest.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
@@ -21,6 +23,7 @@ export function ShoppingListPage() {
   const [picker, setPicker] = useState(null); // { mode, item }
   const [pendingDelete, setPendingDelete] = useState(null);
   const [completing, setCompleting] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
 
   const categories = useMemo(
     () => getAllCategories(customCategories, language),
@@ -52,10 +55,10 @@ export function ShoppingListPage() {
     if (allPurchased) setCompleting(true);
   }, [allPurchased]);
 
-  function openPicker(name, code = '') {
+  function openPicker(name, code = '', unit = 'unit') {
     setPicker({
       mode: 'add',
-      item: { name, code, categoryId: FALLBACK_CATEGORY_ID, quantity: 1 },
+      item: { name, code, unit, categoryId: FALLBACK_CATEGORY_ID, quantity: 1 },
     });
   }
 
@@ -69,6 +72,7 @@ export function ShoppingListPage() {
   function handlePickerConfirm(values) {
     if (picker.mode === 'add') {
       dispatch({ type: 'add-item', ...values });
+      setAnnouncement(t('live.itemAdded', { name: values.name }));
       setDraftName('');
       inputRef.current?.focus();
     } else {
@@ -84,6 +88,8 @@ export function ShoppingListPage() {
 
   return (
     <main className="page">
+      <LiveRegion message={announcement} />
+
       <div className="list-header">
         <div className="list-heading">
           {/* The title doubles as the input, so naming a basket needs no extra
@@ -144,9 +150,10 @@ export function ShoppingListPage() {
         <ProductSuggest
           value={draftName}
           onChange={setDraftName}
-          onPick={({ name, code }) => {
+          onPick={({ name, code, unit }) => {
             setDraftName(name);
-            openPicker(name, code);
+            // A product the shop sells loose opens straight on the weight box.
+            openPicker(name, code, unit === 1 ? 'kg' : 'unit');
           }}
           onSubmit={() => {
             const trimmed = draftName.trim();
@@ -166,7 +173,7 @@ export function ShoppingListPage() {
       </form>
 
       {items.length === 0 ? (
-        <EmptyState icon={ClipboardList} title={t('list.emptyTitle')} text={t('list.emptyText')} />
+        <EmptyState art={ShelfTicketArt} title={t('list.emptyTitle')} text={t('list.emptyText')} />
       ) : (
         grouped.map((group) => (
           <CategorySection
@@ -194,6 +201,7 @@ export function ShoppingListPage() {
           message={t('confirm.deleteItemText', { name: pendingDelete.name })}
           onConfirm={() => {
             dispatch({ type: 'delete-item', id: pendingDelete.id });
+            setAnnouncement(t('live.itemRemoved', { name: pendingDelete.name }));
             setPendingDelete(null);
           }}
           onClose={() => setPendingDelete(null)}

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, MapPin, RefreshCw, Scale, Trophy } from 'lucide-react';
+import { Check, MapPin, RefreshCw, Trophy } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { CompareSkeleton } from '../components/CompareSkeleton.jsx';
+import { BalanceArt } from '../components/EmptyArt.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
-import { formatCurrency, formatDateTime } from '../utils/format.js';
+import { formatCurrency, formatDateTime, formatWeight } from '../utils/format.js';
 import { findByCode, findInChain } from '../utils/catalogIndex.js';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import './ComparePage.css';
@@ -59,6 +61,11 @@ export function ComparePage() {
     if (selected.length === 0 || items.length === 0) return null;
 
     const lines = items.map((item) => {
+      const byWeight = item.unit === 'kg';
+      // Loose goods are priced per kilogram, so the line is the weight the
+      // shopper asked for; everything else multiplies by the count.
+      const amount = byWeight ? (item.weight ?? 0) : item.quantity;
+
       // A barcode identifies the same product at every chain, so it is looked
       // up directly. Only free text has to be guessed.
       const prices = selected.map((chain) => {
@@ -66,7 +73,7 @@ export function ComparePage() {
         // genuinely does not stock it — unless the catalogue predates
         // barcodes entirely, in which case text is all we have.
         if (item.code && chain.hasCodes) return findByCode(chain, item.code);
-        return findInChain(chain, item.name);
+        return findInChain(chain, item.name, { unit: byWeight ? 1 : 0 });
       });
       const exact = Boolean(item.code) && selected.every((chain) => chain.hasCodes) && prices.some(Boolean);
 
@@ -79,6 +86,9 @@ export function ComparePage() {
       return {
         name: item.name,
         quantity: item.quantity,
+        byWeight,
+        weight: item.weight,
+        amount,
         prices,
         exact,
         suspect: !exact && spread >= 3,
@@ -95,9 +105,9 @@ export function ComparePage() {
       lines.forEach((line, lineIndex) => {
         const match = line.prices[chainIndex];
         if (!match) return;
-        full += match.price * line.quantity;
+        full += match.price * line.amount;
         found += 1;
-        if (sharedFlags[lineIndex]) shared += match.price * line.quantity;
+        if (sharedFlags[lineIndex]) shared += match.price * line.amount;
       });
 
       return {
@@ -143,11 +153,11 @@ export function ComparePage() {
       {/* 'idle' still means work is pending — the index has not arrived yet —
           so it must show progress rather than an empty page. */}
       {!catalog && status !== 'missing' ? (
-        <p className="compare-loading">{t('compare.loading')}</p>
+        <CompareSkeleton label={t('compare.loading')} />
       ) : null}
 
       {status === 'missing' ? (
-        <EmptyState icon={Scale} title={t('compare.emptyTitle')} text={t('compare.emptyText')} />
+        <EmptyState art={BalanceArt} title={t('compare.emptyTitle')} text={t('compare.emptyText')} />
       ) : null}
 
       {catalog ? (
@@ -265,14 +275,27 @@ function sortTotals(totals, sortBy) {
   const copy = [...totals];
   if (sortBy === 'name') return copy.sort((a, b) => a.displayName.localeCompare(b.displayName, 'he'));
   if (sortBy === 'found') return copy.sort((a, b) => b.foundCount - a.foundCount);
-  if (sortBy === 'dearest') return copy.sort((a, b) => b.sharedTotal - a.sharedTotal);
-  return copy.sort((a, b) => a.sharedTotal - b.sharedTotal);
+
+  // A chain stocking none of the list totals ₪0, which would otherwise make it
+  // the cheapest on the page. Empty chains sort last whichever way the price
+  // sort runs, because they are not really in the running at all.
+  const byPrice = sortBy === 'dearest'
+    ? (a, b) => b.sharedTotal - a.sharedTotal
+    : (a, b) => a.sharedTotal - b.sharedTotal;
+
+  return copy.sort((a, b) => {
+    const aEmpty = a.foundCount === 0;
+    const bEmpty = b.foundCount === 0;
+    if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
+    return byPrice(a, b);
+  });
 }
 
 function ChainTable({ table, items, locale, t }) {
-  // With nothing common to every chain the shared column would read ₪0 for
-  // all of them, which says nothing — so it is dropped rather than shown.
-  const showShared = table.sharedCount > 0;
+  // The like-for-like column earns its place only when it says something the
+  // total does not. With nothing common to every chain it would read ₪0 for
+  // all of them; with everything common it merely repeats the total.
+  const showShared = table.sharedCount > 0 && table.sharedCount < items.length;
 
   return (
     <section className="compare-section">
@@ -285,16 +308,16 @@ function ChainTable({ table, items, locale, t }) {
 
       <div className="chain-table" role="table">
         <div className="chain-table-head" role="row">
-          <span role="columnheader">{t('compare.chain')}</span>
+          <span role="columnheader" className="col-name">{t('compare.chain')}</span>
           {showShared ? (
-            <span role="columnheader" className="col-num">
+            <span role="columnheader" className="col-num col-shared">
               {t('compare.sharedBasket')}
             </span>
           ) : null}
-          <span role="columnheader" className="col-num col-full">
+          <span role="columnheader" className="col-num col-total">
             {t('compare.fullBasket')}
           </span>
-          <span role="columnheader" className="col-num">
+          <span role="columnheader" className="col-num col-found">
             {t('compare.found')}
           </span>
         </div>
@@ -304,33 +327,56 @@ function ChainTable({ table, items, locale, t }) {
             key={row.key}
             role="row"
             className={`chain-table-row${
-              table.winner && row.key === table.winner.key && showShared ? ' chain-table-best' : ''
+              table.winner && row.key === table.winner.key && table.sharedCount > 0
+                ? ' chain-table-best'
+                : ''
             }`}
           >
-            <span role="cell" className="chain-cell">
+            <span role="cell" className="col-name chain-cell">
               <span className="chain-cell-name">{row.displayName}</span>
               {row.storeName ? (
                 <span className="chain-cell-store">{row.storeName}</span>
               ) : null}
             </span>
             {showShared ? (
-              <span role="cell" className="col-num tabular chain-cell-shared">
-                {formatCurrency(row.sharedTotal, locale)}
+              <span role="cell" className="col-num col-shared">
+                {/* The column header labels this on a wide screen; once the row
+                    becomes a card there is no header left to do the job. */}
+                <span className="cell-label">{t('compare.sharedBasket')}</span>
+                <span className="cell-figure tabular" dir="ltr">
+                  {formatCurrency(row.sharedTotal, locale)}
+                </span>
               </span>
             ) : null}
-            <span role="cell" className="col-num col-full tabular">
-              {formatCurrency(row.fullTotal, locale)}
+            <span role="cell" className="col-num col-total">
+              <span className="cell-label">{t('compare.fullBasket')}</span>
+              {/* ₪0 would read as "free here" rather than "nothing on your
+                  list is stocked here", which is what it actually means. */}
+              {row.foundCount === 0 ? (
+                <span className="cell-figure cell-figure-empty">{t('compare.unavailable')}</span>
+              ) : (
+                <span className="cell-figure tabular" dir="ltr">
+                  {formatCurrency(row.fullTotal, locale)}
+                </span>
+              )}
             </span>
-            <span role="cell" className="col-num tabular chain-cell-found">
-              {row.foundCount}/{items.length}
+            <span role="cell" className="col-num col-found">
+              <span className="cell-label">{t('compare.found')}</span>
+              <span className="cell-figure tabular" dir="ltr">
+                {row.foundCount}/{items.length}
+              </span>
             </span>
           </div>
         ))}
       </div>
 
-      <p className="compare-note">
-        {showShared ? t('compare.sharedNote') : t('compare.noSharedNote')}
-      </p>
+      {/* When every item was found everywhere the two figures agree, and an
+          explanation of the difference would invent a distinction. */}
+      {table.sharedCount < items.length ? (
+        <p className="compare-note">
+          {showShared ? t('compare.sharedNote') : t('compare.noSharedNote')}
+        </p>
+      ) : null}
     </section>
   );
 }
@@ -351,20 +397,27 @@ function Breakdown({ table, locale, t }) {
             <li key={`${line.name}-${index}`} className="breakdown-item">
               <div className="breakdown-head">
                 <h3 className="breakdown-name">{line.name}</h3>
-                {line.quantity > 1 ? (
+                {line.byWeight ? (
+                  <span className="breakdown-qty tabular">{formatWeight(line.weight, t)}</span>
+                ) : line.quantity > 1 ? (
                   <span className="breakdown-qty tabular">×{line.quantity}</span>
                 ) : null}
                 {found.length === 0 ? (
                   <span className="breakdown-none">{t('compare.notFoundAnywhere')}</span>
                 ) : null}
+                {/* `title` only ever reaches a mouse. The same words repeat
+                    in hidden text so a screen reader, and a phone with no
+                    hover at all, still get the explanation. */}
                 {line.exact ? (
                   <span className="breakdown-exact" title={t('compare.exactMatchHint')}>
                     {t('compare.exactMatch')}
+                    <span className="sr-only"> — {t('compare.exactMatchHint')}</span>
                   </span>
                 ) : null}
                 {line.suspect ? (
                   <span className="breakdown-warn" title={t('compare.suspectHint')}>
                     {t('compare.suspect')}
+                    <span className="sr-only"> — {t('compare.suspectHint')}</span>
                   </span>
                 ) : null}
               </div>
@@ -389,11 +442,19 @@ function Breakdown({ table, locale, t }) {
                               title={t(match.promo === 1 ? 'compare.promoPriceHint' : 'compare.promoHint')}
                             >
                               {t(match.promo === 1 ? 'compare.promoPrice' : 'compare.promo')}
+                              <span className="sr-only">
+                                {' — '}
+                                {t(match.promo === 1 ? 'compare.promoPriceHint' : 'compare.promoHint')}
+                              </span>
                             </span>
                           ) : null}
                         </span>
-                        <span className="breakdown-amount tabular">
-                          {formatCurrency(match.price, locale)}
+                        <span className="breakdown-amount tabular" dir="ltr">
+                          {/* A per-kilogram figure has to say so, or it reads
+                              as the price of what is actually being bought. */}
+                          {line.byWeight
+                            ? t('compare.perKg', { price: formatCurrency(match.price, locale) })
+                            : formatCurrency(match.price, locale)}
                         </span>
                       </li>
                     );
