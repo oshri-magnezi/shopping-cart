@@ -1,0 +1,118 @@
+/* Floats clear of the bottom edge and of the home indicator, centred on the
+   content column rather than pinned to a corner. */
+.undo-bar {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + var(--space-4));
+  z-index: 80;
+  display: flex;
+  justify-content: center;
+  padding-inline: var(--space-4);
+  /* The bar is a message, not a wall: taps outside the pill reach the page. */
+  pointer-events: none;
+}
+
+/* Glass with a hairline, like the masthead and the add row — the two other
+   things in this app that float. A solid red slab reads as an error banner
+   from a component library and belongs to no particular product; the red here
+   is carried by the mark and the action instead, which is enough to be seen
+   without shouting that something went wrong. Nothing did: you deleted an
+   item, on purpose. */
+.undo-bar-inner {
+  pointer-events: auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: 100%;
+  min-height: 48px;
+  padding-inline: var(--space-5) var(--space-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  color: var(--color-text);
+  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--color-hairline);
+  font-size: var(--text-sm);
+  animation: undo-in var(--duration-slow) var(--ease-spring);
+}
+
+/* The one piece of red that is always on: it says what kind of message this
+   is before the words are read. */
+.undo-bar-icon {
+  flex: none;
+  color: var(--color-destructive);
+}
+
+.undo-bar-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.undo-bar-action {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  min-height: 40px;
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-full);
+  color: var(--color-destructive);
+  font-weight: 500;
+  transition: background-color var(--duration-fast) var(--ease),
+    transform var(--duration-base) var(--ease-spring);
+}
+
+.undo-bar-action:hover {
+  background-color: var(--color-destructive-soft);
+}
+
+.undo-bar-action:active {
+  transform: scale(0.94);
+}
+
+.undo-bar-timer {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  background-color: var(--color-destructive);
+  opacity: 0.55;
+  transform-origin: left center;
+  animation: undo-drain 6s linear forwards;
+}
+
+@keyframes undo-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.94);
+  }
+}
+
+@keyframes undo-drain {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* The bar still appears and still expires — only the arrival and the draining
+   line hold still, since neither carries information the text does not. */
+@media (prefers-reduced-motion: reduce) {
+  .undo-bar-inner {
+    animation: none;
+  }
+
+  .undo-bar-timer {
+    animation: none;
+    opacity: 0.4;
+  }
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .undo-bar-inner {
+    background-color: var(--color-surface);
+  }
+}

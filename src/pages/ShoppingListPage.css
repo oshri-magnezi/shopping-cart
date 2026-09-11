@@ -3,11 +3,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--space-4);
-  padding-bottom: var(--space-4);
-  margin-bottom: var(--space-4);
-  /* A rule, not a slab: --color-text is near-white in dark mode and reads as
-     a glaring white bar at 2px. */
-  border-bottom: 1px solid var(--color-border-strong);
+  padding-block: var(--space-4) var(--space-3);
 }
 
 .list-heading {
@@ -34,8 +30,10 @@
   font-family: var(--font-display);
   font-size: var(--text-2xl);
   font-weight: 400;
-  line-height: 1.25;
-  letter-spacing: 0.01em;
+  line-height: 1.2;
+  /* No tracking: this is Hebrew, and pulling its letterforms apart is the
+     fastest way to make a serif face look wrong. */
+  letter-spacing: 0;
 }
 
 .list-title-field::after {
@@ -90,67 +88,98 @@
   color: var(--color-primary);
 }
 
+/* A date is prose, not a figure — it goes in the text face. Only quantities,
+   prices and counts are set in the ledger mono. */
 .list-meta {
   margin-top: var(--space-1);
-  color: var(--color-text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.02em;
+  color: var(--color-text-subtle);
+  font-size: var(--text-sm);
 }
 
-/* Tally strip: one mark per item, filled as it lands in the cart. */
+/* Tally strip: one mark per item, filled as it lands in the cart. It runs in
+   brand petrol, not ochre — the accent is spent once per screen and on this
+   page nothing outranks it, so it stays unspent. */
 .tally {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-2);
 }
 
 .tally-marks {
   flex: 1;
   display: flex;
-  gap: 3px;
+  gap: 2px;
 }
 
 .tally-mark {
   flex: 1;
-  min-width: 4px;
-  height: 10px;
-  background-color: var(--color-border);
-  transition: background-color var(--duration-slow) var(--ease);
+  min-width: 3px;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-border-strong);
+  opacity: 0.45;
+  transition: background-color var(--duration-slow) var(--ease),
+    opacity var(--duration-slow) var(--ease);
 }
 
 .tally-mark-done {
-  background-color: var(--color-accent);
+  background-color: var(--color-primary);
+  opacity: 1;
 }
 
 .tally-label {
   flex: none;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-subtle);
 }
 
 /* Stays put as the list scrolls. A full shop runs well past one screen, and
    having to scroll back to the top to add the next thing is the difference
-   between using this in the aisle and not. The negative inline margin plus
-   matching padding lets the background reach the edge of the page gutter, so
-   rows pass behind it rather than beside it. */
+   between using this in the aisle and not.
+
+   It is a floating pill for the same reason the masthead is: an edge-to-edge
+   bar with a rule under it stacks a second horizontal band onto a screen that
+   is already a stack of horizontal bands. */
 .add-form {
   position: sticky;
-  top: var(--navbar-total);
+  top: calc(var(--navbar-total) + var(--space-2));
   z-index: 20;
   display: flex;
-  gap: var(--space-2);
-  margin-inline: calc(var(--space-4) * -1);
-  margin-bottom: var(--space-6);
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-bg);
-  border-bottom: 1px solid var(--color-border);
+  align-items: center;
+  gap: var(--space-1);
+  margin-block: var(--space-3) var(--space-2);
+  padding: 4px;
+  border-radius: var(--radius-full);
+  background-color: color-mix(in srgb, var(--color-surface) 80%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--color-hairline);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .add-form {
+    background-color: var(--color-surface);
+  }
+}
+
+/* The field inside the pill has no surface of its own — the pill is the
+   surface. Two nested recessed shapes is the boxed-in look in miniature. */
+.add-form .text-input {
+  background-color: transparent;
+  border-color: transparent;
+  min-height: 44px;
+}
+
+.add-form .text-input:focus {
+  background-color: transparent;
+  border-color: transparent;
 }
 
 .add-form .btn {
   flex: none;
+  min-height: 44px;
 }
 
 @media (max-width: 480px) {
@@ -159,7 +188,8 @@
   }
 
   .add-form .btn {
-    padding-inline: var(--space-4);
+    width: 44px;
+    padding-inline: 0;
   }
 
   .list-header {

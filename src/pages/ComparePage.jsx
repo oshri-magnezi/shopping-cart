@@ -1,31 +1,28 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Check, MapPin, RefreshCw, Trophy } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Check, ChevronDown, MapPin, RefreshCw } from 'lucide-react';
+import { AnimatedCurrency } from '../components/AnimatedCurrency.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
+import { GroupedList } from '../components/GroupedList.jsx';
 import { CompareSkeleton } from '../components/CompareSkeleton.jsx';
 import { BalanceArt } from '../components/EmptyArt.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { formatCurrency, formatDateTime, formatWeight } from '../utils/format.js';
 import { findByCode, findInChain } from '../utils/catalogIndex.js';
+import { compareBaskets } from '../utils/basket.js';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import './ComparePage.css';
 
 const PREFS_KEY = 'shopping-cart-compare-prefs';
-const SORT_MODES = ['cheapest', 'dearest', 'found', 'name'];
 
 function loadPrefs() {
   try {
     const raw = JSON.parse(localStorage.getItem(PREFS_KEY));
-    return {
-      excluded: Array.isArray(raw?.excluded) ? raw.excluded : [],
-      sortBy: SORT_MODES.includes(raw?.sortBy) ? raw.sortBy : 'cheapest',
-    };
+    return { excluded: Array.isArray(raw?.excluded) ? raw.excluded : [] };
   } catch {
-    return { excluded: [], sortBy: 'cheapest' };
+    return { excluded: [] };
   }
 }
-
-const round = (value) => Math.round(value * 100) / 100;
 
 export function ComparePage() {
   const { t, locale } = useTranslation();
@@ -33,6 +30,7 @@ export function ComparePage() {
 
   const { cities, city, setCity, catalog, chains: indexed, status, request, reload } = useCatalog();
   const [prefs, setPrefs] = useState(loadPrefs);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // The comparison always needs product data, unlike the add-item box.
   useEffect(() => {
@@ -95,42 +93,18 @@ export function ComparePage() {
       };
     });
 
-    const sharedFlags = lines.map((line) => line.prices.every(Boolean));
-
-    const totals = selected.map((chain, chainIndex) => {
-      let full = 0;
-      let shared = 0;
-      let found = 0;
-
-      lines.forEach((line, lineIndex) => {
-        const match = line.prices[chainIndex];
-        if (!match) return;
-        full += match.price * line.amount;
-        found += 1;
-        if (sharedFlags[lineIndex]) shared += match.price * line.amount;
-      });
-
-      return {
-        key: chain.key,
-        displayName: chain.displayName,
-        storeName: chain.storeName,
-        fullTotal: round(full),
-        sharedTotal: round(shared),
-        foundCount: found,
-      };
-    });
-
-    const ranked = [...totals].sort((a, b) => a.sharedTotal - b.sharedTotal);
+    const { rows, maxFound, winner, runnerUp, savings } = compareBaskets(lines, selected);
 
     return {
       lines,
-      totals: sortTotals(totals, prefs.sortBy),
-      sharedCount: sharedFlags.filter(Boolean).length,
-      winner: ranked[0] ?? null,
-      savings: ranked.length > 1 ? round(ranked[1].sharedTotal - ranked[0].sharedTotal) : 0,
+      rows,
+      maxFound,
+      winner,
+      runnerUp,
+      savings,
       chains: selected,
     };
-  }, [selected, items, prefs.sortBy]);
+  }, [selected, items]);
 
   function toggleChain(key) {
     setPrefs((prev) => {
@@ -143,12 +117,10 @@ export function ComparePage() {
 
   return (
     <main className="page">
-      <div className="compare-header">
-        <div>
-          <h1 className="compare-title">{t('compare.title')}</h1>
-          <p className="compare-subtitle">{t('compare.subtitle')}</p>
-        </div>
-      </div>
+      <header className="compare-header">
+        <h1 className="compare-title">{t('compare.title')}</h1>
+        <p className="compare-subtitle">{t('compare.subtitle')}</p>
+      </header>
 
       {/* 'idle' still means work is pending — the index has not arrived yet —
           so it must show progress rather than an empty page. */}
@@ -162,73 +134,84 @@ export function ComparePage() {
 
       {catalog ? (
         <>
-          <div className="compare-meta">
-            <span className="tabular">
-              {t('compare.updatedAt', { date: formatDateTime(catalog.generatedAt, locale) })}
-            </span>
-            <button type="button" className="compare-refresh" onClick={reload}>
-              <RefreshCw size={14} strokeWidth={2} aria-hidden="true" />
-              {t('compare.refreshData')}
-            </button>
-          </div>
-
-          <section className="compare-filters">
-            <label className="city-picker">
-              <span className="city-picker-label">
-                <MapPin size={16} strokeWidth={2} aria-hidden="true" />
-                {t('compare.cityLabel')}
+          {/* Collapsed by default. Expanded, this panel used to fill half a
+              phone screen before a single price was visible; the answer has to
+              come first and the controls second. */}
+          <section className={`filter${filtersOpen ? ' filter-open' : ''}`}>
+            <button
+              type="button"
+              className="filter-summary"
+              aria-expanded={filtersOpen}
+              onClick={() => setFiltersOpen((open) => !open)}
+            >
+              <MapPin size={16} strokeWidth={1.5} aria-hidden="true" />
+              <span className="filter-summary-text">
+                {t('compare.filterSummary', {
+                  city,
+                  count: selected.length,
+                  total: indexed.length,
+                })}
               </span>
-              <select value={city} onChange={(event) => setCity(event.target.value)}>
-                {cities.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <span className="filter-summary-action">{t('compare.filterEdit')}</span>
+              <ChevronDown className="filter-chevron" size={16} strokeWidth={1.5} aria-hidden="true" />
+            </button>
 
-            <div className="chain-chips" role="group" aria-label={t('compare.filterTitle')}>
-              {indexed.map((chain) => {
-                const active = !excluded.has(chain.key);
-                return (
+            {/* Always mounted so its height can be animated in both
+                directions; `inert` keeps the collapsed controls out of the tab
+                order and away from screen readers. */}
+            <div className="filter-collapse" inert={filtersOpen ? undefined : ''}>
+              <div className="filter-clip">
+                <div className="filter-body">
+                <label className="city-picker">
+                  <span className="city-picker-label">{t('compare.cityLabel')}</span>
+                  <select value={city} onChange={(event) => setCity(event.target.value)}>
+                    {cities.map((name) => (
+                      <option key={name} value={name}>
+                        {name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <div className="chain-chips" role="group" aria-label={t('compare.filterTitle')}>
+                  {indexed.map((chain) => {
+                    const active = !excluded.has(chain.key);
+                    return (
+                      <button
+                        type="button"
+                        key={chain.key}
+                        className={`chain-chip${active ? ' chain-chip-on' : ''}`}
+                        aria-pressed={active}
+                        onClick={() => toggleChain(chain.key)}
+                      >
+                        <span className="chain-chip-box" aria-hidden="true">
+                          {active ? <Check size={11} strokeWidth={3} /> : null}
+                        </span>
+                        {chain.displayName}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="filter-controls">
                   <button
                     type="button"
-                    key={chain.key}
-                    className={`chain-chip${active ? ' chain-chip-on' : ''}`}
-                    aria-pressed={active}
-                    onClick={() => toggleChain(chain.key)}
+                    className="compare-link"
+                    onClick={() => setPrefs((prev) => ({ ...prev, excluded: [] }))}
                   >
-                    <span className="chain-chip-box" aria-hidden="true">
-                      {active ? <Check size={12} strokeWidth={3} /> : null}
-                    </span>
-                    {chain.displayName}
+                    {t('compare.selectAll')}
                   </button>
-                );
-              })}
-            </div>
+                </div>
 
-            <div className="compare-filters-controls">
-              <button
-                type="button"
-                className="compare-link"
-                onClick={() => setPrefs((prev) => ({ ...prev, excluded: [] }))}
-              >
-                {t('compare.selectAll')}
-              </button>
-              <label className="compare-sort">
-                <span>{t('compare.sortBy')}</span>
-                <select
-                  value={prefs.sortBy}
-                  onChange={(event) =>
-                    setPrefs((prev) => ({ ...prev, sortBy: event.target.value }))
-                  }
-                >
-                  <option value="cheapest">{t('compare.sortCheapest')}</option>
-                  <option value="dearest">{t('compare.sortDearest')}</option>
-                  <option value="found">{t('compare.sortMostFound')}</option>
-                  <option value="name">{t('compare.sortName')}</option>
-                </select>
-              </label>
+                <div className="filter-meta">
+                  <span>{t('compare.updatedAt', { date: formatDateTime(catalog.generatedAt, locale) })}</span>
+                  <button type="button" className="compare-link" onClick={reload}>
+                    <RefreshCw size={13} strokeWidth={1.5} aria-hidden="true" />
+                    {t('compare.refreshData')}
+                  </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -238,31 +221,43 @@ export function ComparePage() {
             <p className="compare-none">{t('compare.noneSelected')}</p>
           ) : table ? (
             <>
-              {table.winner && table.sharedCount > 0 ? (
-                <div className="compare-winner">
-                  <span className="compare-winner-icon" aria-hidden="true">
-                    <Trophy size={22} strokeWidth={2} />
-                  </span>
-                  <div>
-                    <p className="compare-winner-name">
-                      {t('compare.winner', { chain: table.winner.displayName })}
+              {/* The answer, before anything that qualifies it. One figure,
+                  larger than everything else on the page, in the only accent
+                  colour this screen is allowed to spend. */}
+              {table.winner ? (
+                <div className="lead">
+                  <p className="lead-label">{t('compare.cheapestLabel')}</p>
+                  <h2 className="lead-chain">{table.winner.displayName}</h2>
+                  {/* What you would actually pay there, for everything it
+                      stocks — not a subtotal of some shared remainder. */}
+                  <AnimatedCurrency
+                    className="lead-total tabular"
+                    value={table.winner.total}
+                    locale={locale}
+                  />
+                  <p className="lead-coverage">
+                    {table.maxFound === items.length
+                      ? t('compare.coverageAll')
+                      : t('compare.coverageSome', { found: table.maxFound, total: items.length })}
+                  </p>
+                  {table.savings > 0 && table.runnerUp ? (
+                    <p className="lead-note">
+                      {t('compare.savingsVs', {
+                        amount: formatCurrency(table.savings, locale),
+                      })}
                     </p>
-                    <p className="compare-winner-savings">
-                      {table.savings > 0
-                        ? t('compare.savings', {
-                            amount: formatCurrency(table.savings, locale),
-                          })
-                        : t('compare.basketOf', { count: table.sharedCount })}
-                    </p>
-                  </div>
-                  <span className="compare-winner-total tabular">
-                    {formatCurrency(table.winner.sharedTotal, locale)}
-                  </span>
+                  ) : null}
                 </div>
               ) : null}
 
-              <ChainTable table={table} items={items} locale={locale} t={t} />
-              <Breakdown table={table} locale={locale} t={t} />
+              {/* Two readings of the same figures. On a wide screen they sit
+                  side by side and the ladder sticks, so the ranking stays in
+                  view while the per-item detail — much the longer of the two —
+                  scrolls past it. */}
+              <div className="compare-columns">
+                <ChainLadder table={table} items={items} locale={locale} t={t} />
+                <Breakdown table={table} locale={locale} t={t} />
+              </div>
             </>
           ) : null}
         </>
@@ -271,200 +266,184 @@ export function ComparePage() {
   );
 }
 
-function sortTotals(totals, sortBy) {
-  const copy = [...totals];
-  if (sortBy === 'name') return copy.sort((a, b) => a.displayName.localeCompare(b.displayName, 'he'));
-  if (sortBy === 'found') return copy.sort((a, b) => b.foundCount - a.foundCount);
-
-  // A chain stocking none of the list totals ₪0, which would otherwise make it
-  // the cheapest on the page. Empty chains sort last whichever way the price
-  // sort runs, because they are not really in the running at all.
-  const byPrice = sortBy === 'dearest'
-    ? (a, b) => b.sharedTotal - a.sharedTotal
-    : (a, b) => a.sharedTotal - b.sharedTotal;
-
-  return copy.sort((a, b) => {
-    const aEmpty = a.foundCount === 0;
-    const bEmpty = b.foundCount === 0;
-    if (aEmpty !== bEmpty) return aEmpty ? 1 : -1;
-    return byPrice(a, b);
-  });
-}
-
-function ChainTable({ table, items, locale, t }) {
-  // The like-for-like column earns its place only when it says something the
-  // total does not. With nothing common to every chain it would read ₪0 for
-  // all of them; with everything common it merely repeats the total.
-  const showShared = table.sharedCount > 0 && table.sharedCount < items.length;
-
+/**
+ * Every chain as one flat row, descending. The rows are deliberately identical
+ * in weight: the winner has already been named above, and repeating that
+ * emphasis seven times would leave the page with no hierarchy at all.
+ */
+function ChainLadder({ table, items, locale, t }) {
   return (
-    <section className="compare-section">
-      <div className="compare-section-header">
-        <h2>{t('compare.resultsTitle')}</h2>
-        <span className="compare-section-sub">
-          {t('compare.basketSummary', { found: table.sharedCount, total: items.length })}
-        </span>
-      </div>
-
-      <div className="chain-table" role="table">
-        <div className="chain-table-head" role="row">
-          <span role="columnheader" className="col-name">{t('compare.chain')}</span>
-          {showShared ? (
-            <span role="columnheader" className="col-num col-shared">
-              {t('compare.sharedBasket')}
-            </span>
-          ) : null}
-          <span role="columnheader" className="col-num col-total">
-            {t('compare.fullBasket')}
+    <GroupedList
+      label={t('compare.resultsTitle')}
+      meta={
+        <>
+          <span aria-hidden="true" dir="ltr">
+            {table.maxFound}/{items.length}
           </span>
-          <span role="columnheader" className="col-num col-found">
-            {t('compare.found')}
+          <span className="sr-only">
+            {t('compare.coverageSome', { found: table.maxFound, total: items.length })}
           </span>
+        </>
+      }
+    >
+      <div className="ladder stagger" role="table" aria-label={t('compare.resultsTitle')}>
+        {/* The column names still exist for assistive technology; on screen the
+            row labels its own figures, so a header strip is dead weight. */}
+        <div role="row" className="sr-only">
+          <span role="columnheader">{t('compare.chain')}</span>
+          <span role="columnheader">{t('compare.fullBasket')}</span>
+          <span role="columnheader">{t('compare.found')}</span>
         </div>
 
-        {table.totals.map((row) => (
-          <div
-            key={row.key}
-            role="row"
-            className={`chain-table-row${
-              table.winner && row.key === table.winner.key && table.sharedCount > 0
-                ? ' chain-table-best'
-                : ''
-            }`}
-          >
-            <span role="cell" className="col-name chain-cell">
-              <span className="chain-cell-name">{row.displayName}</span>
-              {row.storeName ? (
-                <span className="chain-cell-store">{row.storeName}</span>
+        {table.rows.map((row, position) => {
+          const best = table.winner && row.key === table.winner.key;
+          const empty = row.foundCount === 0;
+          // Ranked below the leaders because it stocks less of the list, not
+          // because it is expensive. The break says which.
+          const partial = !empty && row.foundCount < table.maxFound;
+          const firstPartial =
+            partial && (position === 0 || table.rows[position - 1].foundCount === table.maxFound);
+
+          return (
+            <Fragment key={row.key}>
+              {firstPartial ? (
+                <p className="ladder-divider">{t('compare.partialGroup')}</p>
               ) : null}
-            </span>
-            {showShared ? (
-              <span role="cell" className="col-num col-shared">
-                {/* The column header labels this on a wide screen; once the row
-                    becomes a card there is no header left to do the job. */}
-                <span className="cell-label">{t('compare.sharedBasket')}</span>
-                <span className="cell-figure tabular" dir="ltr">
-                  {formatCurrency(row.sharedTotal, locale)}
+              <div
+                role="row"
+                className={`grouped-row ladder-row${best ? ' ladder-row-best' : ''}${
+                  empty ? ' ladder-row-empty' : ''
+                }`}
+              >
+                <span role="cell" className="ladder-chain">
+                  <span className="ladder-chain-name">{row.displayName}</span>
+                  <span className="ladder-chain-sub">
+                    {row.storeName ? <span>{row.storeName}</span> : null}
+                    {/* Only worth saying when something is missing. When every
+                        chain has the whole list — the ordinary case — a column
+                        of identical 4/4 is noise you have to read past. */}
+                    {row.foundCount < items.length ? (
+                      <span className="ladder-missing tabular" dir="ltr">
+                        {row.foundCount}/{items.length}
+                      </span>
+                    ) : null}
+                    <span className="sr-only">
+                      {t('compare.coverageSome', { found: row.foundCount, total: items.length })}
+                    </span>
+                  </span>
                 </span>
-              </span>
-            ) : null}
-            <span role="cell" className="col-num col-total">
-              <span className="cell-label">{t('compare.fullBasket')}</span>
-              {/* ₪0 would read as "free here" rather than "nothing on your
-                  list is stocked here", which is what it actually means. */}
-              {row.foundCount === 0 ? (
-                <span className="cell-figure cell-figure-empty">{t('compare.unavailable')}</span>
-              ) : (
-                <span className="cell-figure tabular" dir="ltr">
-                  {formatCurrency(row.fullTotal, locale)}
+
+                <span role="cell" className="ladder-figures">
+                  {/* ₪0 would read as "free here" rather than "nothing on your
+                      list is stocked here", which is what it actually means. */}
+                  {empty ? (
+                    <span className="ladder-total ladder-total-empty">
+                      {t('compare.unavailable')}
+                    </span>
+                  ) : (
+                    <AnimatedCurrency
+                      className="ladder-total tabular"
+                      value={row.total}
+                      locale={locale}
+                    />
+                  )}
+                  {/* Plain money, and only against a basket holding the same
+                      items. The leader has nothing to be more expensive than. */}
+                  {row.overLeader > 0 ? (
+                    <span className="ladder-level">
+                      {t('compare.overLeader', { amount: formatCurrency(row.overLeader, locale) })}
+                    </span>
+                  ) : null}
                 </span>
-              )}
-            </span>
-            <span role="cell" className="col-num col-found">
-              <span className="cell-label">{t('compare.found')}</span>
-              <span className="cell-figure tabular" dir="ltr">
-                {row.foundCount}/{items.length}
-              </span>
-            </span>
-          </div>
-        ))}
+              </div>
+            </Fragment>
+          );
+        })}
       </div>
 
-      {/* When every item was found everywhere the two figures agree, and an
-          explanation of the difference would invent a distinction. */}
-      {table.sharedCount < items.length ? (
-        <p className="compare-note">
-          {showShared ? t('compare.sharedNote') : t('compare.noSharedNote')}
-        </p>
-      ) : null}
-    </section>
+      <p className="compare-note grouped-block">{t('compare.indexNote')}</p>
+    </GroupedList>
   );
 }
 
 function Breakdown({ table, locale, t }) {
   return (
-    <section className="compare-section">
-      <div className="compare-section-header">
-        <h2>{t('compare.itemsTitle')}</h2>
-      </div>
+    <GroupedList label={t('compare.itemsTitle')}>
+      {table.lines.map((line, index) => {
+        const found = line.prices.filter(Boolean);
+        const cheapest = found.length > 0 ? Math.min(...found.map((m) => m.price)) : null;
 
-      <ul className="breakdown">
-        {table.lines.map((line, index) => {
-          const found = line.prices.filter(Boolean);
-          const cheapest = found.length > 0 ? Math.min(...found.map((m) => m.price)) : null;
-
-          return (
-            <li key={`${line.name}-${index}`} className="breakdown-item">
-              <div className="breakdown-head">
-                <h3 className="breakdown-name">{line.name}</h3>
-                {line.byWeight ? (
-                  <span className="breakdown-qty tabular">{formatWeight(line.weight, t)}</span>
-                ) : line.quantity > 1 ? (
-                  <span className="breakdown-qty tabular">×{line.quantity}</span>
-                ) : null}
-                {found.length === 0 ? (
-                  <span className="breakdown-none">{t('compare.notFoundAnywhere')}</span>
-                ) : null}
-                {/* `title` only ever reaches a mouse. The same words repeat
-                    in hidden text so a screen reader, and a phone with no
-                    hover at all, still get the explanation. */}
-                {line.exact ? (
-                  <span className="breakdown-exact" title={t('compare.exactMatchHint')}>
-                    {t('compare.exactMatch')}
-                    <span className="sr-only"> — {t('compare.exactMatchHint')}</span>
-                  </span>
-                ) : null}
-                {line.suspect ? (
-                  <span className="breakdown-warn" title={t('compare.suspectHint')}>
-                    {t('compare.suspect')}
-                    <span className="sr-only"> — {t('compare.suspectHint')}</span>
-                  </span>
-                ) : null}
-              </div>
-
-              {found.length > 0 ? (
-                <ul className="breakdown-prices">
-                  {table.chains.map((chain, chainIndex) => {
-                    const match = line.prices[chainIndex];
-                    if (!match) return null;
-                    const best = match.price === cheapest;
-                    return (
-                      <li
-                        key={chain.key}
-                        className={`breakdown-price${best ? ' breakdown-price-best' : ''}`}
-                      >
-                        <span className="breakdown-chain">{chain.displayName}</span>
-                        <span className="breakdown-product">
-                          {match.name}
-                          {match.promo ? (
-                            <span
-                              className="promo-tag"
-                              title={t(match.promo === 1 ? 'compare.promoPriceHint' : 'compare.promoHint')}
-                            >
-                              {t(match.promo === 1 ? 'compare.promoPrice' : 'compare.promo')}
-                              <span className="sr-only">
-                                {' — '}
-                                {t(match.promo === 1 ? 'compare.promoPriceHint' : 'compare.promoHint')}
-                              </span>
-                            </span>
-                          ) : null}
-                        </span>
-                        <span className="breakdown-amount tabular" dir="ltr">
-                          {/* A per-kilogram figure has to say so, or it reads
-                              as the price of what is actually being bought. */}
-                          {line.byWeight
-                            ? t('compare.perKg', { price: formatCurrency(match.price, locale) })
-                            : formatCurrency(match.price, locale)}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+        return (
+          <div key={`${line.name}-${index}`} className="breakdown-item">
+            <div className="breakdown-head">
+              <h3 className="breakdown-name">{line.name}</h3>
+              {line.byWeight ? (
+                <span className="breakdown-qty tabular">{formatWeight(line.weight, t)}</span>
+              ) : line.quantity > 1 ? (
+                <span className="breakdown-qty tabular">×{line.quantity}</span>
               ) : null}
-            </li>
-          );
-        })}
-      </ul>
-    </section>
+              {found.length === 0 ? (
+                <span className="breakdown-none">{t('compare.notFoundAnywhere')}</span>
+              ) : null}
+              {/* `title` only ever reaches a mouse. The same words repeat in
+                  hidden text so a screen reader, and a phone with no hover at
+                  all, still get the explanation. */}
+              {line.exact ? (
+                <span className="tag tag-exact" title={t('compare.exactMatchHint')}>
+                  {t('compare.exactMatch')}
+                  <span className="sr-only"> — {t('compare.exactMatchHint')}</span>
+                </span>
+              ) : null}
+              {line.suspect ? (
+                <span className="tag tag-warn" title={t('compare.suspectHint')}>
+                  {t('compare.suspect')}
+                  <span className="sr-only"> — {t('compare.suspectHint')}</span>
+                </span>
+              ) : null}
+            </div>
+
+            {found.length > 0 ? (
+              <ul className="breakdown-prices">
+                {table.chains.map((chain, chainIndex) => {
+                  const match = line.prices[chainIndex];
+                  if (!match) return null;
+                  const best = match.price === cheapest;
+                  return (
+                    <li
+                      key={chain.key}
+                      className={`breakdown-price${best ? ' breakdown-price-best' : ''}`}
+                    >
+                      <span className="breakdown-chain">{chain.displayName}</span>
+                      <span className="breakdown-product">
+                        {match.name}
+                        {match.promo ? (
+                          <span
+                            className="tag tag-promo"
+                            title={t(match.promo === 1 ? 'compare.promoPriceHint' : 'compare.promoHint')}
+                          >
+                            {t(match.promo === 1 ? 'compare.promoPrice' : 'compare.promo')}
+                            <span className="sr-only">
+                              {' — '}
+                              {t(match.promo === 1 ? 'compare.promoPriceHint' : 'compare.promoHint')}
+                            </span>
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="breakdown-amount tabular" dir="ltr">
+                        {/* A per-kilogram figure has to say so, or it reads as
+                            the price of what is actually being bought. */}
+                        {line.byWeight
+                          ? t('compare.perKg', { price: formatCurrency(match.price, locale) })
+                          : formatCurrency(match.price, locale)}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : null}
+          </div>
+        );
+      })}
+    </GroupedList>
   );
 }

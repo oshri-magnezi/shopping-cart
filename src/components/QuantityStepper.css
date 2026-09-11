@@ -1,19 +1,24 @@
+/* A recessed pill, no outline. Segment rules between the buttons and the
+   readout were three more lines on a row that already has a separator. */
 .stepper {
   display: inline-flex;
   align-items: center;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  flex: none;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-sunken);
 }
 
 .stepper-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  color: var(--color-text-subtle);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  color: var(--color-text-muted);
   transition: background-color var(--duration-fast) var(--ease),
-    color var(--duration-fast) var(--ease);
+    color var(--duration-fast) var(--ease),
+    transform var(--duration-base) var(--ease-spring);
 }
 
 .stepper-btn:hover:not(:disabled) {
@@ -21,19 +26,23 @@
   color: var(--color-primary);
 }
 
+.stepper-btn:active:not(:disabled) {
+  transform: scale(0.88);
+}
+
 .stepper-btn:disabled {
-  opacity: 0.3;
+  opacity: 0.28;
   cursor: not-allowed;
 }
 
 .stepper-value {
-  min-width: 30px;
+  min-width: 32px;
   text-align: center;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
-  border-inline: 1.5px solid var(--color-border);
+  color: var(--color-text);
   align-self: stretch;
   display: inline-flex;
   align-items: center;
@@ -46,11 +55,13 @@
 }
 
 .stepper-md .stepper-value {
-  min-width: 46px;
+  min-width: 52px;
   font-size: var(--text-base);
 }
 
-/* On touch screens even the compact stepper gets full-size targets. */
+/* On touch screens the targets grow to a full 44 square. The eight pixels
+   come out of the item name, which already truncates; they do not come out of
+   the row height, which is what the density depends on. */
 @media (pointer: coarse), (max-width: 640px) {
   .stepper-btn {
     width: 44px;

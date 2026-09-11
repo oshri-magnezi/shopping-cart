@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- The app mark: a price tag with the fall through it. Kept identical to
+       src/components/Logo.jsx, with the palette resolved to literals because a
+       favicon has no stylesheet. -->
+  <path d="M17.7 3.1a3.2 3.2 0 0 0-2.3-.9H6.6a3.4 3.4 0 0 0-3.4 3.4v8.8c0 .9.3 1.7.9 2.3l11.6 11.6a3.2 3.2 0 0 0 4.6 0l8.8-8.8a3.2 3.2 0 0 0 0-4.6z" fill="#0F4A44"/>
+  <circle cx="9.6" cy="9.6" r="2.4" fill="#FAF9F7"/>
+  <path d="M17.6 12.9v6.1m0 0 2.7-2.7m-2.7 2.7-2.7-2.7" fill="none" stroke="#C77A0E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,54 @@
+.swipe-row {
+  position: relative;
+  overflow: hidden;
+}
+
+/* The actions sit underneath, pinned to the edge the surface slides away
+   from. They are revealed rather than animated in, which is why they never
+   need a transition of their own. */
+.swipe-actions {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: flex;
+}
+
+.swipe-action {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  width: 74px;
+  color: #ffffff;
+  background-color: var(--color-action-edit);
+  font-size: var(--text-xs);
+}
+
+.swipe-action-danger {
+  background-color: var(--color-action-delete);
+}
+
+.swipe-surface {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 52px;
+  padding-inline: var(--space-4);
+  background-color: var(--color-surface);
+  /* The browser keeps vertical scrolling; this element claims only the
+     horizontal axis. Without it a swipe fights the scroller and both lose. */
+  touch-action: pan-y;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+/* While a finger is down the surface tracks it exactly — a transition here
+   would make the row lag behind the thumb. */
+.swipe-dragging {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-surface {
+    transition: none;
+  }
+}

@@ -47,12 +47,69 @@ const SYNONYMS = new Map([
   ['ביצה', 'ביצים'],
 ]);
 
+// Every list below is consulted with token values, and token values are folded
+// by `singular`. An entry written in the plural — "שקדים", "קפסולות" — would
+// otherwise never be found again once the tokenizer started folding.
+const toStems = (words) => new Set(words.map(singular));
+
+// Hebrew glues its prepositions to the next word, so "in tomato paste" is
+// written "ברסק עגבניות" and the paste arrives as one token, "ברסק". Only the
+// listed words are ever unglued, and only to test them against the list — so
+// this can never turn an ordinary word into a disqualifier by accident.
+const KIND_PREFIXES = 'בלמהכו';
+
+function bareKind(token) {
+  const word = token.value;
+  if (KIND_WORDS.has(word)) return word;
+  if (word.length > 3 && KIND_PREFIXES.includes(word[0])) {
+    const bare = word.slice(1);
+    if (KIND_WORDS.has(bare)) return bare;
+  }
+  return null;
+}
+
+/**
+ * Words that change what a product *is*, wherever they sit in its name.
+ *
+ * The head rule above only inspects the first word, which is why it never saw
+ * "חלב קוקוס" or "ביצה קינדר גוי" — both lead with the very noun that was
+ * searched for. What disqualifies them is a modifier further along.
+ *
+ * The list is deliberately short and every entry has to pass the same test as
+ * a category noun: **it can only ever reject a product the shopper did not ask
+ * for**, because a query containing the word keeps its own match. Searching
+ * for "חלב קוקוס" still finds coconut milk; searching for "חלב" no longer
+ * does. That property is what makes the list safe to extend.
+ */
+const KIND_WORDS = toStems([
+  // Plant milks are a different product from milk, not a variety of it.
+  'קוקוס',
+  'סויה',
+  'שקדים',
+  'שיבולת',
+  // Preparations of a thing, rather than the thing.
+  'מיץ',
+  'חומץ',
+  'רסק',
+  'ריבה',
+  'ריבת',
+  'ממרח',
+  'אבקת',
+  'תמצית',
+  'מרק',
+  // Confectionery built on a fruit or an egg.
+  'מצופה',
+  'מצופות',
+  'מצופים',
+  'קינדר',
+]);
+
 /**
  * Category nouns. A product that *leads* with one of these belongs to a
  * different category than the shopper asked for: "גלידת מסקרפונה" is ice
  * cream, not cheese; "מעדן חלב" is a dessert, not milk.
  */
-const CATEGORY_WORDS = new Set([
+const CATEGORY_WORDS = toStems([
   'גלידה',
   'גלידת',
   'מעדן',
@@ -157,6 +214,28 @@ function canonicalSize(amount, unit) {
  * "1000 מל" compare equal rather than looking like a conflict, and pack counts
  * ("6*330") are kept distinct from unit sizes.
  */
+/**
+ * Folds a Hebrew plural onto its singular.
+ *
+ * Catalogues are written in the singular — "בננה", "תפוח עץ" — and shoppers
+ * type the plural. The two then share only three or four leading letters, one
+ * short of the prefix rule, so "בננות" found bananas in none of the seven
+ * chains and "תפוחים" found apples in almost none.
+ *
+ * Both sides of every comparison are folded, so this cannot introduce a match
+ * on its own: it can only bring a plural and its own singular together. A word
+ * that is not really a plural — "תרבות" — folds to the same stem wherever it
+ * appears and keeps matching itself. Words of four letters or fewer are left
+ * alone, which is what protects "מים" and "חיים" from being eaten.
+ */
+function singular(word) {
+  if (word.length <= 4) return word;
+  if (word.endsWith('ים')) return word.slice(0, -2);
+  // Feminine plurals drop the ות and take back their ה: בננות -> בננה.
+  if (word.endsWith('ות')) return `${word.slice(0, -2)}ה`;
+  return word;
+}
+
 export function tokenize(text) {
   const raw = normalize(text).split(' ').filter(Boolean);
   const tokens = [];
@@ -187,7 +266,7 @@ export function tokenize(text) {
     }
 
     if (NOISE_WORDS.has(word)) continue;
-    tokens.push({ value: word, numeric: false, brand: BRANDS.has(word) });
+    tokens.push({ value: singular(word), numeric: false, brand: BRANDS.has(word) });
   }
 
   return tokens;
@@ -271,6 +350,13 @@ export function similarityTokens(left, right) {
   const category =
     rightWords[0] && CATEGORY_WORDS.has(rightWords[0].value) ? rightWords[0].value : null;
   if (category && !leftWords.some((token) => token.value === category)) return 0;
+
+  // The same judgement, for words that do their work anywhere in the name
+  // rather than at the front. These are the misses the head rule cannot see,
+  // because the head is exactly what the shopper asked for: "חלב קוקוס" leads
+  // with milk, "ביצה קינדר" leads with egg.
+  const kind = rightWords.map(bareKind).find(Boolean);
+  if (kind && !leftWords.some((token) => bareKind(token) === kind)) return 0;
 
   const recallCredits = leftWords.map((token) => credit(token.value, right));
   const recall = recallCredits.reduce((sum, value) => sum + value, 0) / leftWords.length;

@@ -10,7 +10,7 @@
     "watch": "node src/index.js --watch 30",
     "import-list": "node src/export-list.js",
     "stores": "node src/index.js --list-stores",
-    "test": "node --test \"test/**/*.test.js\""
+    "test": "node --test"
   },
   "engines": {
     "node": ">=20"

@@ -16,6 +16,9 @@ concurrency:
 
 permissions:
   contents: write
+  # So a failed night can raise an issue against the repository instead of
+  # relying on an email nobody opens.
+  issues: write
 
 jobs:
   refresh:
@@ -30,7 +33,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: bot/package-lock.json
 
@@ -38,19 +41,33 @@ jobs:
         working-directory: bot
         run: npm ci
 
-      - name: Install Chrome for Puppeteer
-        working-directory: bot
-        run: npx puppeteer browsers install chrome
-
+      # Before the browser download, not after it. The tests need the packages
+      # above, but they do not need Chrome — and putting them first means a
+      # broken build costs seconds instead of a hundred megabytes.
       - name: Check the bot still parses correctly
         working-directory: bot
         run: npm test
+
+      - name: Install Chrome for Puppeteer
+        working-directory: bot
+        run: npx puppeteer browsers install chrome
 
       # The bot is fail-soft by design: a chain that will not answer is logged
       # and skipped, and the other chains still produce a catalogue.
       - name: Build the catalogues
         working-directory: bot
         run: node src/index.js --catalog ../public --cities "תל אביב,ראשון לציון,חיפה,ירושלים"
+
+      # Which is exactly why this step exists. Fail-soft plus an automatic
+      # commit would quietly publish a two-chain catalogue on a night when five
+      # portals were down, and the comparison the whole app is built on would
+      # silently be running on two shops. Losing chains, losing cities or losing
+      # most of a chain's products stops the publish and fails the job instead.
+      - name: Refuse to publish a degraded catalogue
+        run: |
+          git show HEAD:public/price-catalog-index.json > /tmp/published-index.json \
+            || echo 'null' > /tmp/published-index.json
+          node bot/src/verify-catalog.js /tmp/published-index.json public/price-catalog-index.json
 
       - name: Commit the refreshed catalogues
         run: |
@@ -62,4 +79,42 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add public/
           git commit -m "chore: refresh price catalogues"
-          git push
+
+          # A build takes minutes, and a push to main during that window leaves
+          # this commit behind the branch. Without the rebase the push is
+          # rejected and the night's catalogue is thrown away over a conflict
+          # that does not exist: nothing else touches public/.
+          for attempt in 1 2 3; do
+            if git push; then
+              exit 0
+            fi
+            echo "Push rejected — the branch moved. Rebasing and retrying ($attempt/3)."
+            git pull --rebase origin "${GITHUB_REF_NAME}"
+          done
+          echo "Could not push after three attempts."
+          exit 1
+
+      # This job ran and failed nineteen nights in a row without anyone
+      # noticing, because the only signal was a notification email. An open
+      # issue sits in the repository until it is dealt with, and it is the
+      # first thing visible on the repo's front page.
+      #
+      # One issue, not one per night: if the alarm is already raised, a
+      # twentieth copy of it says nothing new.
+      - name: Raise an issue if the refresh failed
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title='Nightly price refresh is failing'
+          open=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then
+            echo "Issue #$open is already open for this; not filing another."
+            exit 0
+          fi
+          gh issue create --title "$title" --body             "The scheduled price refresh failed and the published catalogue was left unchanged.
+
+          Run: $RUN_URL
+
+          Prices on the site stay as they are until this is fixed. Close this issue once a run succeeds."

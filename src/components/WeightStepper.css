@@ -1,6 +1,12 @@
 /* Wider than the quantity readout: "500 גרם" needs more room than "2". */
 .weight-value {
-  min-width: 86px;
-  padding-inline: var(--space-2);
+  min-width: 72px;
+  padding-inline: var(--space-1);
   white-space: nowrap;
+  font-size: var(--text-xs);
+}
+
+.stepper-md .weight-value {
+  min-width: 96px;
+  font-size: var(--text-sm);
 }

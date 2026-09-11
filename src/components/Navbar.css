@@ -1,22 +1,41 @@
-/* The masthead is a solid enamel band, the way a market hall hangs its
-   signage — not a white bar with a colored pill inside it. */
+/* The masthead is a pill that floats clear of the viewport edge and lets the
+   page slide under it, rather than a full-bleed enamel band. Detaching it from
+   the edge is most of what makes the app read as a tool instead of a template. */
 .navbar {
   position: sticky;
   top: 0;
   z-index: 40;
-  background-color: var(--color-band);
-  border-bottom: var(--navbar-rule) solid rgba(255, 255, 255, 0.12);
+  /* The gap above the pill is padding on the sticky element itself, so the
+     pill keeps exactly the same clearance from the viewport edge whether the
+     page is at rest or scrolled. */
+  padding: var(--space-3) var(--space-3) 0;
 }
 
 .navbar-inner {
   max-width: var(--content-width);
   margin-inline: auto;
-  min-height: var(--navbar-height);
-  padding-inline: var(--space-4);
+  min-height: 56px;
+  padding-inline: var(--space-2) var(--space-3);
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  color: var(--color-on-band);
+  gap: var(--space-3);
+  color: var(--color-text);
+  border-radius: var(--radius-full);
+  /* Semi-transparent over blur: the page tinting through the glass is what
+     sells it as floating. Saturation is pushed back up because blur washes it
+     out. */
+  background-color: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--color-hairline);
+}
+
+/* Browsers without backdrop-filter would show text over live content. Fall
+   back to an opaque surface there. */
+@supports not (backdrop-filter: blur(1px)) {
+  .navbar-inner {
+    background-color: var(--color-surface);
+  }
 }
 
 .navbar-brand {
@@ -26,119 +45,130 @@
   flex: none;
   min-width: 44px;
   min-height: 44px;
+  padding-inline: var(--space-2);
   justify-content: center;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   transition: opacity var(--duration-fast) var(--ease);
 }
 
 .navbar-brand:hover {
-  opacity: 0.85;
+  opacity: 0.7;
 }
 
 .navbar-logo {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-accent);
+  flex: none;
+  color: var(--color-primary);
 }
 
 .navbar-name {
   font-family: var(--font-display);
   font-size: var(--text-lg);
-  letter-spacing: 0.01em;
+  font-weight: 400;
   white-space: nowrap;
 }
 
+/* Equal-width tabs. The indicator translates by whole tab widths, so they have
+   to stay equal — that is why this is a grid and not a gapped flex row. */
 .navbar-tabs {
-  display: flex;
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   align-items: stretch;
-  gap: var(--space-1);
   margin-inline-start: auto;
-  align-self: stretch;
+  padding: 3px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-sunken);
 }
 
-/* Tabs read as signage labels: no chips, just a thick ochre underline on the
-   current one. */
+/* translateX is physical, so the direction of travel has to flip with the
+   document. Everything else in the app uses logical properties; this is the
+   one place that cannot. */
+.tab-indicator {
+  position: absolute;
+  inset-block: 3px;
+  inset-inline-start: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(calc(var(--tab-index) * 100% * var(--tab-dir, 1)));
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+[dir='rtl'] .tab-indicator {
+  --tab-dir: -1;
+}
+
 .tab {
   position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
   min-height: 44px;
   padding-inline: var(--space-3);
   font-size: var(--text-sm);
   font-weight: 500;
-  color: var(--color-on-band-muted);
+  color: var(--color-text-muted);
   white-space: nowrap;
-  transition: color var(--duration-fast) var(--ease);
-}
-
-/* The active marker sits just above the bar's own edge rather than merging
-   into it, so the two lines stay legible as separate things. */
-.tab::after {
-  content: '';
-  position: absolute;
-  inset-inline: var(--space-2);
-  bottom: 6px;
-  height: 2px;
-  border-radius: 2px;
-  background-color: transparent;
-  transition: background-color var(--duration-fast) var(--ease);
+  border-radius: var(--radius-full);
+  transition: color var(--duration-base) var(--ease);
 }
 
 .tab:hover {
-  color: var(--color-on-band);
+  color: var(--color-text);
 }
 
-.tab-active {
-  color: var(--color-on-band);
-  font-weight: 700;
-}
-
-.tab-active::after {
-  background-color: var(--color-accent);
+.tab-active,
+.tab-active:hover {
+  color: var(--color-on-primary);
 }
 
 .navbar-actions {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: 2px;
   flex: none;
-}
-
-/* Controls sitting on the band get their own inverted treatment. */
-.navbar-actions .icon-btn,
-.lang-toggle {
-  color: var(--color-on-band-muted);
-}
-
-.navbar-actions .icon-btn:hover,
-.lang-toggle:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--color-on-band);
 }
 
 .lang-toggle {
   min-width: 44px;
   height: 44px;
   padding-inline: var(--space-2);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-full);
+  color: var(--color-text-subtle);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  font-weight: 500;
   transition: background-color var(--duration-fast) var(--ease),
     color var(--duration-fast) var(--ease);
 }
 
+.lang-toggle:hover {
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text);
+}
+
 @media (max-width: 640px) {
-  .navbar-inner {
-    gap: var(--space-2);
-    padding-inline: var(--space-3);
+  .navbar {
+    padding-inline: var(--space-2);
   }
 
+  .navbar-inner {
+    gap: var(--space-2);
+    padding-inline: var(--space-1) var(--space-2);
+  }
+
+  /* The mark stays — it is the only thing on the bar that says which app this
+     is. The words go: the tab below them already carries them. */
   .navbar-name {
     display: none;
+  }
+
+  .navbar-brand {
+    padding-inline: var(--space-1);
   }
 
   .tab span {
@@ -146,12 +176,7 @@
   }
 
   .tab {
-    width: 44px;
-    justify-content: center;
+    width: 46px;
     padding-inline: 0;
-  }
-
-  .tab::after {
-    inset-inline: 6px;
   }
 }

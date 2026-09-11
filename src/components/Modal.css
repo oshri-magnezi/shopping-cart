@@ -7,7 +7,16 @@
   justify-content: center;
   padding: var(--space-4);
   background-color: var(--color-scrim);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   animation: modal-fade var(--duration-base) var(--ease);
+}
+
+/* Leaving runs slower than arriving. A dialog that snaps away reads as a
+   glitch; one that recedes reads as a decision. */
+.modal-leaving {
+  animation: modal-fade var(--duration-slow) var(--ease) reverse forwards;
+  pointer-events: none;
 }
 
 .modal-panel {
@@ -17,49 +26,53 @@
   display: flex;
   flex-direction: column;
   background-color: var(--color-surface-raised);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-modal);
-  animation: modal-rise var(--duration-slow) var(--ease);
+  /* A touch of overshoot on the way in. It is the difference between a panel
+     that appears and one that arrives. */
+  animation: modal-rise var(--duration-slow) var(--ease-spring);
   overflow: hidden;
+  transition: transform var(--duration-base) var(--ease-spring);
 }
 
-/* The dialog carries the same enamel band as an aisle sign. */
+.modal-leaving .modal-panel {
+  animation: modal-sink var(--duration-slow) var(--ease) forwards;
+}
+
+.modal-grip {
+  display: none;
+}
+
+/* No enamel band. The title is a title; a filled bar behind it added a second
+   horizontal stripe to a panel that is already framed by its own edge. */
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
-  background-color: var(--color-band);
-  color: var(--color-on-band);
+  padding: var(--space-4) var(--space-3) var(--space-3) var(--space-5);
 }
 
 .modal-title {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 400;
-  letter-spacing: 0.02em;
-}
-
-.modal-header .icon-btn {
-  color: var(--color-on-band-muted);
-}
-
-.modal-header .icon-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--color-on-band);
+  letter-spacing: 0;
 }
 
 .modal-body {
-  padding: var(--space-5);
+  padding: 0 var(--space-5) var(--space-5);
   overflow-y: auto;
+  /* Momentum scrolling matters more here than anywhere: on a phone this panel
+     is most of the screen. */
+  -webkit-overflow-scrolling: touch;
 }
 
 .modal-footer {
   display: flex;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  border-top: 1px solid var(--color-border);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-top: 1px solid var(--color-hairline);
 }
 
 .modal-footer > * {
@@ -75,14 +88,12 @@
   margin-bottom: 0;
 }
 
+/* A field label is prose. Uppercasing does nothing in Hebrew and the tracking
+   that came with it actively damaged the letterforms. */
 .field-label {
   display: block;
   margin-bottom: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--text-sm);
   color: var(--color-text-subtle);
 }
 
@@ -90,6 +101,62 @@
   margin-top: var(--space-2);
   font-size: var(--text-sm);
   color: var(--color-destructive);
+}
+
+/* A dialog on a phone is a sheet that comes up from the bottom edge, not a
+   card floating in the middle with a gutter of scrim all round it. */
+@media (max-width: 600px) {
+  .modal-scrim {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .modal-panel {
+    max-width: none;
+    max-height: 92dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    /* Clears the home indicator on a modern phone. */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    animation: sheet-up var(--duration-slow) var(--ease-out);
+  }
+
+  /* A real handle, not a decoration: it drags the sheet and dismisses it.
+     touch-action none because this element owns the vertical gesture; without
+     it the browser scrolls the page instead. The generous invisible padding
+     is what makes a 4px bar catchable with a thumb. */
+  .modal-grip {
+    display: block;
+    width: 36px;
+    height: 4px;
+    margin: var(--space-2) auto 0;
+    padding: 0;
+    border-radius: var(--radius-full);
+    background-color: var(--color-border-strong);
+    flex: none;
+    touch-action: none;
+    cursor: grab;
+    box-shadow: 0 14px 0 -6px transparent, 0 -8px 0 -6px transparent;
+  }
+
+  .modal-grip::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    margin-top: -14px;
+    height: 34px;
+  }
+
+  .modal-panel {
+    position: relative;
+  }
+
+  .modal-leaving .modal-panel {
+    animation: sheet-down var(--duration-slow) var(--ease) forwards;
+  }
+
+  .modal-header {
+    padding-block: var(--space-3);
+  }
 }
 
 @keyframes modal-fade {
@@ -101,6 +168,35 @@
 @keyframes modal-rise {
   from {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
+    transform: translateY(12px) scale(0.96);
+  }
+}
+
+@keyframes modal-sink {
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes sheet-down {
+  to {
+    transform: translateY(100%);
+  }
+}
+
+/* With motion reduced the dialog is dismissed outright rather than animated
+   away, so these never run — but a stray keyframe would still hold the panel
+   on screen, and that has to be impossible. */
+@media (prefers-reduced-motion: reduce) {
+  .modal-leaving,
+  .modal-leaving .modal-panel {
+    animation: none;
   }
 }

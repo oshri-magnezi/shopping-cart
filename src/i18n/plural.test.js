@@ -7,7 +7,7 @@ import en from './en.json';
  * equally wrong. A key opts into plural handling by defining `key_one`.
  */
 describe('plural forms', () => {
-  const pluralised = ['history.itemsLabel', 'compare.basketOf', 'live.comparisonReady'];
+  const pluralised = ['history.itemsLabel', 'live.comparisonReady'];
 
   it.each(pluralised)('%s has both forms in both languages', (key) => {
     for (const dict of [he, en]) {
@@ -19,7 +19,6 @@ describe('plural forms', () => {
   });
 
   it('keeps the singular free of a count placeholder in Hebrew', () => {
-    expect(he['compare.basketOf_one']).not.toContain('{count}');
     expect(he['history.itemsLabel_one']).not.toContain('{count}');
   });
 

@@ -1,5 +1,8 @@
 # רשימת קניות | Shopping List
 
+[![Deploy](https://github.com/oshri-magnezi/shopping-cart/actions/workflows/deploy.yml/badge.svg)](https://github.com/oshri-magnezi/shopping-cart/actions/workflows/deploy.yml)
+[![Refresh prices](https://github.com/oshri-magnezi/shopping-cart/actions/workflows/prices.yml/badge.svg)](https://github.com/oshri-magnezi/shopping-cart/actions/workflows/prices.yml)
+
 אתר לניהול רשימות קניות, השוואת מחירים בין רשתות השיווק ומעקב אחר ההוצאות. הרשימה וההיסטוריה נשמרות ב-`localStorage` של הדפדפן, כך שהן נשארות גם אחרי סגירת האתר.
 
 ## יכולות

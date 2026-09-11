@@ -111,7 +111,7 @@ export function SpendingTrend({ history, locale }) {
             pointer target and is hopeless on a phone. */}
         {points.map((point, i) => (
           <rect
-            key={point.at ?? i}
+            key={i}
             x={x(i) - plotW / points.length / 2}
             y="0"
             width={plotW / points.length}

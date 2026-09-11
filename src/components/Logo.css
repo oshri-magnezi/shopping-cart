@@ -1,0 +1,5 @@
+/* The eyelet is punched to whatever surface the mark sits on, so the same file
+   works on the masthead, on paper and on charcoal without a second variant. */
+.logo-eye {
+  fill: var(--color-surface);
+}

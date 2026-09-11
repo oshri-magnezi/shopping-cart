@@ -1,6 +1,8 @@
+/* The one element on this page that is allowed to lift off the paper. It earns
+   it: everything else is a figure you read, and this is a shape you look at. */
 .trend {
-  margin: 0 0 var(--space-5);
-  padding: var(--space-4);
+  margin: 0 0 var(--space-6);
+  padding: var(--space-5) var(--space-4) var(--space-4);
 }
 
 .trend-caption {
@@ -8,21 +10,22 @@
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .trend-label {
   font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 /* The figure wears the data face, not the display face — a serif or display
    cut on a number reads as decoration rather than as a reading. */
 .trend-readout {
   font-family: var(--font-mono);
-  font-size: var(--text-lg);
-  font-weight: 700;
+  font-size: var(--text-xl);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
   color: var(--color-text);
 }
 

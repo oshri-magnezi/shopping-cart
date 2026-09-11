@@ -1,115 +1,206 @@
 .compare-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding-bottom: var(--space-4);
-  margin-bottom: var(--space-5);
-  border-bottom: 1px solid var(--color-border-strong);
+  padding-block: var(--space-4) var(--space-2);
 }
 
 .compare-title {
+  font-family: var(--font-display);
   font-size: var(--text-2xl);
-  letter-spacing: 0.01em;
+  font-weight: 400;
+  /* Hebrew: no tracking, ever. */
+  letter-spacing: 0;
 }
 
 .compare-subtitle {
   margin-top: var(--space-1);
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
   font-size: var(--text-sm);
 }
 
-.compare-meta {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-bottom: var(--space-5);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-subtle);
-}
+/* ---------- Filter ---------- */
 
-.compare-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: 44px;
-  padding-inline: var(--space-1);
-  color: var(--color-primary);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-/* ---------- Filters ---------- */
-
-.compare-filters {
-  margin-bottom: var(--space-5);
-  padding: var(--space-4);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
+.filter {
+  margin-block: var(--space-4);
+  border-radius: var(--radius-lg);
   background-color: var(--color-surface);
+  box-shadow: 0 0 0 1px var(--color-hairline);
+  overflow: hidden;
 }
 
-.compare-filters-head {
+.filter-summary {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-3);
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 52px;
+  padding-inline: var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  text-align: start;
+  transition: background-color var(--duration-fast) var(--ease);
 }
 
-.compare-filters-title {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.filter-summary:hover {
+  background-color: var(--color-surface-sunken);
+}
+
+.filter-summary-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.filter-summary-action {
+  flex: none;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.filter-chevron {
+  flex: none;
   color: var(--color-text-subtle);
+  transition: transform var(--duration-base) var(--ease-out);
 }
 
-.compare-filters-count {
-  font-size: var(--text-xs);
-  color: var(--color-text-subtle);
+.filter-open .filter-chevron {
+  transform: rotate(180deg);
 }
 
+/* Height is animated with a grid track rather than max-height: 0fr to 1fr is
+   a real measurement, so the panel never overshoots on a short filter list nor
+   clips on a long one — and it closes exactly the way it opened, which the
+   old enter-only animation did not. */
+.filter-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-slow) var(--ease-out);
+}
+
+.filter-open .filter-collapse {
+  grid-template-rows: 1fr;
+}
+
+/* The clipper carries no padding or border of its own. Put them on the grid
+   child and a collapsed 0fr track still measures 33px, because a zero-height
+   track zeroes the content box and not the box's own padding. */
+.filter-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.filter-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-top: 1px solid var(--color-hairline);
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease);
+}
+
+.filter-open .filter-body {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .filter-collapse,
+  .filter-body {
+    transition: none;
+  }
+}
+
+.city-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* The browser's own dropdown arrow is the one shape in the app that does not
+   come from the icon set, and it sits hard against the edge with no padding of
+   its own. This draws our chevron instead — same geometry and stroke weight as
+   every other icon — and reserves real room for it. */
+.city-picker select {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  /* Start, then end: the end side is where the chevron lives. */
+  padding-inline: var(--space-4) var(--space-8);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-sunken);
+  background-repeat: no-repeat;
+  background-size: 18px 18px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6a59' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+/* background-position has no logical form, so the side is chosen by direction.
+   The chevron always sits at the inline-end, a full gutter clear of the edge. */
+[dir='rtl'] .city-picker select {
+  background-position: left var(--space-4) center;
+}
+
+[dir='ltr'] .city-picker select {
+  background-position: right var(--space-4) center;
+}
+
+/* A data URI cannot read currentColor, so the dark palette gets its own. */
+[data-theme='dark'] .city-picker select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b3ada0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+.city-picker select:hover {
+  background-color: var(--color-bg);
+}
+
+/* A select keeps focus after its menu closes — that is how every native select
+   behaves — so its focus state is on screen for as long as the control is the
+   active one. A hard offset ring reads as an alarm for that whole time. The
+   indicator here is the field's own edge lighting up, plus a soft halo: still
+   unmistakable from the keyboard, no longer shouting after a mouse click. */
+.city-picker select:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+.city-picker-label {
+  flex: none;
+}
+
+/* Chips, not a grid of checkbox cards. The state lives in fill and weight —
+   a bordered box around each one turned the filter into a second list. */
 .chain-chips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
 
-/* Chips read as a checklist of the shops you actually use. */
 .chain-chip {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  min-height: 44px;
+  min-height: 36px;
   padding-inline: var(--space-3);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  font-weight: 500;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-sunken);
   color: var(--color-text-muted);
-  transition: border-color var(--duration-fast) var(--ease),
-    background-color var(--duration-fast) var(--ease), color var(--duration-fast) var(--ease);
+  font-size: var(--text-sm);
+  transition: background-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease),
+    transform var(--duration-base) var(--ease-spring);
 }
 
-.chain-chip:hover {
-  border-color: var(--color-border-strong);
-}
-
-.chain-chip-on {
-  border-color: var(--color-primary);
-  background-color: var(--color-primary-soft);
-  color: var(--color-text);
-  font-weight: 700;
-}
-
-.chain-chip-off {
-  opacity: 0.55;
+.chain-chip:active {
+  transform: scale(0.96);
 }
 
 .chain-chip-box {
@@ -119,9 +210,14 @@
   width: 16px;
   height: 16px;
   flex: none;
+  border-radius: var(--radius-full);
   border: 1.5px solid var(--color-border-strong);
-  border-radius: 2px;
   color: var(--color-on-primary);
+}
+
+.chain-chip-on {
+  background-color: var(--color-primary-soft);
+  color: var(--color-text);
 }
 
 .chain-chip-on .chain-chip-box {
@@ -129,519 +225,351 @@
   border-color: var(--color-primary);
 }
 
-.compare-filters-controls {
+.filter-controls,
+.filter-meta {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-4);
-  margin-top: var(--space-4);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
-  font-size: var(--text-sm);
-}
-
-.compare-link {
-  min-height: 44px;
-  color: var(--color-primary);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-.compare-sort {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  color: var(--color-text-muted);
-  cursor: pointer;
-}
-
-.compare-sort select {
-  min-height: 44px;
-  padding-inline: var(--space-2);
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-
-.compare-none {
-  padding: var(--space-5);
-  border: 1.5px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-  text-align: center;
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
-}
-
-/* The headline result gets the enamel treatment, like an aisle sign. */
-.compare-winner {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  margin-bottom: var(--space-6);
-  background-color: var(--color-band);
-  color: var(--color-on-band);
-  border-radius: var(--radius-md);
-}
-
-.compare-winner-icon {
-  display: inline-flex;
-  flex: none;
-  color: var(--color-accent);
-}
-
-.compare-winner-name {
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  letter-spacing: 0.01em;
-}
-
-.compare-winner-savings {
-  font-size: var(--text-sm);
-  color: var(--color-on-band-muted);
-}
-
-.compare-winner-total {
-  margin-inline-start: auto;
-  font-size: var(--text-2xl);
-  font-weight: 600;
-  color: var(--color-accent);
-}
-
-.compare-section {
-  margin-bottom: var(--space-6);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background-color: var(--color-surface);
-  overflow: hidden;
-}
-
-.compare-section-header {
-  display: flex;
-  align-items: baseline;
   justify-content: space-between;
   gap: var(--space-3);
   flex-wrap: wrap;
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-band);
-  color: var(--color-on-band);
-  font-family: var(--font-display);
-  font-size: var(--text-base);
-  font-weight: 400;
-  letter-spacing: 0.02em;
 }
 
-.compare-section-header h2 {
-  font: inherit;
-}
-
-.compare-section-sub {
-  font-family: var(--font-body);
-  font-size: var(--text-xs);
-  color: var(--color-on-band-muted);
-}
-
-/* ---------- Chain table ---------- */
-
-.chain-table {
-  display: flex;
-  flex-direction: column;
-}
-
-.chain-table-head,
-.chain-table-row {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-3) var(--space-4);
-}
-
-/* Labelled columns: three bare numbers in a row told the reader nothing. */
-.chain-table-head {
-  background-color: var(--color-surface-sunken);
-  border-bottom: 1px solid var(--color-border);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.04em;
+.filter-meta {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-hairline);
   color: var(--color-text-subtle);
+  font-size: var(--text-xs);
 }
 
-.chain-table-row {
-  border-bottom: 1px solid var(--color-border);
+.compare-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+  transition: opacity var(--duration-fast) var(--ease);
 }
 
-.chain-table-row:last-child {
-  border-bottom: none;
+.compare-link:hover {
+  opacity: 0.7;
 }
 
-.chain-table-best {
-  background-color: var(--color-primary-soft);
+/* ---------- The answer ---------- */
+
+/* No card, no trophy, no banner. The figure is the largest thing on the page
+   and carries the screen's single use of the accent colour; everything below
+   it is a qualification of this one number. */
+.lead {
+  padding-block: var(--space-7) var(--space-6);
+  text-align: center;
 }
 
-.col-num {
-  text-align: end;
-  min-width: 76px;
+.lead-label {
+  color: var(--color-text-subtle);
+  font-size: var(--text-sm);
 }
 
-/* Repeats the column header inside the cell. Hidden wherever the header is
-   actually on screen, and revealed once the row collapses into a card. */
-.cell-label {
-  display: none;
+.lead-chain {
+  margin-top: var(--space-1);
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 400;
+  letter-spacing: 0;
 }
 
-.cell-figure {
-  display: block;
+.lead-total {
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-hero);
+  font-weight: 500;
+  line-height: 1;
+  /* Mono figures are Latin glyphs, so tightening them is safe — and at this
+     size the default spacing reads as gappy. */
+  letter-spacing: -0.04em;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
 }
 
-/* What the shopper would actually pay at this chain: the figure the whole
-   page exists to produce, so it outranks everything else in the row. */
-.col-total .cell-figure {
-  font-size: var(--text-lg);
-  font-weight: 700;
+/* What the headline figure is actually claiming: how much of the list this
+   chain carries, and how its prices sit against the usual. Without this the
+   number is just a number. */
+.lead-coverage {
+  margin-top: var(--space-3);
+  color: var(--color-text);
+  font-size: var(--text-sm);
 }
 
-.col-shared .cell-figure {
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--color-text-muted);
+.lead-note {
+  margin-top: var(--space-1);
+  color: var(--color-text-subtle);
+  font-size: var(--text-sm);
 }
 
-.chain-cell {
+/* ---------- Two-column result ---------- */
+
+/* Below the breakpoint they simply stack, which is what the grid does with a
+   single column — no separate mobile rule needed. */
+@media (min-width: 1100px) {
+  .compare-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    align-items: start;
+    gap: var(--space-6);
+  }
+
+  /* Both groups start at the same baseline; the section margin that separates
+     them when stacked would offset one column against the other. */
+  .compare-columns > * {
+    margin-block-start: 0;
+  }
+}
+
+/* Sticking only helps while the ladder actually fits above the fold. On a
+   short window a taller-than-viewport sticky element pins its top and hides
+   its own bottom, which is worse than letting it scroll. */
+@media (min-width: 1100px) and (min-height: 780px) {
+  .compare-columns > :first-child {
+    position: sticky;
+    top: calc(var(--navbar-total) + var(--space-3));
+  }
+}
+
+/* ---------- Ranking ladder ---------- */
+
+.ladder-row {
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 60px;
+  padding-block: var(--space-2);
+}
+
+.ladder-chain {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 2px;
+}
+
+.ladder-chain-name {
+  font-size: var(--text-base);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ladder-row-best .ladder-chain-name {
+  font-weight: 500;
+  color: var(--color-primary);
+}
+
+.ladder-chain-sub {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
   min-width: 0;
 }
 
-.chain-cell-name {
-  font-weight: 700;
+.ladder-chain-sub > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.chain-cell-store {
+.ladder-figures {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  text-align: end;
+}
+
+.ladder-total {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+}
+
+.ladder-total-empty {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 400;
   color: var(--color-text-subtle);
 }
 
-.col-found {
-  min-width: 52px;
-  font-size: var(--text-sm);
+/* Shown only when a chain is short of the list, so it should read as a flag
+   rather than as one more figure in a column. */
+.ladder-missing {
+  color: var(--color-destructive);
+}
+
+.ladder-level {
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+/* A break, not a heading: everything below it is ranked on a smaller basket,
+   and saying so once is clearer than repeating it on every row. */
+.ladder-divider {
+  padding: var(--space-3) var(--space-4) var(--space-2);
+  border-top: 1px solid var(--color-hairline);
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+}
+
+/* A chain that stocks none of the list is not in the running. It steps back
+   through weight and colour rather than opacity — dimming a whole row takes
+   its text below the contrast floor along with everything else. */
+.ladder-row-empty .ladder-chain-name {
   color: var(--color-text-muted);
 }
 
-/* ---------- City picker ---------- */
-
-.city-picker {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-  padding-bottom: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.city-picker-label {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.compare-note {
   color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+  border-top: 1px solid var(--color-hairline);
 }
 
-.city-picker select {
-  flex: 1;
-  min-height: 44px;
-  padding-inline: var(--space-3);
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  font-size: var(--text-base);
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.compare-loading {
-  padding: var(--space-6);
+.compare-none {
+  margin-block: var(--space-7);
   text-align: center;
   color: var(--color-text-muted);
   font-size: var(--text-sm);
 }
 
-.compare-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-border);
-}
-
-.compare-row:last-child {
-  border-bottom: none;
-}
-
-.compare-row-winner {
-  background-color: var(--color-primary-soft);
-}
-
-.compare-row-off {
-  opacity: 0.6;
-}
-
-.compare-row-name {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  font-weight: 500;
-}
-
-.compare-row-store {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-text-subtle);
-}
-
-.compare-row-shared {
-  flex: none;
-  min-width: 84px;
-  text-align: end;
-  font-weight: 600;
-  font-size: var(--text-base);
-}
-
-.compare-row-full,
-.compare-row-found {
-  flex: none;
-  min-width: 68px;
-  text-align: end;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
-
-.compare-row-missing {
-  flex: none;
-  font-size: var(--text-sm);
-  color: var(--color-text-subtle);
-}
-
-.compare-note {
-  padding: var(--space-3) var(--space-4);
-  background-color: var(--color-surface-sunken);
-  border-top: 1px solid var(--color-border);
-  font-size: var(--text-xs);
-  color: var(--color-text-muted);
-}
+/* ---------- Per-item breakdown ---------- */
 
 .breakdown-item {
   padding: var(--space-4);
-  border-bottom: 1px solid var(--color-border);
 }
 
-.breakdown-item:last-child {
-  border-bottom: none;
+.breakdown-item + .breakdown-item {
+  border-top: 1px solid var(--color-hairline);
 }
 
 .breakdown-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .breakdown-name {
   font-family: var(--font-body);
-  font-size: var(--text-base);
-  font-weight: 700;
-}
-
-.breakdown-none {
-  margin-inline-start: auto;
-  font-size: var(--text-xs);
-  color: var(--color-text-subtle);
-}
-
-/* Barcode-identified lines are the trustworthy ones; the badge says so. */
-.breakdown-exact {
-  margin-inline-start: auto;
-  display: inline-flex;
-  align-items: center;
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-primary-soft);
-  color: var(--color-primary);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  cursor: help;
-}
-
-.breakdown-warn {
-  margin-inline-start: auto;
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-accent-soft);
-  color: var(--color-accent-text);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  cursor: help;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .breakdown-qty {
-  font-size: var(--text-sm);
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+}
+
+.breakdown-none {
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+}
+
+/* One tag treatment, three meanings. Three different pill styles side by side
+   was noise pretending to be information. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: var(--space-2);
+  min-height: 20px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  background-color: var(--color-surface-sunken);
   color: var(--color-text-muted);
+}
+
+.tag-exact {
+  background-color: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+/* Deliberately not ochre. A promo tag can appear forty times on one screen,
+   and the accent is spent once — on the figure that answers the question. The
+   word already says what it means. */
+.tag-promo {
+  margin-inline-start: var(--space-2);
+}
+
+.tag-warn {
+  background-color: var(--color-destructive-soft);
+  color: var(--color-destructive);
+}
+
+.breakdown-prices {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .breakdown-price {
   display: grid;
-  grid-template-columns: 96px 1fr auto;
-  gap: var(--space-3);
+  grid-template-columns: minmax(64px, auto) 1fr auto;
   align-items: baseline;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-}
-
-/* The cheapest row is the answer, so it gets the emphasis. */
-.breakdown-price-best {
-  background-color: var(--color-primary-soft);
+  gap: var(--space-2);
+  padding-block: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
 }
 
 .breakdown-chain {
-  color: var(--color-text-muted);
-  font-weight: 500;
-}
-
-.breakdown-price-best .breakdown-chain {
-  color: var(--color-text);
-  font-weight: 700;
+  white-space: nowrap;
 }
 
 .breakdown-product {
   min-width: 0;
-  overflow-wrap: anywhere;
-  color: var(--color-text-muted);
-  font-size: var(--text-xs);
-}
-
-/* A deal exists on this product. When the price itself is the deal the tag is
-   solid; when the deal depends on quantity the tag only points it out. */
-.promo-tag {
-  display: inline-block;
-  margin-inline-start: var(--space-2);
-  padding: 1px 6px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-accent);
-  color: var(--color-accent-text);
-  font-family: var(--font-body);
-  font-size: 0.6875rem;
-  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  cursor: help;
 }
 
 .breakdown-amount {
-  font-weight: 600;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  color: var(--color-text-muted);
 }
 
+/* The cheapest line for this item is the only one that needs to stand out,
+   and weight alone is enough to do it. */
+.breakdown-price-best .breakdown-chain,
 .breakdown-price-best .breakdown-amount {
-  color: var(--color-accent-text);
-  font-size: var(--text-base);
+  color: var(--color-text);
+  font-weight: 500;
 }
 
-@media (max-width: 600px) {
-  .compare-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-3);
+/* The filter's controls are the one place in the app that never met the 44px
+   touch floor. They went unnoticed because the panel used to be rendered only
+   while open, so the audit never had them to measure. */
+@media (pointer: coarse), (max-width: 640px) {
+  .chain-chip,
+  .compare-link {
+    min-height: 44px;
   }
 
-  /* Hiding a column is the one thing a comparison table cannot afford, and
-     the total is exactly what a shopper opens this page for. So the row folds
-     into a card and keeps every figure, with the in-cell labels standing in
-     for the header that no longer fits. */
-  .chain-table-head {
-    display: none;
+  .chain-chip {
+    padding-inline: var(--space-4);
   }
+}
 
-  .chain-table {
-    gap: var(--space-2);
-  }
-
-  .chain-table-row {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      'name  total'
-      'found shared';
-    row-gap: var(--space-2);
-    align-items: start;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-  }
-
-  .chain-table-row:last-child {
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .col-name {
-    grid-area: name;
-  }
-
-  .col-total {
-    grid-area: total;
-  }
-
-  .col-shared {
-    grid-area: shared;
-  }
-
-  .col-found {
-    grid-area: found;
-    text-align: start;
-  }
-
-  .cell-label {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--color-text-subtle);
-  }
-
-  .col-total .cell-figure {
-    font-size: var(--text-xl);
-  }
-
+@media (max-width: 480px) {
   .breakdown-price {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(56px, auto) 1fr auto;
   }
-
-  .breakdown-product {
-    flex-basis: 100%;
-    order: 3;
-    font-size: var(--text-xs);
-    color: var(--color-text-muted);
-  }
-
-  }
-
-/* A chain that stocks nothing from the list states so, rather than showing a
-   zero that reads as a price. */
-.cell-figure-empty {
-  display: block;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-text-subtle);
 }

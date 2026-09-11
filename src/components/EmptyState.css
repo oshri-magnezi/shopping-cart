@@ -4,10 +4,12 @@
   align-items: center;
   text-align: center;
   gap: var(--space-2);
+  margin-block-start: var(--space-6);
   padding: var(--space-8) var(--space-5);
-  border: 1.5px dashed var(--color-border-strong);
-  border-radius: var(--radius-md);
-  background-color: transparent;
+  border-radius: var(--radius-lg);
+  /* A dashed outline says "drop something here". Nothing is dropped here —
+     the state is simply empty, and a quiet recessed panel says that. */
+  background-color: var(--color-surface-sunken);
 }
 
 .empty-state-icon {
@@ -20,13 +22,14 @@
 
 .empty-state-title {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
   font-weight: 400;
+  letter-spacing: 0;
 }
 
 .empty-state-text {
   max-width: 36ch;
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
   font-size: var(--text-sm);
 }
 

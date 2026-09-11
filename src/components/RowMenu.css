@@ -1,0 +1,106 @@
+.row-menu {
+  position: relative;
+  flex: none;
+}
+
+.row-menu-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  color: var(--color-text-subtle);
+  transition: background-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+/* The glyph is 32px so the row stays dense; the target it answers to is 44px.
+   Growing the hit box instead of the box itself is how both can be true. */
+.row-menu-trigger::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+}
+
+.row-menu-trigger:hover,
+.row-menu-trigger[aria-expanded='true'] {
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text);
+}
+
+/* Positioned in the body, so it is fixed to the viewport and its coordinates
+   come from the trigger's rect rather than from a containing block. */
+.row-menu-popover {
+  position: fixed;
+  z-index: 120;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-raised);
+  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--color-hairline);
+  animation: row-menu-in var(--duration-base) var(--ease-spring);
+}
+
+.row-menu-leaving {
+  animation: row-menu-out var(--duration-fast) var(--ease) forwards;
+  pointer-events: none;
+}
+
+/* Scaled from the trigger, not from the middle — the origin is set inline
+   because only the running layout knows where the button was. */
+@keyframes row-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes row-menu-out {
+  to {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-menu-leaving {
+    animation: none;
+  }
+}
+
+.row-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 44px;
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  text-align: start;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.row-menu-item:hover {
+  background-color: var(--color-surface-sunken);
+}
+
+.row-menu-item-selected {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.row-menu-tick {
+  margin-inline-start: auto;
+  flex: none;
+}
+
+.row-menu-item-danger {
+  color: var(--color-destructive);
+}
+
+.row-menu-item-danger:hover {
+  background-color: var(--color-destructive-soft);
+}

@@ -1,0 +1,84 @@
+.grouped-section {
+  margin-block-start: var(--space-6);
+}
+
+/* The label lives outside the group and stays quiet. It is a caption for the
+   block below it, not a banner across the top of it — the filled header bar is
+   what made every category look like a separate product. */
+.grouped-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-inline: var(--space-4);
+  padding-block-end: var(--space-2);
+}
+
+.grouped-label {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-subtle);
+  line-height: 1.4;
+}
+
+.grouped-meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+.grouped-head > :last-child:not(.grouped-label):not(.grouped-meta) {
+  margin-inline-start: auto;
+}
+
+.grouped {
+  background-color: var(--color-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 0 1px var(--color-hairline);
+  overflow: hidden;
+}
+
+.grouped-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 52px;
+  padding-inline: var(--space-4);
+  padding-block: var(--space-2);
+  text-align: start;
+  color: inherit;
+}
+
+/* Inset hairline, iOS style: it starts where the row's text starts, so the
+   leading control reads as part of a continuous column instead of being cut
+   off by a full-width rule. --row-inset lets a row with a wide leading control
+   push the line further in. */
+.grouped-row + .grouped-row::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: var(--row-inset, var(--space-4));
+  inset-inline-end: 0;
+  height: 1px;
+  background-color: var(--color-hairline);
+}
+
+.grouped-row-button {
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.grouped-row-button:hover {
+  background-color: var(--color-surface-sunken);
+}
+
+.grouped-row-button:active {
+  background-color: var(--color-surface-sunken);
+}
+
+/* A row that is only there to hold something full-width — a chart, an empty
+   note — drops the row rhythm and takes its own padding. */
+.grouped-block {
+  display: block;
+  padding: var(--space-4);
+}

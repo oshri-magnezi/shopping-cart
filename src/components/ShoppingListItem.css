@@ -1,41 +1,71 @@
+/* The row is now just a frame: the sliding surface inside it owns the layout,
+   the padding and the background, because that is the part that has to move
+   independently of the actions parked underneath. */
 .list-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--color-border);
-  transition: opacity var(--duration-base) var(--ease);
+  --row-inset: 48px;
+  display: block;
+  padding: 0;
 }
 
-.list-item:last-child {
-  border-bottom: none;
+.list-item .swipe-surface {
+  gap: var(--space-2);
 }
 
 .item-check {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 24px;
+  height: 24px;
   flex: none;
 }
 
-/* A square box, checked off the way you cross a paper list. */
+/* 24px of ink, 44px of target. Padding the button out to 44 would push the
+   name a finger's width off the edge on every single row. */
+.item-check::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+}
+
 .item-check-box {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 21px;
-  height: 21px;
-  border: 2px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
   color: var(--color-on-primary);
   transition: background-color var(--duration-base) var(--ease),
-    border-color var(--duration-base) var(--ease);
+    border-color var(--duration-base) var(--ease),
+    transform var(--duration-base) var(--ease-spring);
+}
+
+/* The tick draws itself along its own path instead of appearing whole. The
+   mark is always in the DOM so there is a shape to animate; unchecked, it is
+   simply drawn to zero length. */
+.item-check-box svg {
+  overflow: visible;
+}
+
+.item-check-box path {
+  stroke-dasharray: 22;
+  stroke-dashoffset: 22;
+  transition: stroke-dashoffset var(--duration-base) var(--ease-out);
+}
+
+.list-item-purchased .item-check-box path {
+  stroke-dashoffset: 0;
 }
 
 .item-check:hover .item-check-box {
   border-color: var(--color-primary);
+}
+
+.item-check:active .item-check-box {
+  transform: scale(0.88);
 }
 
 .list-item-purchased .item-check-box {
@@ -46,32 +76,26 @@
 .item-name {
   flex: 1;
   min-width: 0;
-  overflow-wrap: anywhere;
-  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-base);
+  font-weight: 400;
   transition: color var(--duration-base) var(--ease);
 }
 
 .list-item-purchased .item-name {
   text-decoration: line-through;
-  text-decoration-thickness: 1.5px;
+  text-decoration-thickness: 1px;
   color: var(--color-text-subtle);
 }
 
-.list-item-purchased {
-  opacity: 0.7;
-}
+/* No opacity on the row. Fading text is the cheapest way to say "done" and the
+   most expensive in contrast: at 0.6 the name dropped to 3.2:1. The rule
+   through it and the filled circle already say it, at full legibility. */
 
-@media (max-width: 480px) {
-  .list-item {
-    flex-wrap: wrap;
-    padding-block: var(--space-3);
-  }
-
-  .item-name {
-    flex-basis: calc(100% - 100px);
-  }
-
-  .list-item .stepper {
-    margin-inline-start: 44px;
+@media (prefers-reduced-motion: reduce) {
+  .item-check-box path {
+    transition: none;
   }
 }

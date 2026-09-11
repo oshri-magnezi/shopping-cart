@@ -3,11 +3,11 @@ import { Pencil, Plus } from 'lucide-react';
 import { CategoryPickerModal } from '../components/CategoryPickerModal.jsx';
 import { CategorySection } from '../components/CategorySection.jsx';
 import { CompletePurchaseModal } from '../components/CompletePurchaseModal.jsx';
-import { ConfirmDialog } from '../components/ConfirmDialog.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
 import { LiveRegion } from '../components/LiveRegion.jsx';
 import { ShelfTicketArt } from '../components/EmptyArt.jsx';
 import { ProductSuggest } from '../components/ProductSuggest.jsx';
+import { UndoBar } from '../components/UndoBar.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { getAllCategories, FALLBACK_CATEGORY_ID } from '../utils/categories.js';
@@ -21,7 +21,8 @@ export function ShoppingListPage() {
 
   const [draftName, setDraftName] = useState('');
   const [picker, setPicker] = useState(null); // { mode, item }
-  const [pendingDelete, setPendingDelete] = useState(null);
+  // What the undo bar is currently offering back: the item and where it sat.
+  const [undoable, setUndoable] = useState(null);
   const [completing, setCompleting] = useState(false);
   const [announcement, setAnnouncement] = useState('');
 
@@ -81,6 +82,19 @@ export function ShoppingListPage() {
     setPicker(null);
   }
 
+  /**
+   * Deletes at once and offers it back, rather than asking first.
+   *
+   * The index is captured here because after the dispatch it is gone, and
+   * putting the item back anywhere else would quietly reorder the list.
+   */
+  function handleDelete(item) {
+    const index = items.findIndex((entry) => entry.id === item.id);
+    dispatch({ type: 'delete-item', id: item.id });
+    setAnnouncement(t('live.itemRemoved', { name: item.name }));
+    setUndoable({ item, index });
+  }
+
   function handleComplete(totalCost) {
     dispatch({ type: 'complete-purchase', totalCost });
     setCompleting(false);
@@ -131,12 +145,17 @@ export function ShoppingListPage() {
           role="group"
           aria-label={t('list.progress', { done: purchasedCount, total: items.length })}
         >
-          {/* One mark per item, filled as it goes in the cart. */}
+          {/* One mark per item, filling in order rather than in place.
+              Lighting the mark that sits at the checked item's own position
+              scattered the bar — tick the first, third and fifth things in the
+              basket and you got gaps, which reads as a fault rather than as
+              progress. The count is what the bar is reporting, so the count is
+              what it draws: each tick advances it by one more segment. */}
           <div className="tally-marks" aria-hidden="true">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <span
                 key={item.id}
-                className={`tally-mark${item.purchased ? ' tally-mark-done' : ''}`}
+                className={`tally-mark${index < purchasedCount ? ' tally-mark-done' : ''}`}
               />
             ))}
           </div>
@@ -181,7 +200,7 @@ export function ShoppingListPage() {
             category={group.category}
             items={group.items}
             onEdit={(item) => setPicker({ mode: 'edit', item })}
-            onDelete={(item) => setPendingDelete(item)}
+            onDelete={handleDelete}
           />
         ))
       )}
@@ -195,16 +214,15 @@ export function ShoppingListPage() {
         />
       ) : null}
 
-      {pendingDelete ? (
-        <ConfirmDialog
-          title={t('confirm.deleteItemTitle')}
-          message={t('confirm.deleteItemText', { name: pendingDelete.name })}
-          onConfirm={() => {
-            dispatch({ type: 'delete-item', id: pendingDelete.id });
-            setAnnouncement(t('live.itemRemoved', { name: pendingDelete.name }));
-            setPendingDelete(null);
+      {undoable ? (
+        <UndoBar
+          key={undoable.item.id}
+          message={t('undo.itemDeleted', { name: undoable.item.name })}
+          onUndo={() => {
+            dispatch({ type: 'restore-item', item: undoable.item, index: undoable.index });
+            setUndoable(null);
           }}
-          onClose={() => setPendingDelete(null)}
+          onDismiss={() => setUndoable(null)}
         />
       ) : null}
 

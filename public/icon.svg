@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
-  <!-- Enamel field with the ochre cart, inset far enough to survive Android's
-       maskable circle crop. Same two colours as the masthead. -->
+  <!-- Maskable: the mark is inset well inside Android's circle crop, and the
+       field is the app's paper rather than a coloured slab, so the icon reads
+       as the same object as the masthead mark. -->
   <rect width="192" height="192" fill="#0F4A44"/>
-  <g transform="translate(96 100) scale(4.6) translate(-12 -12)"
-     fill="none" stroke="#E0A013" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <circle cx="8" cy="21" r="1"/>
-    <circle cx="19" cy="21" r="1"/>
-    <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+  <g transform="translate(96 96) scale(4.1) translate(-16 -16)">
+    <path d="M17.7 3.1a3.2 3.2 0 0 0-2.3-.9H6.6a3.4 3.4 0 0 0-3.4 3.4v8.8c0 .9.3 1.7.9 2.3l11.6 11.6a3.2 3.2 0 0 0 4.6 0l8.8-8.8a3.2 3.2 0 0 0 0-4.6z" fill="#FAF9F7"/>
+    <circle cx="9.6" cy="9.6" r="2.4" fill="#0F4A44"/>
+    <path d="M17.6 12.9v6.1m0 0 2.7-2.7m-2.7 2.7-2.7-2.7" fill="none" stroke="#C77A0E" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>

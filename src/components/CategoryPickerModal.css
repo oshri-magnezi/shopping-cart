@@ -4,18 +4,19 @@
   gap: var(--space-2);
 }
 
-/* Category tiles read like shelf-edge labels: square, hairline, no fuss. */
+/* Recessed tiles, no outline. A grid of bordered boxes inside a bordered
+   panel is the nested-frame problem in miniature — and it was the first thing
+   the shopper saw on every single add. */
 .category-option {
   position: relative;
   display: flex;
   align-items: stretch;
-  min-height: 52px;
-  background-color: var(--color-surface);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  min-height: 48px;
+  background-color: var(--color-surface-sunken);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  transition: border-color var(--duration-fast) var(--ease),
-    background-color var(--duration-fast) var(--ease);
+  transition: background-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
 }
 
 /* The tile is a container now: picking and deleting are separate targets. */
@@ -33,8 +34,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  min-width: 46px;
+  width: 44px;
+  min-width: 44px;
   flex: none;
   color: var(--color-text-subtle);
   transition: background-color var(--duration-fast) var(--ease),
@@ -51,14 +52,13 @@
   align-items: center;
   gap: var(--space-1);
   padding-inline-start: var(--space-3);
-  border-color: var(--color-destructive);
   background-color: var(--color-destructive-soft);
 }
 
 .category-confirm-text {
   flex: 1;
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-destructive);
 }
 
@@ -67,8 +67,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  min-width: 46px;
+  width: 44px;
+  min-width: 44px;
   flex: none;
   align-self: stretch;
   color: var(--color-destructive);
@@ -81,11 +81,11 @@
 }
 
 .category-option:hover {
-  border-color: var(--color-border-strong);
+  background-color: var(--color-bg);
 }
 
-.category-option-selected {
-  border-color: var(--color-primary);
+.category-option-selected,
+.category-option-selected:hover {
   background-color: var(--color-primary-soft);
 }
 
@@ -96,12 +96,14 @@
 
 .category-name {
   font-size: var(--text-sm);
-  font-weight: 500;
   line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .category-option-selected .category-name {
-  font-weight: 700;
+  font-weight: 500;
 }
 
 /* Sits at the end of the pick area rather than in the tile's corner. The
@@ -115,7 +117,7 @@
   justify-content: center;
   width: 17px;
   height: 17px;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
   background-color: var(--color-primary);
   color: var(--color-on-primary);
 }
@@ -125,18 +127,16 @@
   align-items: center;
   gap: var(--space-2);
   min-height: 44px;
-  margin-top: var(--space-3);
+  margin-top: var(--space-2);
   padding-inline: var(--space-2);
   font-size: var(--text-sm);
-  font-weight: 700;
+  font-weight: 500;
   color: var(--color-primary);
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  text-decoration-thickness: 1.5px;
+  transition: opacity var(--duration-fast) var(--ease);
 }
 
 .new-category-trigger:hover {
-  color: var(--color-primary-hover);
+  opacity: 0.7;
 }
 
 .new-category-row {
@@ -158,40 +158,35 @@
 
 /* ---------- Sold by unit or by weight ---------- */
 
-/* Two halves of one control rather than two buttons: the choice is exclusive,
-   and the shared outline says so before the labels are read. */
+/* A segmented control: one recessed track, one filled thumb. The choice is
+   exclusive and the shared track says so before the labels are read. */
 .unit-toggle {
   display: inline-flex;
-  border: 1.5px solid var(--color-border-strong);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.unit-option {
-  min-height: 44px;
-  padding-inline: var(--space-4);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-text-muted);
-  transition: background-color var(--duration-fast) var(--ease),
-    color var(--duration-fast) var(--ease);
-}
-
-.unit-option + .unit-option {
-  border-inline-start: 1.5px solid var(--color-border-strong);
-}
-
-.unit-option:hover {
+  padding: 3px;
+  border-radius: var(--radius-full);
   background-color: var(--color-surface-sunken);
 }
 
-.unit-option-on {
-  background-color: var(--color-primary);
-  color: var(--color-on-primary);
+.unit-option {
+  min-height: 38px;
+  padding-inline: var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-muted);
+  transition: background-color var(--duration-base) var(--ease),
+    color var(--duration-base) var(--ease);
 }
 
+.unit-option:hover {
+  color: var(--color-text);
+}
+
+.unit-option-on,
 .unit-option-on:hover {
-  background-color: var(--color-primary-hover);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-sm);
 }
 
 .quick-weights {
@@ -202,26 +197,31 @@
 }
 
 .quick-weight {
-  min-height: 44px;
+  min-height: 38px;
   padding-inline: var(--space-3);
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface-sunken);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   color: var(--color-text-muted);
-  transition: border-color var(--duration-fast) var(--ease),
-    color var(--duration-fast) var(--ease);
+  transition: background-color var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease),
+    transform var(--duration-base) var(--ease-spring);
 }
 
 .quick-weight:hover {
-  border-color: var(--color-border-strong);
   color: var(--color-text);
 }
 
-.quick-weight-on {
-  border-color: var(--color-primary);
+.quick-weight:active {
+  transform: scale(0.95);
+}
+
+.quick-weight-on,
+.quick-weight-on:hover {
+  background-color: var(--color-primary-soft);
   color: var(--color-primary);
-  font-weight: 700;
+  font-weight: 500;
 }
 
 /* The counter ticket: what a kilo costs, and what this much of it comes to.
@@ -233,18 +233,20 @@
   gap: var(--space-3);
   margin-top: var(--space-4);
   padding-top: var(--space-3);
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-hairline);
 }
 
 .price-estimate-unit {
   font-size: var(--text-sm);
-  color: var(--color-text-muted);
+  color: var(--color-text-subtle);
 }
 
 .price-estimate-total {
   font-family: var(--font-mono);
-  font-size: var(--text-base);
-  font-weight: 700;
+  font-size: var(--text-lg);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
   color: var(--color-accent-text);
   white-space: nowrap;
 }

@@ -1,3 +1,4 @@
+import { GroupedList } from './GroupedList.jsx';
 import { ShoppingListItem } from './ShoppingListItem.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { categoryLabel } from '../utils/categories.js';
@@ -8,20 +9,22 @@ export function CategorySection({ category, items, onEdit, onDelete }) {
   const Icon = category.icon;
 
   return (
-    <section className="category-section">
-      <h2 className="category-section-header">
-        <span className="category-section-icon" style={{ color: category.color }}>
-          <Icon size={18} strokeWidth={2} aria-hidden="true" />
-        </span>
-        {categoryLabel(category, t)}
-        <span className="category-section-count tabular">{items.length}</span>
-      </h2>
-
-      <ul>
+    <GroupedList
+      className="category-section"
+      label={
+        <>
+          <span className="category-section-icon" style={{ color: category.color }}>
+            <Icon size={15} strokeWidth={1.5} aria-hidden="true" />
+          </span>
+          {categoryLabel(category, t)}
+        </>
+      }
+    >
+      <ul className="stagger">
         {items.map((item) => (
           <ShoppingListItem key={item.id} item={item} onEdit={onEdit} onDelete={onDelete} />
         ))}
       </ul>
-    </section>
+    </GroupedList>
   );
 }
