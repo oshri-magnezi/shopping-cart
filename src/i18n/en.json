@@ -36,6 +36,8 @@
   "picker.addTitle": "Choose a category",
   "picker.editTitle": "Edit item",
   "picker.itemName": "Product name",
+  "picker.categoryRecommended": "Suggested",
+  "picker.categorySuggested": "Suggested from the product name. Pick another to change it.",
   "picker.category": "Category",
   "picker.quantity": "Quantity",
   "picker.newCategory": "New category",
@@ -151,6 +153,7 @@
   "category.frozen": "Frozen",
   "category.drinks": "Beverages",
   "category.snacks": "Snacks & Sweets",
-  "category.cleaning": "Cleaning & Toiletries",
+  "category.cleaning": "Cleaning",
+  "category.care": "Hygiene & Care",
   "category.other": "Other"
 }

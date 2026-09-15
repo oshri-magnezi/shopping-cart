@@ -9,6 +9,7 @@ import { ShelfTicketArt } from '../components/EmptyArt.jsx';
 import { ProductSuggest } from '../components/ProductSuggest.jsx';
 import { UndoBar } from '../components/UndoBar.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
+import { classify, nameSignature } from '../utils/classify.js';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { getAllCategories, FALLBACK_CATEGORY_ID } from '../utils/categories.js';
 import { formatDateTime } from '../utils/format.js';
@@ -16,11 +17,13 @@ import './ShoppingListPage.css';
 
 export function ShoppingListPage() {
   const { t, language, locale } = useTranslation();
-  const { activeList, customCategories, dispatch } = useAppData();
+  const { activeList, customCategories, categoryMemory, dispatch } = useAppData();
   const inputRef = useRef(null);
 
   const [draftName, setDraftName] = useState('');
-  const [picker, setPicker] = useState(null); // { mode, item }
+  // { session, mode, item } — `session` only exists to key the modal below.
+  const [picker, setPicker] = useState(null);
+  const pickerSession = useRef(0);
   // What the undo bar is currently offering back: the item and where it sat.
   const [undoable, setUndoable] = useState(null);
   const [completing, setCompleting] = useState(false);
@@ -56,10 +59,36 @@ export function ShoppingListPage() {
     if (allPurchased) setCompleting(true);
   }, [allPurchased]);
 
+  /**
+   * Opens the picker with a category already guessed from the name.
+   *
+   * The guess is made here, synchronously, rather than inside the modal: the
+   * modal is mounted fresh on every open, so a category chosen before it exists
+   * is simply its initial state. A suggestion that arrived later would move the
+   * selection a beat after the shopper was already looking at it.
+   *
+   * `categorySuggested` only travels as far as the modal — `handleSubmit` there
+   * builds its payload explicitly, so it never reaches the stored item.
+   */
   function openPicker(name, code = '', unit = 'unit') {
+    const guess = classify(name, {
+      loose: unit === 'kg',
+      memory: categoryMemory,
+      validCategoryIds: new Set(categories.map((category) => category.id)),
+    });
+
+    pickerSession.current += 1;
     setPicker({
+      session: pickerSession.current,
       mode: 'add',
-      item: { name, code, unit, categoryId: FALLBACK_CATEGORY_ID, quantity: 1 },
+      item: {
+        name,
+        code,
+        unit,
+        quantity: 1,
+        categoryId: guess?.categoryId ?? FALLBACK_CATEGORY_ID,
+        categorySuggested: guess !== null,
+      },
     });
   }
 
@@ -71,6 +100,21 @@ export function ShoppingListPage() {
   }
 
   function handlePickerConfirm(values) {
+    // What the shopper files by hand is the only signal that can ever suggest a
+    // category they invented, and an edit is them saying the filing was wrong.
+    //
+    // `other` is recorded only when it overrides a suggestion. Storing it every
+    // time would fill the store with the default and teach the app to suggest
+    // "other" for everything. `values.name`, not the draft — the name may have
+    // been edited in the modal.
+    if (values.categoryId !== FALLBACK_CATEGORY_ID || picker.item.categorySuggested) {
+      dispatch({
+        type: 'remember-category',
+        signature: nameSignature(values.name),
+        categoryId: values.categoryId,
+      });
+    }
+
     if (picker.mode === 'add') {
       dispatch({ type: 'add-item', ...values });
       setAnnouncement(t('live.itemAdded', { name: values.name }));
@@ -199,7 +243,10 @@ export function ShoppingListPage() {
             key={group.category.id}
             category={group.category}
             items={group.items}
-            onEdit={(item) => setPicker({ mode: 'edit', item })}
+            onEdit={(item) => {
+              pickerSession.current += 1;
+              setPicker({ session: pickerSession.current, mode: 'edit', item });
+            }}
             onDelete={handleDelete}
           />
         ))
@@ -207,6 +254,13 @@ export function ShoppingListPage() {
 
       {picker ? (
         <CategoryPickerModal
+          /* The modal seeds its fields from `initialItem` with useState, which
+             only runs on mount. Replacing one open picker with another — the
+             same component, a different product — would keep the old name and
+             the old category while the new props said otherwise, and the
+             suggestion marker would end up on a tile nobody suggested. Keying
+             on the session forces the fresh mount the seeding assumes. */
+          key={picker.session}
           mode={picker.mode}
           initialItem={picker.item}
           onConfirm={handlePickerConfirm}

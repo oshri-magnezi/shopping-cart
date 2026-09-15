@@ -250,3 +250,28 @@
   color: var(--color-accent-text);
   white-space: nowrap;
 }
+
+/* Names the guessed tile. It sits on the selected tile's primary-soft fill, so
+   it takes the plain surface colour to stay legible in both themes without
+   introducing a second accent. Pushed to the end of the row, with the check
+   badge following it. */
+.category-recommended {
+  flex: none;
+  margin-inline-start: auto;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface);
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Says why a tile is already chosen. Muted on purpose: the filled tile plus its
+   check badge is the emphasis, and this is its caption — a second coloured
+   signal here would compete with the price estimate below it. */
+.category-suggested-note {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}

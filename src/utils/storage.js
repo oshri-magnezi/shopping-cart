@@ -7,6 +7,15 @@ const DATA_VERSION = 1;
  */
 export const DEFAULT_WEIGHT = 0.5;
 
+/**
+ * How many name-to-category corrections to keep.
+ *
+ * A household's regular basket is a few dozen products, so this covers it
+ * several times over while staying a few kilobytes — small beside the purchase
+ * history already in this key. Oldest entries fall off the end.
+ */
+export const CATEGORY_MEMORY_LIMIT = 200;
+
 export function createId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
@@ -22,6 +31,7 @@ export function createInitialData() {
     activeList: createEmptyList(),
     customCategories: [],
     history: [],
+    categoryMemory: [],
   };
 }
 
@@ -66,6 +76,20 @@ export function loadData() {
       activeList,
       customCategories: Array.isArray(parsed.customCategories) ? parsed.customCategories : [],
       history: Array.isArray(parsed.history) ? parsed.history : [],
+      // Absent for everything saved before category suggestions existed, which
+      // is the whole migration: an empty store simply suggests nothing yet.
+      categoryMemory: Array.isArray(parsed.categoryMemory)
+        ? parsed.categoryMemory
+            .filter(
+              (entry) =>
+                entry &&
+                typeof entry.signature === 'string' &&
+                entry.signature &&
+                typeof entry.categoryId === 'string' &&
+                entry.categoryId,
+            )
+            .slice(0, CATEGORY_MEMORY_LIMIT)
+        : [],
     };
   } catch {
     return createInitialData();

@@ -19,6 +19,10 @@ const QUICK_WEIGHTS = [0.25, 0.5, 1];
  * The popup that opens whenever an item is added or edited: pick a category,
  * set the quantity, and (in edit mode) adjust the name.
  */
+// Ties the pre-selected radio to the line explaining why it is selected, so a
+// screen-reader user is not handed an unexplained choice.
+const SUGGESTION_NOTE_ID = 'category-suggested-note';
+
 export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
   const { t, language, locale } = useTranslation();
   const { customCategories, dispatch } = useAppData();
@@ -30,6 +34,11 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
   const [quantity, setQuantity] = useState(initialItem.quantity ?? 1);
   const [unit, setUnit] = useState(initialItem.unit ?? 'unit');
   const [weight, setWeight] = useState(initialItem.weight ?? DEFAULT_WEIGHT);
+  // Purely presentational: whether the note explaining the pre-selected tile is
+  // still true. Once the shopper expresses a preference it is not, and leaving
+  // it up would describe a choice they have already replaced.
+  const [touched, setTouched] = useState(false);
+  const showingSuggestion = Boolean(initialItem.categorySuggested) && !touched;
   const [creatingCategory, setCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   // Confirming inline rather than in a dialog: a modal on top of this modal
@@ -75,6 +84,7 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
     const id = createId();
     dispatch({ type: 'add-custom-category', id, name: trimmed });
     setCategoryId(id);
+    setTouched(true);
     setCreatingCategory(false);
     setNewCategoryName('');
   }
@@ -83,6 +93,7 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
     dispatch({ type: 'delete-custom-category', id });
     // Anything filed under it moves to "other"; follow the selection there.
     if (categoryId === id) setCategoryId(FALLBACK_CATEGORY_ID);
+    setTouched(true);
     setConfirmingDelete(null);
   }
 
@@ -176,15 +187,32 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
                     role="radio"
                     aria-checked={selected}
                     className="category-pick"
-                    onClick={() => setCategoryId(category.id)}
+                    onClick={() => {
+                      setCategoryId(category.id);
+                      setTouched(true);
+                    }}
+                    aria-describedby={
+                      showingSuggestion && selected ? SUGGESTION_NOTE_ID : undefined
+                    }
                   >
                     <span className="category-icon" style={{ color: category.color }}>
                       <Icon size={20} strokeWidth={2} aria-hidden="true" />
                     </span>
                     <span className="category-name">{categoryLabel(category, t)}</span>
+                    {/* Both of these say "this is the one", so the tile shows
+                        one or the other — never both. On a guessed tile the
+                        word is the more useful of the two, and the tick would
+                        only cost the name the room it needs. Quiet on purpose:
+                        the filled tile is still the emphasis and this is its
+                        label, not a rival to it. */}
+                    {selected && showingSuggestion ? (
+                      <span className="category-recommended">
+                        {t('picker.categoryRecommended')}
+                      </span>
+                    ) : null}
                     {/* Inside the pick button and after the name, so it can
                         never land on top of the delete control. */}
-                    {selected ? (
+                    {selected && !showingSuggestion ? (
                       <span className="category-check" aria-hidden="true">
                         <Check size={14} strokeWidth={3} />
                       </span>
@@ -207,6 +235,16 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
               );
             })}
           </div>
+
+          {/* A caption for the filled tile, not a second signal competing with
+              it. The selection is the emphasis; this only says where it came
+              from, so the shopper knows it was guessed rather than remembered
+              from last time. */}
+          {showingSuggestion ? (
+            <p className="category-suggested-note" id={SUGGESTION_NOTE_ID}>
+              {t('picker.categorySuggested')}
+            </p>
+          ) : null}
 
           {creatingCategory ? (
             <div className="new-category-row">

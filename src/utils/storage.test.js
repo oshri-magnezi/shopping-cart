@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createEmptyList, createId, loadData, saveData } from './storage.js';
+import {
+  CATEGORY_MEMORY_LIMIT,
+  createEmptyList,
+  createId,
+  loadData,
+  saveData,
+} from './storage.js';
 
 const KEY = 'shopping-cart-data';
 
@@ -84,5 +90,54 @@ describe('createEmptyList', () => {
     expect(list.name).toBe('');
     expect(list.items).toEqual([]);
     expect(typeof list.createdAt).toBe('number');
+  });
+});
+
+/**
+ * The learned categories are the only part of the saved state written by
+ * inference rather than by a direct action, so a malformed entry here would
+ * come back as a confident wrong suggestion rather than as visible damage.
+ */
+describe('categoryMemory', () => {
+  const store = (categoryMemory) =>
+    localStorage.setItem(KEY, JSON.stringify({ activeList: createEmptyList(), categoryMemory }));
+
+  it('is empty for anything saved before suggestions existed', () => {
+    localStorage.setItem(KEY, JSON.stringify({ activeList: createEmptyList() }));
+    expect(loadData().categoryMemory).toEqual([]);
+  });
+
+  it('drops entries that cannot be used', () => {
+    store([
+      { signature: 'חלב', categoryId: 'dairy' },
+      null,
+      { signature: 'לחם' },
+      { categoryId: 'bakery' },
+      { signature: '', categoryId: 'bakery' },
+      { signature: 'ביצים', categoryId: 7 },
+    ]);
+
+    expect(loadData().categoryMemory).toEqual([{ signature: 'חלב', categoryId: 'dairy' }]);
+  });
+
+  it('caps a store that grew past the limit', () => {
+    store(Array.from({ length: 500 }, (_, i) => ({ signature: `p${i}`, categoryId: 'other' })));
+
+    const { categoryMemory } = loadData();
+    expect(categoryMemory).toHaveLength(CATEGORY_MEMORY_LIMIT);
+    // The front of the array is the most recent, so the cap keeps the front.
+    expect(categoryMemory[0].signature).toBe('p0');
+  });
+
+  it('survives a round trip', () => {
+    const entries = [{ signature: 'חלב', categoryId: 'dairy', at: 1 }];
+    saveData({ ...loadData(), categoryMemory: entries });
+
+    expect(loadData().categoryMemory).toEqual(entries);
+  });
+
+  it('ignores a store that is not a list at all', () => {
+    store({ 'חלב': 'dairy' });
+    expect(loadData().categoryMemory).toEqual([]);
   });
 });

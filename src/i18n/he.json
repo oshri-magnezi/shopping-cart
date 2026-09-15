@@ -36,6 +36,8 @@
   "picker.addTitle": "שיוך לקטגוריה",
   "picker.editTitle": "עריכת פריט",
   "picker.itemName": "שם המוצר",
+  "picker.categoryRecommended": "מומלץ",
+  "picker.categorySuggested": "ההמלצה לפי שם המוצר. אפשר לבחור אחרת.",
   "picker.category": "קטגוריה",
   "picker.quantity": "כמות",
   "picker.newCategory": "קטגוריה חדשה",
@@ -151,6 +153,7 @@
   "category.frozen": "קפואים",
   "category.drinks": "משקאות",
   "category.snacks": "חטיפים ומתוקים",
-  "category.cleaning": "ניקיון וטואלטיקה",
+  "category.cleaning": "ניקיון",
+  "category.care": "היגיינה וטיפוח",
   "category.other": "אחר"
 }

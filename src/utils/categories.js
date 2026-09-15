@@ -1,4 +1,5 @@
 import {
+  Bath,
   Beef,
   Candy,
   Carrot,
@@ -24,6 +25,14 @@ export const BUILT_IN_CATEGORIES = [
   { id: 'drinks', icon: CupSoda, color: '#2563eb' },
   { id: 'snacks', icon: Candy, color: '#db2777' },
   { id: 'cleaning', icon: SprayCan, color: '#0d9488' },
+  // Toiletries used to share the cleaning shelf, which put toothpaste next to
+  // bleach. They are bought on a different rhythm and belong apart.
+  //
+  // The colour is muted rather than the obvious bright fuchsia because a tile
+  // has four backgrounds — light and dark, selected and not — and the selected
+  // dark one (`--color-primary-soft`) is the hard case. This clears 3:1
+  // against all four; #c026d3 managed only 2.68 against that one.
+  { id: 'care', icon: Bath, color: '#c757b4' },
   { id: 'other', icon: ShoppingBasket, color: '#64748b' },
 ];
 

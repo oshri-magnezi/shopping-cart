@@ -1,4 +1,9 @@
-import { createEmptyList, createId, DEFAULT_WEIGHT } from '../utils/storage.js';
+import {
+  CATEGORY_MEMORY_LIMIT,
+  createEmptyList,
+  createId,
+  DEFAULT_WEIGHT,
+} from '../utils/storage.js';
 import { FALLBACK_CATEGORY_ID } from '../utils/categories.js';
 
 /**
@@ -101,7 +106,29 @@ export function reducer(state, action) {
         ...state,
         activeList: { ...state.activeList, items },
         customCategories: state.customCategories.filter((category) => category.id !== action.id),
+        // For the same reason the items above are reassigned: a remembered
+        // correction pointing at a category that no longer exists would keep
+        // suggesting a shelf the shopper can no longer see.
+        categoryMemory: state.categoryMemory.filter((entry) => entry.categoryId !== action.id),
       };
+    }
+
+    /**
+     * Records which shelf the shopper filed a product on.
+     *
+     * Last write wins. Moving something is what a shopper does when they mean
+     * it, and weighting by how often a category was confirmed would make a
+     * settled habit take three corrections to unlearn.
+     */
+    case 'remember-category': {
+      if (!action.signature || !action.categoryId) return state;
+      const rest = state.categoryMemory.filter((entry) => entry.signature !== action.signature);
+      const next = [
+        { signature: action.signature, categoryId: action.categoryId, at: Date.now() },
+        ...rest,
+      ];
+      // Order is the recency, so the cap drops the oldest correction.
+      return { ...state, categoryMemory: next.slice(0, CATEGORY_MEMORY_LIMIT) };
     }
 
     case 'add-custom-category': {
