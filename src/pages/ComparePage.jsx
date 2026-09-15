@@ -28,7 +28,8 @@ export function ComparePage() {
   const { t, locale } = useTranslation();
   const { activeList } = useAppData();
 
-  const { cities, city, setCity, catalog, chains: indexed, status, request, reload } = useCatalog();
+  const { cities, city, setCity, catalog, chains: indexed, indexing, status, request, reload } =
+    useCatalog();
   const [prefs, setPrefs] = useState(loadPrefs);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -123,8 +124,10 @@ export function ComparePage() {
       </header>
 
       {/* 'idle' still means work is pending — the index has not arrived yet —
-          so it must show progress rather than an empty page. */}
-      {!catalog && status !== 'missing' ? (
+          so it must show progress rather than an empty page. `indexing` covers
+          the gap after it: the catalogue is here but has not been tokenized
+          yet, and rendering from an empty index would flash "0 chains". */}
+      {(!catalog || indexing) && status !== 'missing' ? (
         <CompareSkeleton label={t('compare.loading')} />
       ) : null}
 
@@ -132,7 +135,7 @@ export function ComparePage() {
         <EmptyState art={BalanceArt} title={t('compare.emptyTitle')} text={t('compare.emptyText')} />
       ) : null}
 
-      {catalog ? (
+      {catalog && !indexing ? (
         <>
           {/* Collapsed by default. Expanded, this panel used to fill half a
               phone screen before a single price was visible; the answer has to

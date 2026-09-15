@@ -1,11 +1,35 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { buildIndex } from '../utils/catalogIndex.js';
-import { buildSuggestionPool } from '../utils/suggest.js';
+import { buildIndexInSlices } from '../utils/catalogIndex.js';
+import { buildSuggestionPoolInSlices } from '../utils/suggest.js';
 
 const INDEX_FILE = `${import.meta.env.BASE_URL}price-catalog-index.json`;
 const CITY_KEY = 'shopping-cart-city';
 
 const CatalogContext = createContext(null);
+
+/**
+ * Hands the main thread back so the browser can paint and read the keyboard.
+ *
+ * `scheduler.yield` is exactly this and resumes with priority, so the build
+ * does not lose its place behind every other pending task; where it is not
+ * available a zero timeout does the same job a little less politely.
+ */
+const breathe = () => {
+  if (globalThis.scheduler?.yield) return globalThis.scheduler.yield();
+
+  // Not `setTimeout(0)`. Browsers clamp timers in a backgrounded tab to about
+  // a second, which would stretch a build with a dozen yields in it across
+  // fifteen seconds — so a shopper returning to the tab would find it still
+  // loading. A message port is a task like any other and is not clamped.
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => {
+      channel.port1.close();
+      resolve();
+    };
+    channel.port2.postMessage(null);
+  });
+};
 
 /**
  * Holds the price catalogue for the selected city.
@@ -90,11 +114,57 @@ export function CatalogProvider({ children }) {
     };
   }, [index, city, wanted]);
 
-  // Tokenizing ~80k product names is the expensive part, and both the
-  // comparison and the autocomplete need it. Doing it once here means the
-  // work happens on load rather than twice, on two different screens.
-  const chains = useMemo(() => (catalog ? buildIndex(catalog) : []), [catalog]);
-  const suggestions = useMemo(() => (catalog ? buildSuggestionPool(catalog) : null), [catalog]);
+  /**
+   * Tokenizing ~80k product names is the expensive part, and both the
+   * comparison and the autocomplete need it — so it is done once, here.
+   *
+   * **After paint, and in slices.** As two `useMemo` calls this was about
+   * 1.2 seconds of unbroken main-thread work — measured on a mid-range
+   * desktop, so several times that on a phone — running inside the render that
+   * follows the download. The app locked up exactly when the shopper had
+   * started typing in the add box, and their first keystrokes went nowhere.
+   *
+   * The work is unchanged and so is the result. What changed is when and how
+   * it runs: after the browser has painted rather than during the commit, and
+   * a chain at a time with a yield in between, so no single task is long
+   * enough to be felt. The autocomplete is published before the comparison
+   * index starts, because that is the one the shopper is waiting on.
+   */
+  const [derived, setDerived] = useState({ chains: [], suggestions: null });
+
+  useEffect(() => {
+    if (!catalog) {
+      setDerived({ chains: [], suggestions: null });
+      return undefined;
+    }
+
+    let cancelled = false;
+    // A macrotask, so this lands after the browser has painted rather than in
+    // the commit that scheduled it.
+    const handle = setTimeout(async () => {
+      const suggestions = await buildSuggestionPoolInSlices(catalog, breathe);
+      if (cancelled) return;
+      // The autocomplete is what the shopper is waiting on, so publish it
+      // before starting the comparison index and let a frame through between.
+      setDerived((current) => ({ ...current, suggestions }));
+
+      if (cancelled) return;
+      const chains = await buildIndexInSlices(catalog, breathe);
+      if (!cancelled) setDerived((current) => ({ ...current, chains }));
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(handle);
+    };
+  }, [catalog]);
+
+  const { chains, suggestions } = derived;
+
+  // True between the catalogue arriving and its indexes being ready. Screens
+  // that render from `chains` must keep showing progress across that gap, or
+  // they flash an empty comparison for a frame or two.
+  const indexing = Boolean(catalog) && chains.length === 0;
 
   const value = useMemo(
     () => ({
@@ -105,11 +175,12 @@ export function CatalogProvider({ children }) {
       catalog,
       chains,
       suggestions,
+      indexing,
       status,
       request,
       reload: loadIndex,
     }),
-    [index, city, catalog, chains, suggestions, status, request, loadIndex],
+    [index, city, catalog, chains, suggestions, indexing, status, request, loadIndex],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

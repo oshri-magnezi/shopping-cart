@@ -78,6 +78,24 @@ export function buildIndex(catalog) {
 }
 
 /**
+ * The same index, one chain at a time with a breath in between.
+ *
+ * Indexing a whole city is half a second of unbroken main-thread work. Each
+ * chain on its own is a fraction of that, and the result is identical either
+ * way — so the comparison screen can stay answerable while it builds instead
+ * of locking up once.
+ */
+export async function buildIndexInSlices(catalog, breathe) {
+  const indexed = [];
+  for (const chain of catalog.chains) {
+    indexed.push(indexChain(chain));
+    // eslint-disable-next-line no-await-in-loop -- yielding is the point
+    await breathe();
+  }
+  return indexed;
+}
+
+/**
  * The lowest price this item currently carries anywhere in the loaded city.
  *
  * Used to answer the question a shopper actually has at the counter — what

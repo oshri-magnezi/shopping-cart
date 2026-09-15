@@ -10,8 +10,34 @@ import { normalize, tokenize, leadCategory } from './textMatch.js';
  */
 export function buildSuggestionPool(catalog) {
   const byName = new Map();
+  for (const chain of catalog.chains) collectChain(byName, chain);
+  return finishPool(byName);
+}
 
+/**
+ * The same pool, built a chain at a time with a breath in between.
+ *
+ * Building it in one go is over half a second of unbroken main-thread work on
+ * a city catalogue, and it runs the moment the shopper starts typing — so
+ * their first keystrokes went into a frozen field. Same result, same order,
+ * just handed back to the browser between chains so it can paint and keep up
+ * with the keyboard.
+ *
+ * `breathe` is injected rather than hardcoded so this stays testable without a
+ * scheduler, and so the caller decides what "give the browser a turn" means.
+ */
+export async function buildSuggestionPoolInSlices(catalog, breathe) {
+  const byName = new Map();
   for (const chain of catalog.chains) {
+    collectChain(byName, chain);
+    // eslint-disable-next-line no-await-in-loop -- yielding is the point
+    await breathe();
+  }
+  return finishPool(byName);
+}
+
+function collectChain(byName, chain) {
+  {
     for (const [name, price, code, , unit] of chain.products) {
       const normalized = normalize(name);
       if (!normalized) continue;
@@ -41,6 +67,9 @@ export function buildSuggestionPool(catalog) {
     }
   }
 
+}
+
+function finishPool(byName) {
   const pool = [...byName.values()].map((entry) => ({
     ...entry,
     chains: entry.chainKeys.size,

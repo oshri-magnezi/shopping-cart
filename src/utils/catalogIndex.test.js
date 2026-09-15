@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findByCode, findInChain, indexChain } from './catalogIndex.js';
+import { buildIndex, buildIndexInSlices, findByCode, findInChain, indexChain } from './catalogIndex.js';
 
 const chain = (products) => indexChain({ key: 'test', displayName: 'Test', products });
 
@@ -127,5 +127,38 @@ describe('text lookup', () => {
   it('carries the promo flag through', () => {
     const indexed = chain([['שמן זית כתית 750 מל', 24.9, '1', 1]]);
     expect(findInChain(indexed, 'שמן זית 750 מל').promo).toBe(1);
+  });
+});
+
+/**
+ * The comparison screen renders straight from this index, so a sliced build
+ * that differed from the whole-hog one would show different prices depending
+ * on nothing but timing.
+ */
+describe('building in slices', () => {
+  const sample = {
+    chains: [
+      { key: 'a', displayName: 'a', products: [['חלב 3% 1 ליטר', 6.9, '7290000000011']] },
+      { key: 'b', displayName: 'b', products: [['לחם אחיד', 5.5, '']] },
+    ],
+  };
+
+  it('produces exactly what building it in one go produces', async () => {
+    const atOnce = buildIndex(sample);
+    const sliced = await buildIndexInSlices(sample, async () => {});
+
+    expect(sliced).toHaveLength(atOnce.length);
+    sliced.forEach((chain, i) => {
+      expect(chain.key).toBe(atOnce[i].key);
+      expect(chain.vocabulary).toEqual(atOnce[i].vocabulary);
+      expect([...chain.byToken.entries()]).toEqual([...atOnce[i].byToken.entries()]);
+      expect([...chain.byCode.entries()]).toEqual([...atOnce[i].byCode.entries()]);
+    });
+  });
+
+  it('gives the browser a turn once per chain', async () => {
+    let breaths = 0;
+    await buildIndexInSlices(sample, async () => { breaths += 1; });
+    expect(breaths).toBe(sample.chains.length);
   });
 });
