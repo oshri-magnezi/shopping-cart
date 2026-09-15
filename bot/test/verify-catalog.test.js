@@ -8,61 +8,92 @@ const city = (name, chains) => ({
   chains: chains.map(([key, productCount]) => ({ key, displayName: key, productCount })),
 });
 
+// Six chains, so a third of them is two — enough room to tell "one went quiet"
+// apart from "an outage".
+const six = (counts) =>
+  city('תל אביב', Object.entries(counts).map(([key, n]) => [key, n]));
+const full = { a: 6000, b: 6000, c: 6000, d: 6000, e: 6000, f: 6000 };
+
 describe('compareCatalogues', () => {
   it('publishes a run that held on to everything', () => {
-    const before = index([city('תל אביב', [['shufersal', 6000], ['ramilevi', 14000]])]);
-    const after = index([city('תל אביב', [['shufersal', 6100], ['ramilevi', 13900]])]);
-
-    assert.equal(compareCatalogues(before, after).ok, true);
+    const after = { ...full, a: 6100, b: 5900 };
+    assert.equal(compareCatalogues(index([six(full)]), index([six(after)])).ok, true);
   });
 
-  it('refuses a run that lost a chain', () => {
-    // The failure this whole file exists for: the bot is fail-soft, so a chain
-    // that would not answer simply is not there, and the run still succeeds.
-    const before = index([city('תל אביב', [['shufersal', 6000], ['ramilevi', 14000]])]);
-    const after = index([city('תל אביב', [['shufersal', 6000]])]);
+  it('publishes when one chain simply did not answer', () => {
+    // The night this was written for: one shop out of six went quiet, and the
+    // strict version held three weeks of prices back over it.
+    const after = { ...full };
+    delete after.f;
 
-    const { ok, problems } = compareCatalogues(before, after);
+    const { ok, notes } = compareCatalogues(index([six(full)]), index([six(after)]));
+    assert.equal(ok, true);
+    assert.match(notes[0], /f/);
+  });
+
+  it('still publishes when a chain is lost and another is gained', () => {
+    const after = { ...full, newchain: 5000 };
+    delete after.f;
+
+    assert.equal(compareCatalogues(index([six(full)]), index([six(after)])).ok, true);
+  });
+
+  it('refuses when a third of a city goes quiet at once', () => {
+    const after = { ...full };
+    delete after.e;
+    delete after.f;
+    delete after.d;
+
+    const { ok, problems } = compareCatalogues(index([six(full)]), index([six(after)]));
     assert.equal(ok, false);
-    assert.match(problems[0], /ramilevi/);
+    assert.match(problems[0], /went quiet/);
+  });
+
+  it('refuses a truncated chain however small the shortfall list', () => {
+    // Missing data drops out of the comparison; truncated data is published as
+    // fact and quietly misprices a basket. Only one chain is affected here and
+    // it is still a hard stop.
+    const after = { ...full, c: 900 };
+
+    const { ok, problems } = compareCatalogues(index([six(full)]), index([six(after)]));
+    assert.equal(ok, false);
+    assert.match(problems[0], /truncated/);
+  });
+
+  it('accepts ordinary night-to-night movement', () => {
+    const after = Object.fromEntries(Object.keys(full).map((k) => [k, 5700]));
+    assert.equal(compareCatalogues(index([six(full)]), index([six(after)])).ok, true);
+  });
+
+  it('refuses a city left with too few chains to compare', () => {
+    const before = city('חיפה', [['a', 100], ['b', 100], ['c', 100]]);
+    const after = city('חיפה', [['a', 100], ['b', 100]]);
+
+    const { ok, problems } = compareCatalogues(index([before]), index([after]));
+    assert.equal(ok, false);
+    assert.match(problems[0], /too few/);
   });
 
   it('refuses a run that lost a city', () => {
-    const before = index([city('תל אביב', [['shufersal', 6000]]), city('חיפה', [['shufersal', 5000]])]);
-    const after = index([city('תל אביב', [['shufersal', 6000]])]);
+    const before = index([six(full), city('חיפה', [['a', 100], ['b', 100], ['c', 100]])]);
+    const after = index([six(full)]);
 
     const { ok, problems } = compareCatalogues(before, after);
     assert.equal(ok, false);
     assert.match(problems[0], /חיפה/);
   });
 
-  it('refuses a chain whose catalogue collapsed', () => {
-    // A truncated download, not a price change.
-    const before = index([city('תל אביב', [['shufersal', 6000]])]);
-    const after = index([city('תל אביב', [['shufersal', 900]])]);
-
-    assert.equal(compareCatalogues(before, after).ok, false);
-  });
-
-  it('accepts ordinary night-to-night movement', () => {
-    const before = index([city('תל אביב', [['shufersal', 6000]])]);
-    const after = index([city('תל אביב', [['shufersal', 5700]])]);
-
-    assert.equal(compareCatalogues(before, after).ok, true);
-  });
-
   it('never objects to growth', () => {
-    const before = index([city('תל אביב', [['shufersal', 6000]])]);
     const after = index([
-      city('תל אביב', [['shufersal', 9000], ['newchain', 100]]),
-      city('אשדוד', [['shufersal', 4000]]),
+      six({ ...full, g: 9000 }),
+      city('אשדוד', [['a', 4000], ['b', 4000], ['c', 4000]]),
     ]);
 
-    assert.equal(compareCatalogues(before, after).ok, true);
+    assert.equal(compareCatalogues(index([six(full)]), after).ok, true);
   });
 
   it('publishes the first run, when there is no baseline to lose', () => {
-    const after = index([city('תל אביב', [['shufersal', 6000]])]);
+    const after = index([six(full)]);
 
     assert.equal(compareCatalogues(null, after).ok, true);
     assert.equal(compareCatalogues(index([]), after).ok, true);
