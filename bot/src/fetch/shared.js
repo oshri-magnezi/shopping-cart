@@ -114,11 +114,52 @@ export function pickStore(stores, city, storeOverride, isUsable = () => true) {
   return online ? { store: online, viaOnline: true } : null;
 }
 
-export function storeNotFoundError(chainKey, chainName, city) {
+/**
+ * Explains why a chain could not be priced, accurately.
+ *
+ * The original message said one thing in every case: "no branch in that city,
+ * set a storeOverride". For קשת טעמים that advice is simply wrong — the chain
+ * lists twenty-seven branches and twenty-six of them publish an empty
+ * catalogue, so no override exists that would help. Reading that line three
+ * nights running and going looking for a branch id is time spent on a problem
+ * that is not there.
+ *
+ * `stores` and `isUsable` are optional so the older callers keep working
+ * unchanged; passing them is what buys the better diagnosis.
+ */
+export function storeNotFoundError(chainKey, chainName, city, stores = null, isUsable = null) {
+  const listHint = `הרץ "node src/index.js --list-stores ${chainKey}" כדי לראות את רשימת הסניפים`;
+  // Hebrew agrees in number across the whole clause, not just the noun, so
+  // these produce the clause rather than a count to be pasted into one.
+  const branches = (n) => (n === 1 ? 'סניף אחד' : `${n} סניפים`);
+  const othersPublish = (n) =>
+    n === 1 ? 'סניף אחד אחר כן מפרסם' : `${n} סניפים אחרים כן מפרסמים`;
+
+  if (Array.isArray(stores) && stores.length > 0 && typeof isUsable === 'function') {
+    const inCity = stores.filter((store) =>
+      cityMatches(`${cityName(store.city)} ${store.name}`, city),
+    );
+    const publishing = stores.filter(isUsable);
+
+    if (publishing.length === 0) {
+      return new Error(
+        `${chainName}: אף אחד מ־${branches(stores.length)} לא מפרסם קובץ מחירים מלא, ` +
+          `כך שאין מה להשוות. זו בעיה אצל הרשת, לא בהגדרות — storeOverride לא יעזור כאן.`,
+      );
+    }
+
+    if (inCity.length > 0) {
+      return new Error(
+        `${chainName}: יש ${branches(inCity.length)} בעיר "${city}", אבל אף אחד מהם לא מפרסם ` +
+          `קובץ מחירים מלא. ${othersPublish(publishing.length)} — ${listHint}, ` +
+          `ואז הגדר מזהה סניף ב-config.json תחת storeOverrides.${chainKey} אם מחיר מסניף אחר מקובל.`,
+      );
+    }
+  }
+
   return new Error(
     `לא נמצא סניף של ${chainName} בעיר "${city}". ` +
-      `הרץ "node src/index.js --list-stores ${chainKey}" כדי לראות את רשימת הסניפים, ` +
-      `ואז הגדר מזהה סניף ב-config.json תחת storeOverrides.${chainKey}.`,
+      `${listHint}, ואז הגדר מזהה סניף ב-config.json תחת storeOverrides.${chainKey}.`,
   );
 }
 

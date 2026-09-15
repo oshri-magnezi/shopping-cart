@@ -7,6 +7,7 @@ import {
   isStoresFile,
   newestByName,
   storeIdFromName,
+  storeNotFoundError,
   timestampFromName,
 } from '../src/fetch/shared.js';
 
@@ -82,5 +83,47 @@ describe('city matching', () => {
 
   it('is false for an empty city', () => {
     assert.ok(!cityMatches('סניף כלשהו', ''));
+  });
+});
+
+/**
+ * The old message said the same thing however the chain had failed: "no branch
+ * in that city, set an override". For a chain whose branches all publish empty
+ * catalogues that advice is not merely unhelpful, it sends whoever reads it
+ * looking for a branch id that would not have helped.
+ */
+describe('storeNotFoundError', () => {
+  const store = (storeId, city, name = '') => ({ storeId, city, name });
+  const stores = [
+    store('001', 'חיפה', 'הדר'),
+    store('002', 'חיפה', 'קרית אליעזר'),
+    store('003', 'נהריה'),
+  ];
+
+  it('says so when the chain publishes nothing anywhere', () => {
+    const error = storeNotFoundError('keshet', 'קשת טעמים', 'חיפה', stores, () => false);
+
+    assert.match(error.message, /אף אחד מ־3 סניפים/);
+    assert.match(error.message, /לא יעזור/);
+    assert.doesNotMatch(error.message, /לא נמצא סניף/);
+  });
+
+  it('distinguishes "none here publish" from "none here at all"', () => {
+    // Two branches in Haifa, neither with a file; one elsewhere that has one.
+    const error = storeNotFoundError('keshet', 'קשת טעמים', 'חיפה', stores, (s) => s.storeId === '003');
+
+    assert.match(error.message, /2 סניפים בעיר "חיפה"/);
+    assert.match(error.message, /סניף אחד אחר כן מפרסם/);
+  });
+
+  it('falls back to the plain message when the chain is simply absent', () => {
+    const error = storeNotFoundError('politzer', 'פוליצר', 'תל אביב', stores, () => true);
+    assert.match(error.message, /לא נמצא סניף של פוליצר בעיר "תל אביב"/);
+  });
+
+  it('keeps working for a caller that passes no branch list', () => {
+    const error = storeNotFoundError('victory', 'ויקטורי', 'חיפה');
+    assert.match(error.message, /לא נמצא סניף של ויקטורי/);
+    assert.match(error.message, /storeOverrides\.victory/);
   });
 });

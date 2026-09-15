@@ -1,5 +1,6 @@
 import { writeFile } from 'node:fs/promises';
 import puppeteer from 'puppeteer';
+import { isTransient, withRetries } from '../retry.js';
 
 export const NAV_TIMEOUT = 30_000;
 
@@ -30,17 +31,29 @@ export async function newPage(browser) {
 export async function downloadFile(page, url, destPath) {
   const sameOrigin = new URL(url).origin === new URL(page.url()).origin;
 
-  const buffer = sameOrigin
-    ? Buffer.from(
-        await page.evaluate(async (target) => {
-          const response = await fetch(target, { credentials: 'include' });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return Array.from(new Uint8Array(await response.arrayBuffer()));
-        }, url),
-      )
-    : await fetchDirect(url);
+  // These files are tens of megabytes over a connection the portal is in no
+  // hurry to keep open, so a dropped socket part-way through is ordinary. One
+  // more go costs seconds; losing it costs the chain its place in the night's
+  // comparison. A 404 is not retried — the file really is not there.
+  const buffer = await withRetries(
+    async () => {
+      const bytes = sameOrigin
+        ? Buffer.from(
+            await page.evaluate(async (target) => {
+              const response = await fetch(target, { credentials: 'include' });
+              if (!response.ok) throw new Error(`HTTP ${response.status}`);
+              return Array.from(new Uint8Array(await response.arrayBuffer()));
+            }, url),
+          )
+        : await fetchDirect(url);
 
-  if (buffer.length === 0) throw new Error('הקובץ שהתקבל ריק');
+      // Checked inside the retry on purpose: a truncated-to-nothing response is
+      // exactly the transient failure worth another attempt.
+      if (bytes.length === 0) throw new Error('הקובץ שהתקבל ריק');
+      return bytes;
+    },
+    { attempts: 3, delayMs: 1_500, shouldRetry: isTransient },
+  );
 
   await writeFile(destPath, buffer);
   return destPath;

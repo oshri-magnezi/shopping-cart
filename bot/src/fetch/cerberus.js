@@ -140,10 +140,9 @@ export function createCerberusFetcher({ key, displayName, username }) {
         files.filter((file) => isFullPriceFile(file.name)).map((file) => storeIdFromName(file.name)),
       );
 
-      const picked = pickStore(stores, city, storeOverride, (store) =>
-        branchesWithFiles.has(store.storeId),
-      );
-      if (!picked) throw storeNotFoundError(key, displayName, city);
+      const isUsable = (store) => branchesWithFiles.has(store.storeId);
+      const picked = pickStore(stores, city, storeOverride, isUsable);
+      if (!picked) throw storeNotFoundError(key, displayName, city, stores, isUsable);
 
       const { store, viaOnline } = picked;
       log(`${displayName}: סניף ${store.name || store.storeId}${viaOnline ? ' (משלוחים ארצי)' : ''}`);

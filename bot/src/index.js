@@ -10,6 +10,7 @@ import { indexProducts, matchItem } from './match/match.js';
 import { compareBaskets } from './compare.js';
 import { printReport, writeResults } from './report.js';
 import { buildCatalog, writeCityCatalogs } from './catalog.js';
+import { isTransient, withRetries } from './retry.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CACHE_DIR = path.join(ROOT, 'cache');
@@ -98,13 +99,28 @@ async function collectChainFiles(config, args, chains) {
     try {
       for (const chain of pending) {
         try {
-          const fetched = await chain.fetcher({
-            browser,
-            city: config.city,
-            storeOverride: config.storeOverrides?.[chain.key] ?? null,
-            cacheDir: CACHE_DIR,
-            log,
-          });
+          // A portal that times out once is having a moment, not going away.
+          // Without this a single stumble dropped the chain for the whole
+          // night — and because the run is fail-soft it still reported
+          // success, so the shop just quietly vanished from every basket.
+          const fetched = await withRetries(
+            () =>
+              chain.fetcher({
+                browser,
+                city: config.city,
+                storeOverride: config.storeOverrides?.[chain.key] ?? null,
+                cacheDir: CACHE_DIR,
+                log,
+              }),
+            {
+              shouldRetry: isTransient,
+              onRetry: (error, attempt, waitMs) =>
+                log(
+                  `${chain.displayName}: ניסיון ${attempt} נכשל (${error.message}) — ` +
+                    `מנסה שוב בעוד ${Math.round(waitMs / 1000)} שניות`,
+                ),
+            },
+          );
           await writeCacheEntry(CACHE_DIR, chain.key, config.city, fetched);
           results.push({ chain, ...fetched, ok: true, fromCache: false });
         } catch (error) {
