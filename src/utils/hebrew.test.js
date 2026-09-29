@@ -175,3 +175,20 @@ describe('tokenize contract', () => {
     expect(brand.brand).toBe(true);
   });
 });
+
+describe('a percentage written in words', () => {
+  it('reads "3 אחוז" as 3%', () => {
+    expect(normalize('חלב תנובה 3 אחוז')).toBe('חלב תנובה 3%');
+    expect(normalize('חלב 1אחוז')).toBe('חלב 1%');
+  });
+
+  it('matches a product written with the sign', () => {
+    expect(similarity('חלב 3 אחוז', 'חלב תנובה 3% 1 ליטר')).toBeGreaterThan(
+      similarity('חלב 1 אחוז', 'חלב תנובה 3% 1 ליטר'),
+    );
+  });
+
+  it('leaves the word alone when no number comes before it', () => {
+    expect(normalize('מיץ לימון 100% אחוז טבעי')).toBe('מיץ לימון 100% אחוז טבעי');
+  });
+});

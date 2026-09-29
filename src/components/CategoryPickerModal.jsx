@@ -15,14 +15,17 @@ import './CategoryPickerModal.css';
 // The amounts a deli counter is actually asked for.
 const QUICK_WEIGHTS = [0.25, 0.5, 1];
 
-/**
- * The popup that opens whenever an item is added or edited: pick a category,
- * set the quantity, and (in edit mode) adjust the name.
- */
 // Ties the pre-selected radio to the line explaining why it is selected, so a
 // screen-reader user is not handed an unexplained choice.
 const SUGGESTION_NOTE_ID = 'category-suggested-note';
 
+// The sheet's opening spring (--spring-smooth-duration, 510ms) plus a frame.
+const SHEET_SETTLE_MS = 550;
+
+/**
+ * The popup that opens whenever an item is added or edited: pick a category,
+ * set the quantity, and (in edit mode) adjust the name.
+ */
 export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
   const { t, language, locale } = useTranslation();
   const { customCategories, dispatch } = useAppData();
@@ -49,9 +52,14 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
   const trimmedName = name.trim();
   const byWeight = unit === 'kg';
 
-  // The estimate is the whole point of the weight box, and it needs prices.
+  // The estimate is the whole point of the weight box, and it needs prices —
+  // but not in the first half-second. When nothing has loaded the catalogue
+  // yet, asking for it starts a download, a parse and an index build, and
+  // asking on mount put all of that on top of the sheet's opening spring,
+  // which stalled on a phone. Asked once the sheet has settled instead.
   useEffect(() => {
-    request('chains');
+    const settled = setTimeout(() => request('chains'), SHEET_SETTLE_MS);
+    return () => clearTimeout(settled);
   }, [request]);
 
   // What this costs right now at the cheapest chain in the chosen city — the

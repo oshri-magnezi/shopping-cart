@@ -8,6 +8,11 @@
 
 .rolling-figure {
   display: inline-flex;
+  /* The strips hold every digit 0-9 for the roll. Selecting the amount would
+     copy all of them, so the visible figure is not selectable; the readable
+     copy for assistive technology sits beside it (.sr-only). */
+  -webkit-user-select: none;
+  user-select: none;
   align-items: flex-start;
   height: var(--roll-height);
   line-height: var(--roll-height);

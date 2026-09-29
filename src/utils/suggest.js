@@ -1,4 +1,5 @@
 import { normalize, tokenize, tokenizeNormalized, leadCategory } from './textMatch.js';
+import { inSlices } from './slices.js';
 
 /**
  * Builds the suggestion pool for the add-item box.
@@ -11,29 +12,43 @@ import { normalize, tokenize, tokenizeNormalized, leadCategory } from './textMat
 export function buildSuggestionPool(catalog) {
   const byName = new Map();
   for (const chain of catalog.chains) collectChain(byName, chain);
-  return finishPool(byName);
+  const pool = poolFrom(byName);
+  const byToken = new Map();
+  indexPool(pool, byToken);
+  return finishPool(pool, byToken);
 }
 
 /**
- * The same pool, built a chain at a time with a breath in between.
+ * The same pool, built in short slices with a breath in between.
  *
  * Building it in one go is over half a second of unbroken main-thread work on
  * a city catalogue, and it runs the moment the shopper starts typing — so
  * their first keystrokes went into a frozen field. Same result, same order,
- * just handed back to the browser between chains so it can paint and keep up
- * with the keyboard.
+ * just handed back to the browser every few milliseconds (see inSlices) and
+ * at least once per chain, so it can paint and keep up with the keyboard.
  *
  * `breathe` is injected rather than hardcoded so this stays testable without a
  * scheduler, and so the caller decides what "give the browser a turn" means.
+ * `options` passes through to inSlices.
  */
-export async function buildSuggestionPoolInSlices(catalog, breathe) {
+export async function buildSuggestionPoolInSlices(catalog, breathe, options) {
   const byName = new Map();
   for (const chain of catalog.chains) {
-    collectChain(byName, chain);
+    // eslint-disable-next-line no-await-in-loop -- yielding is the point
+    await inSlices(
+      chain.products.length,
+      (from, to) => collectChain(byName, chain, from, to),
+      breathe,
+      options,
+    );
     // eslint-disable-next-line no-await-in-loop -- yielding is the point
     await breathe();
   }
-  return finishPool(byName);
+
+  const pool = poolFrom(byName);
+  const byToken = new Map();
+  await inSlices(pool.length, (from, to) => indexPool(pool, byToken, from, to), breathe, options);
+  return finishPool(pool, byToken);
 }
 
 /**
@@ -44,12 +59,13 @@ export async function buildSuggestionPoolInSlices(catalog, breathe) {
  * the rows in a city with online stores, and normalizing and tokenizing their
  * names was most of what building the pool cost.
  */
-function collectChain(byName, chain) {
+function collectChain(byName, chain, from = 0, to = chain.products.length) {
   // A chain's online store is the same chain, not another place that stocks
   // the product, so the two count once.
   const shop = chain.key.replace(/-online$/, '');
 
-  for (const [name, price, code, , unit] of chain.products) {
+  for (let row = from; row < to; row += 1) {
+    const [name, price, code, , unit] = chain.products[row];
     let entry = code ? byName.get(code) : undefined;
 
     if (!entry) {
@@ -87,18 +103,21 @@ function collectChain(byName, chain) {
   }
 }
 
-function finishPool(byName) {
-  const pool = [...byName.values()].map((entry) => ({
+function poolFrom(byName) {
+  return [...byName.values()].map((entry) => ({
     ...entry,
     chains: entry.chainKeys.size,
   }));
+}
 
-  // Two indexes keep every keystroke cheap against ~40k distinct names: exact
-  // tokens, plus a sorted vocabulary that supports binary-searched prefix
-  // lookups instead of walking the whole map each time.
-  const byToken = new Map();
-  pool.forEach((entry, position) => {
-    for (const token of entry.tokens) {
+/**
+ * Two indexes keep every keystroke cheap against ~50k distinct names: exact
+ * tokens here, plus the sorted vocabulary finishPool builds from them, which
+ * supports binary-searched prefix lookups instead of walking the whole map.
+ */
+function indexPool(pool, byToken, from = 0, to = pool.length) {
+  for (let position = from; position < to; position += 1) {
+    for (const token of pool[position].tokens) {
       let bucket = byToken.get(token.value);
       if (!bucket) {
         bucket = [];
@@ -106,8 +125,10 @@ function finishPool(byName) {
       }
       bucket.push(position);
     }
-  });
+  }
+}
 
+function finishPool(pool, byToken) {
   const vocabulary = [...byToken.keys()].sort();
   // Computed once here rather than per keystroke. Note that spreading tens of
   // thousands of values into Math.max would overflow the call stack.

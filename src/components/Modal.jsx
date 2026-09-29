@@ -69,14 +69,23 @@ export function Modal({ title, onClose, children, footer, labelledBy = 'modal-ti
     const { overflow } = document.body.style;
     document.body.style.overflow = 'hidden';
 
-    // The field the shopper is about to type into, when there is one. One
-    // combined selector returns whichever match comes first in the document,
-    // and the close button sits above every field — so it took the focus, and
-    // with it a focus ring drawn round the X on every open.
-    const focusTarget =
-      panelRef.current?.querySelector('input:not([type=hidden]), textarea, select') ??
-      panelRef.current?.querySelector('button, [tabindex]:not([tabindex="-1"])');
-    focusTarget?.focus();
+    // On a phone the sheet itself takes the focus, not its first field.
+    // Focusing a field there raises the keyboard, which resizes the page in the
+    // middle of the sheet's opening spring — the two fought, and the sheet
+    // stuttered on every add. The name is usually already filled in, and a
+    // keyboard would only have covered the categories the shopper came to
+    // pick. A screen reader still lands inside the dialog.
+    //
+    // With a keyboard and mouse, the field the shopper is about to type into.
+    // One combined selector returns whichever match comes first in the
+    // document, and the close button sits above every field — so it took the
+    // focus, and with it a focus ring drawn round the X on every open.
+    const touch = window.matchMedia?.('(pointer: coarse)').matches;
+    const focusTarget = touch
+      ? panelRef.current
+      : (panelRef.current?.querySelector('input:not([type=hidden]), textarea, select') ??
+        panelRef.current?.querySelector('button, [tabindex]:not([tabindex="-1"])'));
+    focusTarget?.focus({ preventScroll: true });
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
@@ -163,6 +172,9 @@ export function Modal({ title, onClose, children, footer, labelledBy = 'modal-ti
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
+        // Focusable from script only, so the sheet itself can hold the focus
+        // on a phone (see the focus effect above).
+        tabIndex={-1}
         ref={panelRef}
         style={drag ? { transform: `translateY(${drag}px)`, transition: 'none' } : undefined}
       >

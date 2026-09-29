@@ -6,9 +6,11 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-4);
+  /* Dimmed, not blurred. A blur behind the whole screen had to be redrawn on
+     every frame while the page underneath scaled back, which is what made the
+     sheet stutter on a phone — and iOS dims the page behind a sheet without
+     blurring it. */
   background-color: var(--color-scrim);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
   animation: modal-fade var(--duration-base) var(--ease);
 }
 
@@ -17,6 +19,11 @@
 .modal-leaving {
   animation: modal-fade var(--duration-slow) var(--ease) reverse forwards;
   pointer-events: none;
+}
+
+/* The panel holds the focus on a phone; it is not a control to ring. */
+.modal-panel:focus {
+  outline: none;
 }
 
 .modal-panel {
@@ -218,8 +225,12 @@
 .app-shell {
   background-color: var(--color-bg);
   transform-origin: 50% var(--sheet-origin, 50vh);
-  transition: transform var(--spring-smooth-duration) var(--spring-smooth),
-    border-radius var(--spring-smooth-duration) var(--spring-smooth);
+  /* Only the scale is animated: the compositor moves the page without
+     redrawing it. Animating the corner radius too repainted the whole page on
+     every frame of the spring. The radius now snaps on at the start, while
+     the corners are still at the screen's edge where the change cannot be
+     seen. */
+  transition: transform var(--spring-smooth-duration) var(--spring-smooth);
 }
 
 @media (max-width: 600px) and (prefers-reduced-motion: no-preference) {

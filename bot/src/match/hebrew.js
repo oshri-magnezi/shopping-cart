@@ -203,6 +203,11 @@ export function normalize(text) {
     );
   }
 
+  // Shoppers write a fat or strength in words — "חלב 3 אחוז" — and every
+  // catalogue writes it as "3%". Folded the one way, the two meet. No product
+  // name in the catalogues uses the word form, so only queries change.
+  if (result.includes('אחוז')) result = result.replace(/(\d)\s*אחוז/g, '$1%');
+
   // Without a digit or Latin letter in the text no unit pattern can match
   // (see UNITS), and most names are skipped outright.
   if (/\w/.test(result)) result = result.replace(UNITS, unitName);

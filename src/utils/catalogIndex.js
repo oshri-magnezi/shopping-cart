@@ -1,4 +1,5 @@
 import { tokenize, similarity, MATCH_THRESHOLD } from './textMatch.js';
+import { inSlices } from './slices.js';
 
 /**
  * Builds a word → product index for one chain's catalogue.
@@ -17,14 +18,22 @@ import { tokenize, similarity, MATCH_THRESHOLD } from './textMatch.js';
 const MIN_CROSS_CHAIN_CODE = 8;
 
 export function indexChain(chain) {
-  const byToken = new Map();
+  const index = startChainIndex(chain);
+  indexRows(index, chain);
+  return finishChainIndex(index, chain);
+}
+
+function startChainIndex() {
   // Barcodes are the exact path: the same code is the same product at every
   // chain, so a product the shopper picked never has to be guessed again.
-  const byCode = new Map();
+  return { byToken: new Map(), byCode: new Map() };
+}
 
-  chain.products.forEach((product, index) => {
+function indexRows({ byToken, byCode }, chain, from = 0, to = chain.products.length) {
+  for (let row = from; row < to; row += 1) {
+    const product = chain.products[row];
     const code = product[2];
-    if (code && code.length >= MIN_CROSS_CHAIN_CODE && !byCode.has(code)) byCode.set(code, index);
+    if (code && code.length >= MIN_CROSS_CHAIN_CODE && !byCode.has(code)) byCode.set(code, row);
 
     for (const token of tokenize(product[0])) {
       // `tokenize` yields objects; the map must be keyed by the word itself.
@@ -36,10 +45,12 @@ export function indexChain(chain) {
         bucket = [];
         byToken.set(token.value, bucket);
       }
-      bucket.push(index);
+      bucket.push(row);
     }
-  });
+  }
+}
 
+function finishChainIndex({ byToken, byCode }, chain) {
   // A catalogue built before barcodes existed has none at all. Knowing that
   // lets the comparison fall back to text instead of reporting every item as
   // missing when a stale file is deployed.
@@ -78,17 +89,26 @@ export function buildIndex(catalog) {
 }
 
 /**
- * The same index, one chain at a time with a breath in between.
+ * The same index, built in short slices with a breath in between.
  *
- * Indexing a whole city is half a second of unbroken main-thread work. Each
- * chain on its own is a fraction of that, and the result is identical either
- * way — so the comparison screen can stay answerable while it builds instead
- * of locking up once.
+ * Indexing a whole city is well over half a second of main-thread work, and a
+ * single large chain was still a long task on a phone. Breathing every few
+ * milliseconds (see inSlices) and at least once per chain gives an identical
+ * result while the screen stays answerable — the add-item sheet opens
+ * smoothly even when opening it is what started the build.
  */
-export async function buildIndexInSlices(catalog, breathe) {
+export async function buildIndexInSlices(catalog, breathe, options) {
   const indexed = [];
   for (const chain of catalog.chains) {
-    indexed.push(indexChain(chain));
+    const index = startChainIndex(chain);
+    // eslint-disable-next-line no-await-in-loop -- yielding is the point
+    await inSlices(
+      chain.products.length,
+      (from, to) => indexRows(index, chain, from, to),
+      breathe,
+      options,
+    );
+    indexed.push(finishChainIndex(index, chain));
     // eslint-disable-next-line no-await-in-loop -- yielding is the point
     await breathe();
   }

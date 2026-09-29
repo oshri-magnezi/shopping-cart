@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Copy, Trash2 } from 'lucide-react';
 import { UndoBar } from '../components/UndoBar.jsx';
-import { AnimatedCurrency } from '../components/AnimatedCurrency.jsx';
+import { RollingCurrency } from '../components/RollingCurrency.jsx';
 import { CurrencyText } from '../components/CurrencyText.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
 import { RowMenu } from '../components/RowMenu.jsx';
@@ -69,11 +69,11 @@ export function HistoryPage() {
             </div>
             <div className="stat stat-total">
               <span className="stat-label">{t('history.totalSpent')}</span>
-              <AnimatedCurrency className="stat-value tabular" value={stats.total} locale={locale} />
+              <RollingCurrency className="stat-value tabular" value={stats.total} locale={locale} />
             </div>
             <div className="stat">
               <span className="stat-label">{t('history.average')}</span>
-              <AnimatedCurrency
+              <RollingCurrency
                 className="stat-value tabular"
                 value={stats.average}
                 locale={locale}

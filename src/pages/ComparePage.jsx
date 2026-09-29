@@ -1,7 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, ChevronDown, MapPin, RefreshCw } from 'lucide-react';
-import { AnimatedCurrency } from '../components/AnimatedCurrency.jsx';
 import { CityPicker } from '../components/CityPicker.jsx';
 import { CurrencyText } from '../components/CurrencyText.jsx';
 import { RollingCurrency } from '../components/RollingCurrency.jsx';
@@ -391,7 +390,7 @@ function ChainLadder({ table, items, locale, t }) {
                       {t('compare.unavailable')}
                     </span>
                   ) : (
-                    <AnimatedCurrency
+                    <RollingCurrency
                       className="ladder-total tabular"
                       value={row.total}
                       locale={locale}
