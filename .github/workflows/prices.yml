@@ -7,6 +7,15 @@ on:
   schedule:
     - cron: '30 1 * * *'
   workflow_dispatch:
+    inputs:
+      # For a run started by hand when stores are known to be gone — the first
+      # publish after the city-matching fix, which removed branches that had
+      # been published under the wrong city. Truncated files and cities left
+      # with too few stores are still refused. Scheduled runs never set it.
+      allow_chain_loss:
+        description: 'Publish even if more than a third of a city''s stores are missing'
+        type: boolean
+        default: false
 
 # Shares its group with the code deploy: both publish the same site, and two
 # publishes racing each other would leave whichever finished last. Never
@@ -80,9 +89,12 @@ jobs:
       # portals were down. The baseline is what the live site serves right now
       # — what shoppers are actually looking at — not an old commit.
       - name: Refuse to publish a degraded catalogue
+        env:
+          # Empty on scheduled runs; see the allow_chain_loss input above.
+          ALLOW_CHAIN_LOSS: ${{ inputs.allow_chain_loss && '--allow-chain-loss' || '' }}
         run: |
           node bot/src/pull-live-catalog.js --index-only /tmp/published-index.json
-          node bot/src/verify-catalog.js /tmp/published-index.json public/price-catalog-index.json
+          node bot/src/verify-catalog.js /tmp/published-index.json public/price-catalog-index.json $ALLOW_CHAIN_LOSS
 
       # The same checks a code push goes through: a site that fails its own
       # tests is not published, whatever the prices say.

@@ -103,4 +103,33 @@ describe('compareCatalogues', () => {
     assert.equal(compareCatalogues(null, index([])).ok, false);
     assert.equal(compareCatalogues(null, null).ok, false);
   });
+
+  describe('allowChainLoss, for a run started by hand', () => {
+    // Three of six gone: an outage by the usual rule, and blocked without it.
+    const half = { a: 6000, b: 6000, c: 6000 };
+
+    it('lets a known loss of stores through, as a note', () => {
+      assert.equal(compareCatalogues(index([six(full)]), index([six(half)])).ok, false);
+      const { ok, notes } = compareCatalogues(index([six(full)]), index([six(half)]), {
+        allowChainLoss: true,
+      });
+      assert.equal(ok, true);
+      assert.equal(notes.length, 1);
+    });
+
+    it('still refuses a truncated file', () => {
+      const truncated = { ...half, a: 1000 };
+      const { ok } = compareCatalogues(index([six(full)]), index([six(truncated)]), {
+        allowChainLoss: true,
+      });
+      assert.equal(ok, false);
+    });
+
+    it('still refuses a city left with too few stores', () => {
+      const { ok } = compareCatalogues(index([six(full)]), index([six({ a: 6000, b: 6000 })]), {
+        allowChainLoss: true,
+      });
+      assert.equal(ok, false);
+    });
+  });
 });

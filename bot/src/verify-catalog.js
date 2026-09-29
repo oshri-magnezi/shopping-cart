@@ -44,8 +44,14 @@ const MAX_CHAIN_LOSS = 1 / 3;
  *
  * Growth is never suspicious, and neither is a first run with nothing to
  * compare against.
+ *
+ * `allowChainLoss` is for a run someone starts by hand, knowing why stores are
+ * gone — the first publish after the city-matching fix removed Bat Yam and
+ * Glil Yam branches that had been published as Jerusalem, which read here as
+ * Jerusalem losing them. It lets that loss through as a note. Truncated files
+ * and a city left with too few stores still stop the publish, flag or not.
  */
-export function compareCatalogues(previous, next) {
+export function compareCatalogues(previous, next, { allowChainLoss = false } = {}) {
   const problems = [];
   const notes = [];
 
@@ -91,7 +97,7 @@ export function compareCatalogues(previous, next) {
       problems.push(
         `${before.city}: only ${remaining} chains left, which is too few to compare a basket.`,
       );
-    } else if (had.length > 0 && lost.length / had.length > MAX_CHAIN_LOSS) {
+    } else if (had.length > 0 && lost.length / had.length > MAX_CHAIN_LOSS && !allowChainLoss) {
       problems.push(
         `${before.city}: ${lost.length} of ${had.length} chains went quiet (${lost.join(', ')}).`,
       );
@@ -114,12 +120,13 @@ async function readJson(path) {
   }
 }
 
-// node src/verify-catalog.js <published index> <new index>
+// node src/verify-catalog.js <published index> <new index> [--allow-chain-loss]
 if (process.argv[1] && process.argv[1].endsWith('verify-catalog.js')) {
-  const [publishedPath, freshPath] = process.argv.slice(2);
+  const [publishedPath, freshPath, ...flags] = process.argv.slice(2);
   const { ok, problems, notes } = compareCatalogues(
     await readJson(publishedPath),
     await readJson(freshPath),
+    { allowChainLoss: flags.includes('--allow-chain-loss') },
   );
 
   // Tolerated losses are still worth saying out loud. A chain that goes quiet
