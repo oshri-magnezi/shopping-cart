@@ -25,9 +25,14 @@
   max-height: min(88dvh, 720px);
   display: flex;
   flex-direction: column;
-  background-color: var(--color-surface-raised);
+  /* Nearly opaque, like the menus. Thinner glass over a page that is already
+     dimmed and blurred behind it came out a muddy grey, with the list still
+     ghosting through under the title. */
+  background-color: var(--liquid-fill-menu);
+  -webkit-backdrop-filter: var(--liquid-blur-menu);
+  backdrop-filter: var(--liquid-blur-menu);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-modal);
+  box-shadow: var(--liquid-rim), var(--shadow-modal);
   /* A touch of overshoot on the way in. It is the difference between a panel
      that appears and one that arrives. */
   animation: modal-rise var(--duration-slow) var(--ease-spring);
@@ -56,7 +61,7 @@
 .modal-title {
   font-family: var(--font-display);
   font-size: var(--text-xl);
-  font-weight: 400;
+  font-weight: var(--font-display-weight);
   letter-spacing: 0;
 }
 
@@ -198,5 +203,33 @@
   .modal-leaving,
   .modal-leaving .modal-panel {
     animation: none;
+  }
+}
+
+/* ---------- The page behind a sheet ----------
+
+   On an iPhone the screen under a sheet shrinks back and the ground around it
+   goes dark, so the sheet reads as a card lifted over the page rather than a
+   panel painted on top of it. Phones only — on a wider screen a dialog is a
+   centred panel, and receding the whole desktop behind it would be theatre.
+
+   overflow: clip, not hidden: hidden would make the shell a scroll container
+   and the sticky top bar inside it would stop sticking. */
+.app-shell {
+  background-color: var(--color-bg);
+  transform-origin: 50% var(--sheet-origin, 50vh);
+  transition: transform var(--spring-smooth-duration) var(--spring-smooth),
+    border-radius var(--spring-smooth-duration) var(--spring-smooth);
+}
+
+@media (max-width: 600px) and (prefers-reduced-motion: no-preference) {
+  :root[data-sheet='open'] body {
+    background-color: #000000;
+  }
+
+  :root[data-sheet='open'] .app-shell {
+    transform: scale(0.94);
+    border-radius: var(--radius-lg);
+    overflow: clip;
   }
 }

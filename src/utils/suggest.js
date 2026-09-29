@@ -1,4 +1,4 @@
-import { normalize, tokenize, leadCategory } from './textMatch.js';
+import { normalize, tokenize, tokenizeNormalized, leadCategory } from './textMatch.js';
 
 /**
  * Builds the suggestion pool for the add-item box.
@@ -36,14 +36,27 @@ export async function buildSuggestionPoolInSlices(catalog, breathe) {
   return finishPool(byName);
 }
 
+/**
+ * Folds one chain's products into the pool.
+ *
+ * A row whose barcode is already in the pool only updates it — price range,
+ * chain count, a fuller name — without any text work. That is more than half
+ * the rows in a city with online stores, and normalizing and tokenizing their
+ * names was most of what building the pool cost.
+ */
 function collectChain(byName, chain) {
-  {
-    for (const [name, price, code, , unit] of chain.products) {
+  // A chain's online store is the same chain, not another place that stocks
+  // the product, so the two count once.
+  const shop = chain.key.replace(/-online$/, '');
+
+  for (const [name, price, code, , unit] of chain.products) {
+    let entry = code ? byName.get(code) : undefined;
+
+    if (!entry) {
       const normalized = normalize(name);
       if (!normalized) continue;
       const key = code || normalized;
-
-      let entry = byName.get(key);
+      entry = byName.get(key);
       if (!entry) {
         entry = {
           name,
@@ -55,18 +68,23 @@ function collectChain(byName, chain) {
           chainKeys: new Set(),
           min: price,
           max: price,
-          tokens: tokenize(name),
+          tokens: tokenizeNormalized(normalized),
         };
         byName.set(key, entry);
-      } else {
-        if (price < entry.min) entry.min = price;
-        if (price > entry.max) entry.max = price;
       }
-      // A chain can list the same product twice; count shops, not rows.
-      entry.chainKeys.add(chain.key);
     }
-  }
 
+    if (price < entry.min) entry.min = price;
+    if (price > entry.max) entry.max = price;
+    // Several chains cut names at twenty characters ("לבבות דקל שלמים וילי").
+    // When another chain's name for the same product carries on from where
+    // this one stops, this one was cut short: take the whole.
+    if (name.length > entry.name.length && name.startsWith(entry.name)) {
+      entry.name = name;
+      entry.tokens = tokenize(name);
+    }
+    entry.chainKeys.add(shop);
+  }
 }
 
 function finishPool(byName) {

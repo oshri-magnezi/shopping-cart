@@ -4,12 +4,15 @@
   align-items: center;
   text-align: center;
   gap: var(--space-2);
-  margin-block-start: var(--space-6);
-  padding: var(--space-8) var(--space-5);
-  border-radius: var(--radius-lg);
-  /* A dashed outline says "drop something here". Nothing is dropped here —
-     the state is simply empty, and a quiet recessed panel says that. */
-  background-color: var(--color-surface-sunken);
+  /* No panel around it. On the glass, a recessed box read as a hole in the
+     page; iOS sets an empty state straight on the background — the art, a
+     title and a line of text, centred in the space the content would take. */
+  margin-block-start: var(--space-8);
+  padding: var(--space-6) var(--space-5);
+}
+
+.empty-state .btn {
+  margin-top: var(--space-4);
 }
 
 .empty-state-icon {
@@ -23,12 +26,14 @@
 .empty-state-title {
   font-family: var(--font-display);
   font-size: var(--text-xl);
-  font-weight: 400;
+  font-weight: var(--font-display-weight);
   letter-spacing: 0;
 }
 
 .empty-state-text {
   max-width: 36ch;
+  /* Even lines, so a sentence never ends on one word alone. */
+  text-wrap: balance;
   color: var(--color-text-subtle);
   font-size: var(--text-sm);
 }

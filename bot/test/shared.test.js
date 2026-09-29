@@ -77,6 +77,23 @@ describe('city matching', () => {
     assert.ok(!cityMatches('רמת אליהו', 'תל אביב'));
   });
 
+  it('matches an abbreviation with a hyphen or a Hebrew gershayim', () => {
+    assert.ok(cityMatches('סניף י-ם תלפיות', 'ירושלים'));
+    assert.ok(cityMatches('סניף ת״א', 'תל אביב'));
+    assert.ok(cityMatches('מרכז פ"ת', 'פתח תקווה'));
+  });
+
+  // The bug this guards: "י-ם" lost its hyphen and became "ים", the last word
+  // of בת ים — and Tiv Taam's Bat Yam branch was priced as Jerusalem.
+  it('does not read the sea in a town name as Jerusalem', () => {
+    assert.ok(!cityMatches('בת ים בת ים', 'ירושלים'));
+    assert.ok(!cityMatches(' פרשמרקט גליל ים', 'ירושלים'));
+  });
+
+  it('does not read a bare two-letter word as an abbreviation', () => {
+    assert.ok(!cityMatches('סניף תא 5', 'תל אביב'));
+  });
+
   it('is false for an unrelated town', () => {
     assert.ok(!cityMatches('סניף חיפה', 'תל אביב'));
   });

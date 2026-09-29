@@ -9,13 +9,16 @@ const parser = new XMLParser({
   // official catalogues; these files are shallow, so the guard should never
   // fire in practice.
   maxNestedTags: 10_000,
-  // The library's entity limits guard against XML-bomb attacks. A real
-  // catalogue legitimately contains tens of thousands of escaped characters
-  // in product names (&amp;, &quot;), which trips the default cap of 1000.
+  // These files come from outside servers, so the XML-bomb guards stay on.
+  // An XML bomb needs entities declared in a DOCTYPE, and no price file
+  // declares any (none of 97 cached files, 2026-09-29), so declarations are
+  // capped low. Escaped characters in names (&amp;, &quot;) are ordinary: the
+  // busiest real file has ~10k, so the expansion cap sits a hundred times
+  // above that, and the expanded length above the largest file (~29M chars).
   processEntities: {
     enabled: true,
-    maxTotalExpansions: Number.MAX_SAFE_INTEGER,
-    maxEntityCount: Number.MAX_SAFE_INTEGER,
+    maxEntityCount: 100,
+    maxTotalExpansions: 1_000_000,
     maxExpandedLength: 100_000_000,
   },
 });

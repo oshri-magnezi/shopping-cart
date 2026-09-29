@@ -29,11 +29,12 @@
   padding-inline: var(--space-5) var(--space-2);
   border-radius: var(--radius-full);
   overflow: hidden;
-  background-color: color-mix(in srgb, var(--color-surface) 86%, transparent);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  /* The thicker glass (glass.css): it carries a sentence to be read. */
+  background-color: var(--liquid-fill-thick);
+  -webkit-backdrop-filter: var(--liquid-blur);
+  backdrop-filter: var(--liquid-blur);
   color: var(--color-text);
-  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--color-hairline);
+  box-shadow: var(--liquid-rim), var(--liquid-shadow);
   font-size: var(--text-sm);
   animation: undo-in var(--duration-slow) var(--ease-spring);
 }
@@ -66,8 +67,10 @@
     transform var(--duration-base) var(--ease-spring);
 }
 
-.undo-bar-action:hover {
-  background-color: var(--color-destructive-soft);
+@media (hover: hover) {
+  .undo-bar-action:hover {
+    background-color: var(--color-destructive-soft);
+  }
 }
 
 .undo-bar-action:active {
@@ -111,8 +114,10 @@
   }
 }
 
-@supports not (backdrop-filter: blur(1px)) {
-  .undo-bar-inner {
-    background-color: var(--color-surface);
+/* On a phone the tab bar owns the bottom of the screen, so the undo message
+   rides just above it instead of landing on top of it. */
+@media (max-width: 640px) {
+  .undo-bar {
+    bottom: calc(max(var(--safe-bottom), var(--space-3)) + var(--tabbar-height) + var(--space-3));
   }
 }

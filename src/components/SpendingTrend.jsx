@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { formatCurrency, formatDateTime } from '../utils/format.js';
+import { CurrencyText } from './CurrencyText.jsx';
 import './SpendingTrend.css';
 
 const WIDTH = 640;
@@ -50,7 +51,7 @@ export function SpendingTrend({ history, locale }) {
       <figcaption className="trend-caption">
         <span className="trend-label">{t('history.trendLabel')}</span>
         <span className="trend-readout tabular" dir="ltr">
-          {formatCurrency((active ?? last).value, locale)}
+          <CurrencyText value={(active ?? last).value} locale={locale} />
         </span>
       </figcaption>
 
@@ -85,27 +86,9 @@ export function SpendingTrend({ history, locale }) {
 
         {/* Only the newest trip is marked. A dot on every point, with a number
             beside it, is the noise this is meant to replace. */}
-        <circle
-          cx={x(points.length - 1)}
-          cy={y(last.value)}
-          r="4"
-          fill="var(--color-accent)"
-          stroke="var(--color-surface)"
-          strokeWidth="2"
-          vectorEffect="non-scaling-stroke"
-        />
+        <Dot cx={x(points.length - 1)} cy={y(last.value)} color="var(--color-accent)" />
 
-        {active ? (
-          <circle
-            cx={x(hovered)}
-            cy={y(active.value)}
-            r="4"
-            fill="var(--color-primary)"
-            stroke="var(--color-surface)"
-            strokeWidth="2"
-            vectorEffect="non-scaling-stroke"
-          />
-        ) : null}
+        {active ? <Dot cx={x(hovered)} cy={y(active.value)} color="var(--color-primary)" /> : null}
 
         {/* Hit targets are full-height bands, because a 4px dot is not a
             pointer target and is hopeless on a phone. */}
@@ -129,5 +112,33 @@ export function SpendingTrend({ history, locale }) {
         ))}
       </svg>
     </figure>
+  );
+}
+
+/**
+ * A round marker on the stretched plot. The plot scales x and y by different
+ * amounts, which squashed a <circle> into a thin ellipse; a zero-length stroke
+ * with a round cap and a non-scaling stroke is drawn in screen pixels, so it
+ * stays a circle at any width. A wider ring underneath lifts it off the line.
+ */
+function Dot({ cx, cy, color }) {
+  const d = `M${cx},${cy}h0.01`;
+  return (
+    <>
+      <path
+        d={d}
+        stroke="var(--color-surface-raised)"
+        strokeWidth="12"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+      <path
+        d={d}
+        stroke={color}
+        strokeWidth="8"
+        strokeLinecap="round"
+        vectorEffect="non-scaling-stroke"
+      />
+    </>
   );
 }

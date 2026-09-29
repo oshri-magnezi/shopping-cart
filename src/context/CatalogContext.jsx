@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { buildIndexInSlices } from '../utils/catalogIndex.js';
 import { buildSuggestionPoolInSlices } from '../utils/suggest.js';
 
@@ -82,8 +82,14 @@ export function CatalogProvider({ children }) {
   }, [city]);
 
   // Anything that needs product data calls this; the first caller triggers
-  // the download and later ones ride along.
-  const request = useCallback(() => setWanted(true), []);
+  // the download and later ones ride along. `need` says which of the two
+  // indexes that caller is waiting on — 'chains' for the comparison,
+  // 'suggestions' for the add box — so that one is built first.
+  const firstNeed = useRef('suggestions');
+  const request = useCallback((need = 'suggestions') => {
+    firstNeed.current = need;
+    setWanted(true);
+  }, []);
 
   useEffect(() => {
     if (!wanted || !index || !city) return;
@@ -127,8 +133,9 @@ export function CatalogProvider({ children }) {
    * The work is unchanged and so is the result. What changed is when and how
    * it runs: after the browser has painted rather than during the commit, and
    * a chain at a time with a yield in between, so no single task is long
-   * enough to be felt. The autocomplete is published before the comparison
-   * index starts, because that is the one the shopper is waiting on.
+   * enough to be felt. Whichever index the screen asked for is built and
+   * published first: opening the comparison used to wait for the whole
+   * autocomplete pool before its own index even started.
    */
   const [derived, setDerived] = useState({ chains: [], suggestions: null });
 
@@ -142,15 +149,21 @@ export function CatalogProvider({ children }) {
     // A macrotask, so this lands after the browser has painted rather than in
     // the commit that scheduled it.
     const handle = setTimeout(async () => {
-      const suggestions = await buildSuggestionPoolInSlices(catalog, breathe);
-      if (cancelled) return;
-      // The autocomplete is what the shopper is waiting on, so publish it
-      // before starting the comparison index and let a frame through between.
-      setDerived((current) => ({ ...current, suggestions }));
+      const builds = {
+        suggestions: () => buildSuggestionPoolInSlices(catalog, breathe),
+        chains: () => buildIndexInSlices(catalog, breathe),
+      };
+      const order =
+        firstNeed.current === 'chains' ? ['chains', 'suggestions'] : ['suggestions', 'chains'];
 
-      if (cancelled) return;
-      const chains = await buildIndexInSlices(catalog, breathe);
-      if (!cancelled) setDerived((current) => ({ ...current, chains }));
+      for (const name of order) {
+        // eslint-disable-next-line no-await-in-loop -- one after the other is the point
+        const built = await builds[name]();
+        if (cancelled) return;
+        // Published as soon as it exists, with a frame let through before the
+        // next one starts.
+        setDerived((current) => ({ ...current, [name]: built }));
+      }
     }, 0);
 
     return () => {

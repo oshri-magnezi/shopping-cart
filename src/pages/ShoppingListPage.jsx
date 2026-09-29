@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { Pencil, Plus } from 'lucide-react';
 import { CategoryPickerModal } from '../components/CategoryPickerModal.jsx';
 import { CategorySection } from '../components/CategorySection.jsx';
@@ -8,6 +9,8 @@ import { LiveRegion } from '../components/LiveRegion.jsx';
 import { ShelfTicketArt } from '../components/EmptyArt.jsx';
 import { ProductSuggest } from '../components/ProductSuggest.jsx';
 import { UndoBar } from '../components/UndoBar.jsx';
+import { nudgeTab } from '../components/tabs.js';
+import { collapse, shrinkAway } from '../utils/motion.js';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { classify, nameSignature } from '../utils/classify.js';
 import { useTranslation } from '../i18n/useTranslation.js';
@@ -28,6 +31,9 @@ export function ShoppingListPage() {
   const [undoable, setUndoable] = useState(null);
   const [completing, setCompleting] = useState(false);
   const [announcement, setAnnouncement] = useState('');
+  // Rows folding away right now, so a second tap on delete does not fold the
+  // same row twice.
+  const leaving = useRef(new Set());
 
   const categories = useMemo(
     () => getAllCategories(customCategories, language),
@@ -36,6 +42,46 @@ export function ShoppingListPage() {
 
   const items = activeList.items;
   const purchasedCount = items.filter((item) => item.purchased).length;
+
+  // Items that have just arrived, so their rows can light up once. Compared
+  // against the ids the previous render had; the very first render marks
+  // nothing, or opening the page would flash the whole list.
+  const knownIds = useRef(null);
+  const [freshIds, setFreshIds] = useState(() => new Set());
+  useEffect(() => {
+    const ids = items.map((item) => item.id);
+    if (knownIds.current) {
+      const arrived = ids.filter((id) => !knownIds.current.has(id));
+      if (arrived.length > 0) {
+        setFreshIds(new Set(arrived));
+        const timer = setTimeout(() => setFreshIds(new Set()), 1800);
+        knownIds.current = new Set(ids);
+        return () => clearTimeout(timer);
+      }
+    }
+    knownIds.current = new Set(ids);
+    return undefined;
+  }, [items]);
+
+  // Which tally segment was filled by the tap that caused this render, if any.
+  // Compared against the count the last render saw, so opening the page — or
+  // any render that does not raise the count — marks nothing as fresh.
+  const lastCount = useRef(purchasedCount);
+  const freshMark = purchasedCount > lastCount.current ? purchasedCount - 1 : -1;
+  useEffect(() => {
+    lastCount.current = purchasedCount;
+  });
+
+  // Segments that arrive — an item added, or one put back by undo — grow into
+  // the bar instead of appearing at full width. The position they start from
+  // is kept rather than recomputed each render: the render straight after an
+  // add (which lights up the new row) would otherwise drop the class and cut
+  // the growth short. A segment keeps the class once it has it, which never
+  // replays the animation; only a segment that did not exist before gets it.
+  const seenLength = useRef(items.length);
+  const growFrom = useRef(items.length);
+  if (items.length > seenLength.current) growFrom.current = seenLength.current;
+  seenLength.current = items.length;
   const allPurchased = items.length > 0 && purchasedCount === items.length;
 
   // Groups items under their category, dropping categories with nothing in them.
@@ -133,15 +179,42 @@ export function ShoppingListPage() {
    * putting the item back anywhere else would quietly reorder the list.
    */
   function handleDelete(item) {
+    if (leaving.current.has(item.id)) return;
+    leaving.current.add(item.id);
+
     const index = items.findIndex((entry) => entry.id === item.id);
-    dispatch({ type: 'delete-item', id: item.id });
-    setAnnouncement(t('live.itemRemoved', { name: item.name }));
-    setUndoable({ item, index });
+    // The row folds away first and is removed once it has. The last row of a
+    // category takes its section with it, or the category's heading would sit
+    // alone for a moment over an empty group.
+    const row = document.querySelector(`[data-item-id="${item.id}"]`);
+    const onlyRow = row && row.parentElement.children.length === 1;
+
+    // The progress bar loses its segment over the same stretch, rather than
+    // snapping to one fewer while the row is still folding. The bar fills in
+    // order, so the segment to go is the last filled one for a checked item
+    // and the last empty one otherwise.
+    const marks = document.querySelectorAll('.tally-mark');
+    const mark = item.purchased ? marks[purchasedCount - 1] : marks[marks.length - 1];
+    const shrinking = shrinkAway(mark);
+
+    collapse(onlyRow ? row.closest('.category-section') : row, () => {
+      leaving.current.delete(item.id);
+      // Committed at once, and the shrunk segment let go in the same frame:
+      // the segments are keyed by position, so the one that shrank may be
+      // the one React keeps (restyled), and it must not paint shrunk.
+      flushSync(() => {
+        dispatch({ type: 'delete-item', id: item.id });
+        setAnnouncement(t('live.itemRemoved', { name: item.name }));
+        setUndoable({ item, index });
+      });
+      shrinking?.cancel();
+    });
   }
 
   function handleComplete(totalCost) {
     dispatch({ type: 'complete-purchase', totalCost });
     setCompleting(false);
+    nudgeTab('/history');
   }
 
   return (
@@ -155,6 +228,7 @@ export function ShoppingListPage() {
               carries a copy of the text so the field — and its underline —
               stop at the end of the name instead of spanning the row. */}
           <span
+            data-large-title
             className="list-title-field"
             data-value={activeList.name || t('list.title')}
           >
@@ -196,10 +270,14 @@ export function ShoppingListPage() {
               progress. The count is what the bar is reporting, so the count is
               what it draws: each tick advances it by one more segment. */}
           <div className="tally-marks" aria-hidden="true">
+            {/* Keyed by position, not by item: the bar shows a count, so
+                it is always the last segment that comes or goes. */}
             {items.map((item, index) => (
               <span
-                key={item.id}
-                className={`tally-mark${index < purchasedCount ? ' tally-mark-done' : ''}`}
+                key={index}
+                className={`tally-mark${index < purchasedCount ? ' tally-mark-done' : ''}${
+                  index === freshMark ? ' tally-mark-fresh' : ''
+                }${index >= growFrom.current ? ' tally-mark-new' : ''}`}
               />
             ))}
           </div>
@@ -243,6 +321,7 @@ export function ShoppingListPage() {
             key={group.category.id}
             category={group.category}
             items={group.items}
+            freshIds={freshIds}
             onEdit={(item) => {
               pickerSession.current += 1;
               setPicker({ session: pickerSession.current, mode: 'edit', item });
@@ -271,7 +350,9 @@ export function ShoppingListPage() {
       {undoable ? (
         <UndoBar
           key={undoable.item.id}
-          message={t('undo.itemDeleted', { name: undoable.item.name })}
+          // Isolated, so a Hebrew name in the English message cannot flip the
+          // quotation marks around it or pull "deleted" to the wrong side.
+          message={t('undo.itemDeleted', { name: `⁨${undoable.item.name}⁩` })}
           onUndo={() => {
             dispatch({ type: 'restore-item', item: undoable.item, index: undoable.index });
             setUndoable(null);

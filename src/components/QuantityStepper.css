@@ -21,9 +21,11 @@
     transform var(--duration-base) var(--ease-spring);
 }
 
-.stepper-btn:hover:not(:disabled) {
-  background-color: var(--color-primary-soft);
-  color: var(--color-primary);
+@media (hover: hover) {
+  .stepper-btn:hover:not(:disabled) {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+  }
 }
 
 .stepper-btn:active:not(:disabled) {
@@ -38,7 +40,7 @@
 .stepper-value {
   min-width: 32px;
   text-align: center;
-  font-family: var(--font-mono);
+  font-family: var(--font-numeric);
   font-size: var(--text-sm);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -59,12 +61,75 @@
   font-size: var(--text-base);
 }
 
+/* In a list row the stepper is the quiet control, not the headline. As a
+   44px pill it was the heaviest shape on every row — twelve grey capsules
+   shouting over the item names they belong to. iOS draws its stepper 32 high,
+   and so does this one now; the touch target stays a full 44 through an
+   invisible extension, the same way the ⋯ button beside it already works.
+   The looks shrink, the thumb gets exactly what it had. */
+.stepper-sm {
+  background-color: color-mix(in srgb, var(--color-surface-sunken) 80%, transparent);
+}
+
+.stepper-sm .stepper-btn {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}
+
+.stepper-sm .stepper-btn::after {
+  content: '';
+  position: absolute;
+  inset: -6px -3px;
+}
+
+.stepper-sm .stepper-value {
+  min-width: 26px;
+}
+
 /* On touch screens the targets grow to a full 44 square. The eight pixels
    come out of the item name, which already truncates; they do not come out of
    the row height, which is what the density depends on. */
 @media (pointer: coarse), (max-width: 640px) {
-  .stepper-btn {
+  .stepper-md .stepper-btn {
     width: 44px;
     height: 44px;
+  }
+
+  .stepper-sm .stepper-btn {
+    width: 36px;
+    height: 34px;
+  }
+
+  .stepper-sm .stepper-btn::after {
+    inset: -5px -4px;
+  }
+}
+
+/* The number turns over rather than being retyped: up from below, down from
+   above. Short and small — it is a quantity, not a headline. */
+.stepper-digit {
+  display: inline-block;
+}
+
+.stepper-digit-up {
+  animation: stepper-digit-up 220ms var(--ease-out);
+}
+
+.stepper-digit-down {
+  animation: stepper-digit-down 220ms var(--ease-out);
+}
+
+@keyframes stepper-digit-up {
+  from {
+    opacity: 0;
+    transform: translateY(45%);
+  }
+}
+
+@keyframes stepper-digit-down {
+  from {
+    opacity: 0;
+    transform: translateY(-45%);
   }
 }

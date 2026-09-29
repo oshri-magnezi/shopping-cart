@@ -13,27 +13,26 @@ import {
   Tag,
 } from 'lucide-react';
 
-// Built-in categories. `color` is only used for the icon tile, so it stays
-// readable against the surface in both themes.
+// Built-in categories. `color` is only used for the icon, which sits on four
+// backgrounds: light and dark, selected and not. Every colour keeps its hue
+// from the original set but shares one lightness, chosen so the icon clears
+// 3:1 against all four (categories.test.js). Slightly less saturated than the
+// stock set it replaced, whose bright primaries read as a default palette and
+// half of which vanished on one theme or the other.
 export const BUILT_IN_CATEGORIES = [
-  { id: 'produce', icon: Carrot, color: '#16a34a' },
-  { id: 'dairy', icon: Milk, color: '#0284c7' },
-  { id: 'meat', icon: Beef, color: '#dc2626' },
-  { id: 'bakery', icon: Croissant, color: '#d97706' },
-  { id: 'canned', icon: Package, color: '#7c3aed' },
-  { id: 'frozen', icon: Snowflake, color: '#0891b2' },
-  { id: 'drinks', icon: CupSoda, color: '#2563eb' },
-  { id: 'snacks', icon: Candy, color: '#db2777' },
-  { id: 'cleaning', icon: SprayCan, color: '#0d9488' },
+  { id: 'produce', icon: Carrot, color: '#38924f' },
+  { id: 'dairy', icon: Milk, color: '#3c87bb' },
+  { id: 'meat', icon: Beef, color: '#d15c52' },
+  { id: 'bakery', icon: Croissant, color: '#b96f2d' },
+  { id: 'canned', icon: Package, color: '#8a70d6' },
+  { id: 'frozen', icon: Snowflake, color: '#3a8ba4' },
+  { id: 'drinks', icon: CupSoda, color: '#517fdc' },
+  { id: 'snacks', icon: Candy, color: '#cd5b83' },
+  { id: 'cleaning', icon: SprayCan, color: '#3c8e84' },
   // Toiletries used to share the cleaning shelf, which put toothpaste next to
   // bleach. They are bought on a different rhythm and belong apart.
-  //
-  // The colour is muted rather than the obvious bright fuchsia because a tile
-  // has four backgrounds — light and dark, selected and not — and the selected
-  // dark one (`--color-primary-soft`) is the hard case. This clears 3:1
-  // against all four; #c026d3 managed only 2.68 against that one.
-  { id: 'care', icon: Bath, color: '#c757b4' },
-  { id: 'other', icon: ShoppingBasket, color: '#64748b' },
+  { id: 'care', icon: Bath, color: '#b963a9' },
+  { id: 'other', icon: ShoppingBasket, color: '#768295' },
 ];
 
 export const CUSTOM_CATEGORY_ICON = Tag;

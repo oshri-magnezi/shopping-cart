@@ -29,7 +29,7 @@
   padding-inline-end: 26px;
   font-family: var(--font-display);
   font-size: var(--text-2xl);
-  font-weight: 400;
+  font-weight: var(--font-display-weight);
   line-height: 1.2;
   /* No tracking: this is Hebrew, and pulling its letterforms apart is the
      fastest way to make a serif face look wrong. */
@@ -60,8 +60,10 @@
   opacity: 1;
 }
 
-.list-title-field:hover .list-title-input {
-  border-bottom-color: var(--color-border-strong);
+@media (hover: hover) {
+  .list-title-field:hover .list-title-input {
+    border-bottom-color: var(--color-border-strong);
+  }
 }
 
 .list-title-input:focus {
@@ -83,9 +85,14 @@
   transition: color var(--duration-fast) var(--ease);
 }
 
-.list-title-field:hover .list-title-pencil,
 .list-title-field:focus-within .list-title-pencil {
   color: var(--color-primary);
+}
+
+@media (hover: hover) {
+  .list-title-field:hover .list-title-pencil {
+    color: var(--color-primary);
+  }
 }
 
 /* A date is prose, not a figure — it goes in the text face. Only quantities,
@@ -128,6 +135,34 @@
   opacity: 1;
 }
 
+/* The segment a tap just filled swells for a moment and settles — the bar
+   answering the tick. Only that one segment carries the class, and only on the
+   render where the count went up, so segments already filled when the list
+   opens stay put. */
+.tally-mark-fresh {
+  animation: tally-fill var(--spring-bouncy-duration) var(--spring-bouncy);
+}
+
+/* A segment added to the bar grows into it, the reverse of the way a deleted
+   item's segment shrinks out (shrinkAway in motion.js). */
+.tally-mark-new {
+  animation: tally-grow 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes tally-grow {
+  from {
+    flex-grow: 0;
+    min-width: 0;
+  }
+}
+
+@keyframes tally-fill {
+  from {
+    transform: scaleY(2.2);
+    opacity: 0.4;
+  }
+}
+
 .tally-label {
   flex: none;
   font-size: var(--text-xs);
@@ -152,16 +187,11 @@
   margin-block: var(--space-3) var(--space-2);
   padding: 4px;
   border-radius: var(--radius-full);
-  background-color: color-mix(in srgb, var(--color-surface) 80%, transparent);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--color-hairline);
-}
-
-@supports not (backdrop-filter: blur(1px)) {
-  .add-form {
-    background-color: var(--color-surface);
-  }
+  /* The thicker glass (glass.css): it holds what is being typed. */
+  background-color: var(--liquid-fill-thick);
+  -webkit-backdrop-filter: var(--liquid-blur);
+  backdrop-filter: var(--liquid-blur);
+  box-shadow: var(--liquid-rim), var(--liquid-shadow);
 }
 
 /* The field inside the pill has no surface of its own — the pill is the

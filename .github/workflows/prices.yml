@@ -8,14 +8,26 @@ on:
     - cron: '30 1 * * *'
   workflow_dispatch:
 
-# One refresh at a time. Two overlapping runs would both rewrite the same
-# catalogue files and race each other to push.
+# Shares its group with the code deploy: both publish the same site, and two
+# publishes racing each other would leave whichever finished last. Never
+# cancelled — a push arriving mid-refresh waits its turn rather than throwing
+# away forty minutes of downloads.
 concurrency:
-  group: prices
+  group: pages
   cancel-in-progress: false
 
+# The catalogue is not committed: this job builds it and publishes the site
+# with it directly. That fixed the stale prices — a push made with
+# GITHUB_TOKEN never triggers another workflow, so the catalogue the bot used
+# to commit never reached the site at all.
+#
+# What is committed is one small file, PRICES.md, in the owner's name, as the
+# record that the night's update happened (the last step). `contents: write`
+# is for that commit alone.
 permissions:
   contents: write
+  pages: write
+  id-token: write
   # So a failed night can raise an issue against the repository instead of
   # relying on an email nobody opens.
   issues: write
@@ -26,7 +38,10 @@ jobs:
     # Nine portals, four cities, several hundred megabytes of XML. A normal
     # run is well inside this; the cap is here so a hung portal cannot burn
     # the whole job allowance.
-    timeout-minutes: 30
+    timeout-minutes: 40
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - uses: actions/checkout@v4
@@ -35,7 +50,9 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: bot/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            bot/package-lock.json
 
       - name: Install bot dependencies
         working-directory: bot
@@ -59,39 +76,67 @@ jobs:
         run: node src/index.js --catalog ../public --cities "תל אביב,ראשון לציון,חיפה,ירושלים"
 
       # Which is exactly why this step exists. Fail-soft plus an automatic
-      # commit would quietly publish a two-chain catalogue on a night when five
-      # portals were down, and the comparison the whole app is built on would
-      # silently be running on two shops. Losing chains, losing cities or losing
-      # most of a chain's products stops the publish and fails the job instead.
+      # publish would quietly ship a two-chain catalogue on a night when five
+      # portals were down. The baseline is what the live site serves right now
+      # — what shoppers are actually looking at — not an old commit.
       - name: Refuse to publish a degraded catalogue
         run: |
-          git show HEAD:public/price-catalog-index.json > /tmp/published-index.json \
-            || echo 'null' > /tmp/published-index.json
+          node bot/src/pull-live-catalog.js --index-only /tmp/published-index.json
           node bot/src/verify-catalog.js /tmp/published-index.json public/price-catalog-index.json
 
-      - name: Commit the refreshed catalogues
-        run: |
-          if git diff --quiet -- public/; then
-            echo "Prices are unchanged; nothing to commit."
-            exit 0
-          fi
-          git config user.name  'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add public/
-          git commit -m "chore: refresh price catalogues"
+      # The same checks a code push goes through: a site that fails its own
+      # tests is not published, whatever the prices say.
+      - name: Install site dependencies
+        run: npm ci
 
-          # A build takes minutes, and a push to main during that window leaves
-          # this commit behind the branch. Without the rebase the push is
-          # rejected and the night's catalogue is thrown away over a conflict
-          # that does not exist: nothing else touches public/.
+      - name: Test the site
+        run: npm test
+
+      - name: Build the site
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Publish
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      # One small commit a night, in the owner's name, so the repository shows
+      # every update — and only the owner in its contributors. The commit
+      # touches PRICES.md alone: a few lines, overwritten each night, instead
+      # of the tens of megabytes of catalogue the bot used to commit.
+      #
+      # It is made on top of whatever main is now, not the commit this run
+      # started from, so a push made during the forty-minute refresh is never
+      # overwritten; if main moves again before the push lands, it retries.
+      - name: Record the update
+        env:
+          GIT_AUTHOR_NAME: Oshri Magnezi
+          GIT_AUTHOR_EMAIL: oshrimagen0@gmail.com
+          GIT_COMMITTER_NAME: Oshri Magnezi
+          GIT_COMMITTER_EMAIL: oshrimagen0@gmail.com
+        run: |
+          day=$(TZ=Asia/Jerusalem date +%d.%m.%Y)
           for attempt in 1 2 3; do
-            if git push; then
+            git fetch --quiet --depth=1 origin main
+            git checkout --quiet -B record-update FETCH_HEAD
+            node bot/src/record-update.js public PRICES.md
+            git add PRICES.md
+            if git diff --cached --quiet; then
+              echo "PRICES.md is unchanged; nothing to record."
               exit 0
             fi
-            echo "Push rejected — the branch moved. Rebasing and retrying ($attempt/3)."
-            git pull --rebase origin "${GITHUB_REF_NAME}"
+            git commit --quiet -m "Update prices — $day"
+            if git push --quiet origin HEAD:main; then
+              exit 0
+            fi
+            echo "main moved during the push; trying again."
+            sleep 5
           done
-          echo "Could not push after three attempts."
           exit 1
 
       # This job ran and failed nineteen nights in a row without anyone
@@ -113,7 +158,7 @@ jobs:
             echo "Issue #$open is already open for this; not filing another."
             exit 0
           fi
-          gh issue create --title "$title" --body             "The scheduled price refresh failed and the published catalogue was left unchanged.
+          gh issue create --title "$title" --body "The scheduled price refresh failed and the published catalogue was left unchanged.
 
           Run: $RUN_URL
 

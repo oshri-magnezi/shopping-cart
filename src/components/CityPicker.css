@@ -1,0 +1,131 @@
+/* The field: a recessed pill like every other input, with the value at the
+   start and the chevron at the end. */
+.city-picker-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-align: start;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+@media (hover: hover) {
+  .city-picker-button:hover {
+    background-color: var(--color-fill-hover);
+  }
+}
+
+/* The button keeps focus after its list closes, so its focus state stays on
+   screen while it is the active control. The field's own edge lighting up
+   reads as "here" without the alarm of an offset ring. */
+.city-picker-button:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+.city-picker-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.city-picker-chevron {
+  flex: none;
+  color: var(--color-text-subtle);
+  transition: transform var(--duration-base) var(--ease-spring);
+}
+
+.city-picker-button[aria-expanded='true'] .city-picker-chevron {
+  transform: rotate(180deg);
+}
+
+/* The list, in the same glass as the search suggestions: nearly opaque,
+   because it is rows of text over rows of text. Fixed, since it lives on the
+   body and is placed from the button's position. */
+.city-list {
+  position: fixed;
+  z-index: 120;
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  background-color: var(--liquid-fill-menu);
+  -webkit-backdrop-filter: var(--liquid-blur-menu);
+  backdrop-filter: var(--liquid-blur-menu);
+  border-radius: var(--radius-md);
+  box-shadow: var(--liquid-rim), var(--shadow-float);
+  animation: city-list-in var(--duration-base) var(--ease-spring);
+}
+
+.city-list:focus {
+  outline: none;
+}
+
+/* Folds back into the field: slower than the way in, and eased in, so the
+   tick on the city just picked is still readable as it starts to go. */
+.city-list-leaving {
+  animation: city-list-out 300ms cubic-bezier(0.4, 0, 0.8, 0.2) forwards;
+  pointer-events: none;
+}
+
+@keyframes city-list-out {
+  70% {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.6);
+  }
+}
+
+/* Unfolds from the field, like the suggestions do. */
+@keyframes city-list-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scaleY(0.96);
+  }
+}
+
+.city-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-hairline);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+.city-option:last-child {
+  border-bottom: none;
+}
+
+.city-option-active {
+  background-color: var(--color-primary-soft);
+}
+
+.city-option-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.city-option[aria-selected='true'] .city-option-name {
+  font-weight: 500;
+}
+
+.city-option-check {
+  flex: none;
+  color: var(--color-primary);
+}

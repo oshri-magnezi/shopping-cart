@@ -2,7 +2,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildChains } from './chains.js';
+import { buildChains, withoutDuplicateOnline } from './chains.js';
 import { launchBrowser } from './fetch/browser.js';
 import { readCacheEntry, writeCacheEntry, dropCacheEntry } from './cache.js';
 import { parsePricesFile } from './parse/prices.js';
@@ -76,6 +76,13 @@ async function runListStores(chainKey, config, args, chains) {
   }
 }
 
+/**
+ * The city a chain's files are cached under. An online store is the same
+ * file whichever city asked for it, so it is cached once and every city after
+ * the first reads it from there instead of downloading it again.
+ */
+const cacheCityOf = (chain, city) => (chain.online ? 'online' : city);
+
 /** Fetches each chain in turn; one chain failing must not sink the run. */
 async function collectChainFiles(config, args, chains) {
   const results = [];
@@ -84,7 +91,7 @@ async function collectChainFiles(config, args, chains) {
   for (const chain of chains) {
     const cached = args.refresh
       ? null
-      : await readCacheEntry(CACHE_DIR, chain.key, config.city, config.cacheHours);
+      : await readCacheEntry(CACHE_DIR, chain.key, cacheCityOf(chain, config.city), config.cacheHours);
 
     if (cached) {
       log(`${chain.displayName}: נטען מהמטמון`);
@@ -108,7 +115,7 @@ async function collectChainFiles(config, args, chains) {
               chain.fetcher({
                 browser,
                 city: config.city,
-                storeOverride: config.storeOverrides?.[chain.key] ?? null,
+                storeOverride: chain.storeOverride ?? config.storeOverrides?.[chain.key] ?? null,
                 cacheDir: CACHE_DIR,
                 log,
               }),
@@ -121,7 +128,7 @@ async function collectChainFiles(config, args, chains) {
                 ),
             },
           );
-          await writeCacheEntry(CACHE_DIR, chain.key, config.city, fetched);
+          await writeCacheEntry(CACHE_DIR, chain.key, cacheCityOf(chain, config.city), fetched);
           results.push({ chain, ...fetched, ok: true, fromCache: false });
         } catch (error) {
           log(`${chain.displayName}: נכשל — ${error.message}`);
@@ -159,7 +166,7 @@ async function matchChain(entry, items, threshold, config) {
   } catch (error) {
     // A file that will not parse is worse than no file: drop it so the next
     // run re-downloads instead of failing identically forever.
-    await dropCacheEntry(CACHE_DIR, chain.key, config.city);
+    await dropCacheEntry(CACHE_DIR, chain.key, cacheCityOf(chain, config.city));
     return {
       key: chain.key,
       displayName: chain.displayName,
@@ -228,7 +235,7 @@ async function runCatalog(config, args, chains, outputDir) {
   for (const city of cities) {
     console.log(`— ${city} —`);
     const cityConfig = { ...config, city };
-    const fetched = await collectChainFiles(cityConfig, args, chains);
+    const fetched = withoutDuplicateOnline(await collectChainFiles(cityConfig, args, chains));
     const browser = await launchBrowser(args.headful ? false : config.headless);
 
     let payload;

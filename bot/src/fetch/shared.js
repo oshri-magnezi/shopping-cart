@@ -83,11 +83,25 @@ export function cityMatches(text, city) {
   const needles = group ? group.map(squash) : [target];
 
   const haystack = squash(text);
-  const words = normalize(text).split(' ').filter(Boolean);
 
   return needles.some((needle) =>
-    needle.length <= 3 ? words.includes(needle) : haystack.includes(needle),
+    needle.length <= 3 ? abbreviation(needle).test(text) : haystack.includes(needle),
   );
+}
+
+/**
+ * A short alias counts only in its written form, with the gershayim or hyphen
+ * before the last letter that makes it an abbreviation: ת"א, י-ם, פ"ת.
+ *
+ * Compared bare, after punctuation was stripped, "ים" is the sea — the last
+ * word of בת ים and גליל ים — and Tiv Taam in Bat Yam and Fresh Market in Glil
+ * Yam were priced as Jerusalem. Letters on either side rule out a match inside
+ * a longer word.
+ */
+function abbreviation(letters) {
+  const head = letters.slice(0, -1);
+  const tail = letters.slice(-1);
+  return new RegExp(`(^|[^א-ת])${head}["'׳״-]${tail}(?![א-ת])`);
 }
 
 /**

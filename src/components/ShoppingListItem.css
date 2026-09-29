@@ -60,8 +60,10 @@
   stroke-dashoffset: 0;
 }
 
-.item-check:hover .item-check-box {
-  border-color: var(--color-primary);
+@media (hover: hover) {
+  .item-check:hover .item-check-box {
+    border-color: var(--color-primary);
+  }
 }
 
 .item-check:active .item-check-box {
@@ -85,17 +87,83 @@
 }
 
 .list-item-purchased .item-name {
-  text-decoration: line-through;
-  text-decoration-thickness: 1px;
   color: var(--color-text-subtle);
+}
+
+/* The line through a finished item is drawn, not switched on. text-decoration
+   cannot be animated — it simply appears — so the line is its own element,
+   exactly as wide as the words, and it grows across them from the side the
+   language is read from: right to left in Hebrew, left to right in English.
+   That is how Reminders does it, and it is the difference between a row that
+   changed state and a thing that got done. Unticking runs it back. */
+.item-name-text {
+  position: relative;
+}
+
+.item-name-text::after {
+  content: '';
+  position: absolute;
+  inset-inline: -1px;
+  /* Through the body of Hebrew letters, which sit lower in the line box than
+     Latin capitals do. */
+  top: 52%;
+  height: 1.5px;
+  border-radius: var(--radius-full);
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: var(--strike-from, left);
+  transition: transform var(--spring-smooth-duration) var(--spring-smooth);
+}
+
+[dir='rtl'] .item-name-text::after {
+  --strike-from: right;
+}
+
+.list-item-purchased .item-name-text::after {
+  transform: scaleX(1);
+}
+
+/* A tick that lands, not one that appears: the circle gives from a slight
+   squeeze. Only on a tap — the class is set by the click and cleared when
+   the pop ends — so a list opening with finished items stays still. */
+.list-item-checking .item-check-box {
+  animation: item-check-pop var(--spring-bouncy-duration) var(--spring-bouncy);
+}
+
+@keyframes item-check-pop {
+  from {
+    transform: scale(0.7);
+  }
 }
 
 /* No opacity on the row. Fading text is the cheapest way to say "done" and the
    most expensive in contrast: at 0.6 the name dropped to 3.2:1. The rule
    through it and the filled circle already say it, at full legibility. */
 
+/* A row that just arrived lights up once so the eye finds it in a long list.
+   It waits for the sheet it was added from to finish sliding away — the row
+   is created while the sheet still covers the list, and a highlight played
+   underneath the sheet is a highlight nobody sees. */
+.list-item-fresh .swipe-surface {
+  animation: item-arrive 1200ms var(--ease-out) 320ms backwards;
+}
+
+@keyframes item-arrive {
+  from {
+    background-color: var(--color-primary-soft);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .item-check-box path {
+  .item-check-box path,
+  .item-name-text::after {
     transition: none;
   }
+}
+
+/* The ⋯ is the third way to reach the same actions — after a swipe and a long
+   press on a phone — so it steps back to a glyph rather than a control that
+   competes with the item name. Full colour returns under the pointer. */
+.list-item .row-menu-trigger {
+  color: color-mix(in srgb, var(--color-text-subtle) 70%, transparent);
 }

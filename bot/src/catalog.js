@@ -96,11 +96,18 @@ export async function buildCatalog({
       return flag ? [product.name, price, code, flag] : [product.name, price, code];
     });
 
+    // A chain priced from its delivery store — declared as one, or fallen back
+    // to for want of a branch in the city — is labelled as online throughout.
+    const online = Boolean(chain.online || entry.viaOnline);
     entries.push({
       key: chain.key,
-      displayName: chain.displayName,
+      displayName:
+        online && !chain.online ? `${chain.displayName} אונליין` : chain.displayName,
       storeName: entry.storeName ?? '',
       storeId: entry.storeId ?? '',
+      // Tells the site to describe the store as delivery rather than show the
+      // warehouse name the chain registered it under ("מרלוג אינטרנט").
+      ...(online ? { online: true } : {}),
       cities: includeCities ? await chainCities(chain, browser, cacheDir, log) : [],
       products: rows,
     });

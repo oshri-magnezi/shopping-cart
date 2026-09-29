@@ -5,7 +5,7 @@
 .compare-title {
   font-family: var(--font-display);
   font-size: var(--text-2xl);
-  font-weight: 400;
+  font-weight: var(--font-display-weight);
   /* Hebrew: no tracking, ever. */
   letter-spacing: 0;
 }
@@ -21,8 +21,8 @@
 .filter {
   margin-block: var(--space-4);
   border-radius: var(--radius-lg);
-  background-color: var(--color-surface);
-  box-shadow: 0 0 0 1px var(--color-hairline);
+  background-color: var(--liquid-fill-content);
+  box-shadow: var(--liquid-rim), var(--liquid-lift);
   overflow: hidden;
 }
 
@@ -39,8 +39,10 @@
   transition: background-color var(--duration-fast) var(--ease);
 }
 
-.filter-summary:hover {
-  background-color: var(--color-surface-sunken);
+@media (hover: hover) {
+  .filter-summary:hover {
+    background-color: var(--color-surface-sunken);
+  }
 }
 
 .filter-summary-text {
@@ -119,59 +121,6 @@
   color: var(--color-text-muted);
 }
 
-/* The browser's own dropdown arrow is the one shape in the app that does not
-   come from the icon set, and it sits hard against the edge with no padding of
-   its own. This draws our chevron instead — same geometry and stroke weight as
-   every other icon — and reserves real room for it. */
-.city-picker select {
-  appearance: none;
-  -webkit-appearance: none;
-  flex: 1;
-  min-width: 0;
-  min-height: 44px;
-  /* Start, then end: the end side is where the chevron lives. */
-  padding-inline: var(--space-4) var(--space-8);
-  border: 1px solid transparent;
-  border-radius: var(--radius-md);
-  background-color: var(--color-surface-sunken);
-  background-repeat: no-repeat;
-  background-size: 18px 18px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236e6a59' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  color: var(--color-text);
-  font-size: var(--text-sm);
-  cursor: pointer;
-}
-
-/* background-position has no logical form, so the side is chosen by direction.
-   The chevron always sits at the inline-end, a full gutter clear of the edge. */
-[dir='rtl'] .city-picker select {
-  background-position: left var(--space-4) center;
-}
-
-[dir='ltr'] .city-picker select {
-  background-position: right var(--space-4) center;
-}
-
-/* A data URI cannot read currentColor, so the dark palette gets its own. */
-[data-theme='dark'] .city-picker select {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b3ada0' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-}
-
-.city-picker select:hover {
-  background-color: var(--color-bg);
-}
-
-/* A select keeps focus after its menu closes — that is how every native select
-   behaves — so its focus state is on screen for as long as the control is the
-   active one. A hard offset ring reads as an alarm for that whole time. The
-   indicator here is the field's own edge lighting up, plus a soft halo: still
-   unmistakable from the keyboard, no longer shouting after a mouse click. */
-.city-picker select:focus-visible {
-  outline: none;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 16%, transparent);
-}
-
 .city-picker-label {
   flex: none;
 }
@@ -225,6 +174,25 @@
   border-color: var(--color-primary);
 }
 
+/* Choosing a store fills its circle and springs the tick in; clearing it just
+   lets go. The tick is only in the DOM while the chip is on, so the animation
+   plays each time it is turned on and never on the way off. */
+.chain-chip-box {
+  transition: background-color var(--duration-fast) var(--ease),
+    border-color var(--duration-fast) var(--ease);
+}
+
+.chain-chip-box svg {
+  animation: chip-tick-in var(--spring-snappy-duration) var(--spring-snappy);
+}
+
+@keyframes chip-tick-in {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
+
 .filter-controls,
 .filter-meta {
   display: flex;
@@ -251,8 +219,10 @@
   transition: opacity var(--duration-fast) var(--ease);
 }
 
-.compare-link:hover {
-  opacity: 0.7;
+@media (hover: hover) {
+  .compare-link:hover {
+    opacity: 0.7;
+  }
 }
 
 /* ---------- The answer ---------- */
@@ -274,20 +244,22 @@
   margin-top: var(--space-1);
   font-family: var(--font-display);
   font-size: var(--text-xl);
-  font-weight: 400;
+  font-weight: var(--font-display-weight);
   letter-spacing: 0;
 }
 
 .lead-total {
   margin-top: var(--space-2);
-  font-family: var(--font-mono);
+  font-family: var(--font-numeric);
   font-size: var(--text-hero);
-  font-weight: 500;
+  font-weight: 700;
   line-height: 1;
-  /* Mono figures are Latin glyphs, so tightening them is safe — and at this
-     size the default spacing reads as gappy. */
-  letter-spacing: -0.04em;
-  color: var(--color-accent);
+  /* Figures are Latin glyphs, so tightening them is safe — and at display size
+     Apple tightens its own numerals the same way. */
+  letter-spacing: -0.03em;
+  /* The text colour, as Wallet sets a balance. The ochre was the one warm
+     accent on a cool glass screen and sat on it rather than in it. */
+  color: var(--color-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -389,7 +361,7 @@
 }
 
 .ladder-total {
-  font-family: var(--font-mono);
+  font-family: var(--font-numeric);
   font-size: var(--text-lg);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -447,12 +419,37 @@
 
 /* ---------- Per-item breakdown ---------- */
 
-.breakdown-item {
-  padding: var(--space-4);
-}
-
 .breakdown-item + .breakdown-item {
   border-top: 1px solid var(--color-hairline);
+}
+
+/* The heading is only a container for the button — the accordion pattern —
+   so it carries no type of its own. */
+.breakdown-heading {
+  font: inherit;
+}
+
+/* One row per item, closed: what it is on the start side, the answer on the
+   end side. The whole row is the target, as it is in an iOS disclosure list. */
+.breakdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-3) var(--space-4);
+  text-align: start;
+  transition: background-color var(--duration-fast) var(--ease);
+}
+
+@media (hover: hover) {
+  .breakdown-toggle:not(:disabled):hover {
+    background-color: var(--color-surface-sunken);
+  }
+}
+
+.breakdown-toggle:disabled {
+  cursor: default;
 }
 
 .breakdown-head {
@@ -460,7 +457,8 @@
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-bottom: var(--space-2);
+  flex: 1;
+  min-width: 0;
 }
 
 .breakdown-name {
@@ -468,6 +466,66 @@
   font-size: var(--text-sm);
   font-weight: 500;
   line-height: 1.4;
+}
+
+.breakdown-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+}
+
+.breakdown-summary-amount {
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.breakdown-chevron {
+  flex: none;
+  transition: transform var(--spring-smooth-duration) var(--spring-smooth);
+}
+
+.breakdown-open .breakdown-chevron {
+  transform: rotate(180deg);
+}
+
+/* Height by grid track, not max-height: 0fr to 1fr is a real measurement, so
+   it opens to exactly the list's height and closes the way it opened — the
+   same technique as the city filter above. */
+.breakdown-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-slow) var(--ease-out);
+}
+
+.breakdown-open .breakdown-collapse {
+  grid-template-rows: 1fr;
+}
+
+.breakdown-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.breakdown-clip .breakdown-prices {
+  padding: 0 var(--space-4) var(--space-3);
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease);
+}
+
+.breakdown-open .breakdown-clip .breakdown-prices {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breakdown-collapse,
+  .breakdown-clip .breakdown-prices,
+  .breakdown-chevron {
+    transition: none;
+  }
 }
 
 .breakdown-qty {
@@ -540,7 +598,7 @@
 }
 
 .breakdown-amount {
-  font-family: var(--font-mono);
+  font-family: var(--font-numeric);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--color-text-muted);

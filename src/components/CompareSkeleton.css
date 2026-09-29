@@ -5,8 +5,8 @@
   flex-direction: column;
   margin-block-start: var(--space-6);
   border-radius: var(--radius-lg);
-  background-color: var(--color-surface);
-  box-shadow: 0 0 0 1px var(--color-hairline);
+  background-color: var(--liquid-fill-content);
+  box-shadow: var(--liquid-rim), var(--liquid-lift);
   overflow: hidden;
 }
 

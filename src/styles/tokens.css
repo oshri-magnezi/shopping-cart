@@ -28,19 +28,33 @@
   --color-accent: #c77a0e;
   --color-accent-text: #8f5600;
 
-  /* Surfaces — warm paper, barely separated. Depth is earned, not default. */
-  --color-bg: #faf9f7;
-  --color-surface: #ffffff;
+  /* Surfaces — warm paper under soft white, separated the way iOS separates
+     its grouped lists from the page behind them.
+
+     Measured, not eyeballed: the old ground (#faf9f7) against white cards was
+     1.05:1 — white on white, which is exactly why the app read as "too white".
+     iOS keeps its grey ground and white cells about 1.11:1 apart; these land at
+     1.12 on a warm tone instead of a cold one. The cells step back from pure
+     white too, and pure white is kept for the one thing that should be the
+     brightest surface on screen: a sheet or a menu lifted above everything. */
+  --color-bg: #f2efe9;
+  --color-surface: #fdfcf9;
   --color-surface-raised: #ffffff;
-  --color-surface-sunken: #f2f0ec;
+  /* Fields, steppers, chips and pressed rows. A tint of the text rather than
+     a colour of its own, the way iOS draws its fills: it sits inside the glass
+     around it instead of cutting a solid hole in it, and darkens a light
+     surface or lightens a dark one by the same step. */
+  --color-surface-sunken: color-mix(in srgb, var(--color-text) 6%, transparent);
+  --color-fill-hover: color-mix(in srgb, var(--color-text) 10%, transparent);
 
   /* Text — warm black, never pure #000 */
   --color-text: #16150f;
   --color-text-muted: #5d594e;
   /* Measured, not eyeballed: at #86816f this failed AA (3.7:1) on the paper
      ground and on white. It carries category labels, dates and every figure
-     caption, so it has to clear 4.5. */
-  --color-text-subtle: #6e6a59;
+     caption, so it has to clear 4.5 — and it has to do it on the recessed
+     surface too, where the deeper paper took #6e6a59 down to 4.36. */
+  --color-text-subtle: #66624f;
 
   /* Hairlines do the separating work that borders and cards used to do. */
   --color-hairline: rgba(22, 21, 15, 0.09);
@@ -92,11 +106,37 @@
   --duration-base: 220ms;
   --duration-slow: 340ms;
 
+  /* Springs, for the moments that should feel physical rather than timed.
+     Until now --ease-spring was a cubic-bezier doing an impression of a spring:
+     one overshoot and a hard stop. These are the real thing — a damped
+     oscillator, the same model SwiftUI's .spring uses, solved and sampled into
+     linear(). The duration travels with each curve because a spring settles
+     when the physics says it does, not when a token says so.
+
+       smooth — critically damped, no overshoot. Sheets, sliding selections.
+       snappy — a percent of overshoot. Anything the finger just let go of.
+       bouncy — five percent. Reserved for a moment of acknowledgement.
+
+     Browsers without linear() keep the cubic-bezier fallbacks below. */
+  --spring-smooth: var(--ease-out);
+  --spring-smooth-duration: 420ms;
+  --spring-snappy: var(--ease-spring);
+  --spring-snappy-duration: 340ms;
+  --spring-bouncy: var(--ease-spring);
+  --spring-bouncy-duration: 420ms;
+
   /* Shadows carry the hue of the paper, not neutral black. */
   --shadow-sm: 0 1px 2px rgba(60, 50, 20, 0.05);
   --shadow-raised: 0 1px 2px rgba(60, 50, 20, 0.05), 0 8px 24px -12px rgba(60, 50, 20, 0.18);
   --shadow-float: 0 2px 6px rgba(60, 50, 20, 0.06), 0 16px 40px -18px rgba(60, 50, 20, 0.28);
   --shadow-modal: 0 24px 64px -20px rgba(40, 34, 14, 0.35);
+
+  /* Safe areas. Zero on a desktop, the notch and the home indicator on a
+     phone — which the page only learns about with viewport-fit=cover. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 
   /* Layout */
   --content-width: 720px;
@@ -106,6 +146,9 @@
   --navbar-height: 56px;
   --navbar-gap: 12px;
   --navbar-total: calc(var(--navbar-height) + var(--navbar-gap));
+  /* The phone's floating tab bar. Anything fixed to the bottom of the screen
+     on a phone — the undo bar — has to sit above it. */
+  --tabbar-height: 62px;
 
   /* Fonts. All three carry Hebrew — verified on Google Fonts. Latin-only
      display faces would render the entire app as boxes. */
@@ -113,8 +156,54 @@
      the browser synthesise a bold and smear the counters. Presence comes from
      size here, not from weight. */
   --font-display: 'Secular One', 'Segoe UI', system-ui, sans-serif;
+  --font-display-weight: 400;
   --font-body: 'Rubik', 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'Azeret Mono', ui-monospace, 'Courier New', monospace;
+
+  /* Figures — every price, count and date — in the device's own face, with
+     tabular digits so columns still line up.
+
+     They used to be set in a monospace, and a monospace gives every character
+     the same width: the decimal point took a whole digit's room, so ₪135.76
+     read as "135 . 76" on every price in the app. On an iPhone this stack is
+     SF Pro, the face Apple Wallet sets its amounts in; elsewhere it is the
+     platform's own UI face. Digits are Latin glyphs, so the Hebrew around them
+     is untouched. */
+  --font-figures: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto,
+    'Helvetica Neue', system-ui, sans-serif;
+  /* Amounts and counts: the rounded cut of the same face — SF Pro Rounded on
+     an iPhone or a Mac, which is what Wallet, Health and Fitness set their
+     large figures in. Where there is no rounded system face it is simply the
+     figures face above. */
+  --font-numeric: ui-rounded, 'SF Pro Rounded', var(--font-figures);
+}
+
+/* English reads in the device's own face too. Secular One and Rubik carry the
+   Hebrew beautifully, but their Latin letters are a supplement to a Hebrew
+   design, and a whole screen of them read as slightly off. The system face on
+   an iPhone is SF Pro — the app then looks the way native apps do. Secular One
+   ships a single weight, which is why the display weight lives in a token: the
+   system face gets a real bold instead. */
+:root[lang='en'] {
+  --font-display: var(--font-figures);
+  --font-display-weight: 700;
+  --font-body: var(--font-figures);
+}
+
+/* The real springs, where the browser can draw them. Generated, not tuned by
+   eye: a damped oscillator with the response and damping fraction named in
+   each comment, sampled at 25 points up to where it settles within 0.4%. */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    /* response 0.42s, damping 1.0 — settles in 510ms, no overshoot */
+    --spring-smooth: linear(0, 0.041, 0.135, 0.249, 0.366, 0.475, 0.572, 0.655, 0.724, 0.782, 0.828, 0.866, 0.896, 0.919, 0.938, 0.952, 0.963, 0.972, 0.979, 0.984, 0.988, 0.991, 0.993, 0.995, 1);
+    --spring-smooth-duration: 510ms;
+    /* response 0.32s, damping 0.82 — settles in 380ms, 1.1% overshoot */
+    --spring-snappy: linear(0, 0.04, 0.135, 0.257, 0.385, 0.508, 0.619, 0.714, 0.792, 0.855, 0.903, 0.94, 0.966, 0.985, 0.997, 1.005, 1.009, 1.011, 1.011, 1.01, 1.009, 1.008, 1.007, 1.005, 1);
+    --spring-snappy-duration: 380ms;
+    /* response 0.42s, damping 0.68 — settles in 470ms, 5.4% overshoot */
+    --spring-bouncy: linear(0, 0.037, 0.128, 0.25, 0.384, 0.517, 0.64, 0.748, 0.838, 0.91, 0.964, 1.004, 1.03, 1.046, 1.053, 1.054, 1.051, 1.046, 1.039, 1.032, 1.024, 1.018, 1.012, 1.008, 1);
+    --spring-bouncy-duration: 470ms;
+  }
 }
 
 [data-theme='dark'] {
@@ -135,7 +224,8 @@
   --color-bg: #131110;
   --color-surface: #211e1b;
   --color-surface-raised: #2b2724;
-  --color-surface-sunken: #0d0b0a;
+  --color-surface-sunken: color-mix(in srgb, var(--color-text) 9%, transparent);
+  --color-fill-hover: color-mix(in srgb, var(--color-text) 14%, transparent);
 
   --color-text: #efece5;
   --color-text-muted: #a8a396;

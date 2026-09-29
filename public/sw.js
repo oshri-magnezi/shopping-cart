@@ -16,7 +16,9 @@
  * Anything not matched is left entirely alone.
  */
 
-const VERSION = 'v1';
+// v2: v1 kept every night's city catalogue, eight megabytes a night. The bump
+// clears what v1 piled up; storeCatalogue below stops it piling up again.
+const VERSION = 'v2';
 const SHELL = `shell-${VERSION}`;
 const DATA = `data-${VERSION}`;
 
@@ -63,6 +65,27 @@ async function cacheFirst(request, cacheName) {
   return response;
 }
 
+/**
+ * Stores a city catalogue and drops every older version of the same file.
+ *
+ * Each night's catalogue has its own URL (?v=<generatedAt>), so storing it
+ * never replaced anything: a phone opening the comparison daily kept every
+ * night's copy, several megabytes each, for good. Only the newest is useful.
+ */
+async function storeCatalogue(cache, request, response) {
+  await cache.put(request, response);
+  const { pathname, search } = new URL(request.url);
+  const stored = await cache.keys();
+  await Promise.all(
+    stored
+      .filter((key) => {
+        const url = new URL(key.url);
+        return url.pathname === pathname && url.search !== search;
+      })
+      .map((key) => cache.delete(key)),
+  );
+}
+
 /** Serve the stored copy at once, and quietly fetch a fresher one for later. */
 async function staleWhileRevalidate(request, cacheName) {
   const cache = await caches.open(cacheName);
@@ -70,7 +93,7 @@ async function staleWhileRevalidate(request, cacheName) {
 
   const network = fetch(request)
     .then((response) => {
-      if (response.ok) cache.put(request, response.clone());
+      if (response.ok) storeCatalogue(cache, request, response.clone());
       return response;
     })
     // Offline is an expected state here, not a fault: the cached copy stands.

@@ -15,9 +15,12 @@ import { BUILT_IN_CATEGORIES } from './categories.js';
 
 const TILE_BACKGROUNDS = {
   // --color-surface-sunken and --color-primary-soft, both themes (tokens.css).
-  'light, unselected': '#f2f0ec',
+  // The unselected fill is a translucent tint, so these are what it comes to
+  // over the sheet's glass: 6% of the text over the light sheet, 9% over the
+  // dark one.
+  'light, unselected': '#ebeae7',
   'light, selected': '#e7efec',
-  'dark, unselected': '#0d0b0a',
+  'dark, unselected': '#35322f',
   'dark, selected': '#1d3833',
 };
 
@@ -43,22 +46,10 @@ const contrast = (a, b) => {
 };
 
 /**
- * The seven that were already below the floor when this test was written, on
- * 2026-09-15. Listed rather than fixed: changing them is a change to a palette
- * the owner chose, which is his call and not a thing to slip into a feature
- * branch. The list is here so the number cannot quietly grow.
+ * Icons allowed below the floor. Empty since the palette was redone on
+ * 2026-09-28; it stays so an exemption has to be written down, not slipped in.
  */
-const KNOWN_BELOW = new Set([
-  'bakery|light, unselected',
-  'bakery|light, selected',
-  'produce|light, unselected',
-  'produce|light, selected',
-  'meat|dark, selected',
-  'canned|dark, selected',
-  'drinks|dark, selected',
-  'snacks|dark, selected',
-  'other|dark, selected',
-]);
+const KNOWN_BELOW = new Set([]);
 
 describe('category icon colours', () => {
   it('adds no new icon that disappears into its tile', () => {

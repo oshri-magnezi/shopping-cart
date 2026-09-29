@@ -1,5 +1,6 @@
 import { HashRouter, Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/Navbar.jsx';
+import { TabBar } from './components/TabBar.jsx';
 import { AppErrorBoundary } from './components/ErrorBoundary.jsx';
 import { SettingsProvider } from './context/SettingsContext.jsx';
 import { AppDataProvider } from './context/AppDataContext.jsx';
@@ -13,7 +14,11 @@ export default function App() {
     <SettingsProvider>
       <AppDataProvider>
         <CatalogProvider>
-          <HashRouter>
+          {/* Opts in to React Router 7's behaviour now: it silences the
+              warnings the router prints on every load, and the move to 7
+              (which fixes an advisory that does not reach this app — no
+              user-supplied links, no server rendering) becomes a version bump. */}
+          <HashRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <div className="app-shell">
               <Navbar />
               {/* Only the pages are guarded: keeping the navbar outside means a
@@ -27,6 +32,11 @@ export default function App() {
                 </Routes>
               </AppErrorBoundary>
             </div>
+            {/* Phones only — the CSS hides it on wider screens. Outside the
+                shell on purpose: the shell is what recedes behind an open
+                sheet, and a fixed bar inside a transformed parent stops being
+                fixed to the screen. */}
+            <TabBar />
           </HashRouter>
         </CatalogProvider>
       </AppDataProvider>

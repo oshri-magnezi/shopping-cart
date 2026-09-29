@@ -141,6 +141,9 @@ export async function fetchHaziHinam({ browser, city, storeOverride, cacheDir, l
       promosPath,
       storeId: store.storeId,
       storeName: store.name || store.city,
+      // No branch in the city, so this is the chain's delivery store: the
+      // catalogue has to say so, or it reads as a shop down the road.
+      viaOnline,
     };
   } finally {
     await page.close();

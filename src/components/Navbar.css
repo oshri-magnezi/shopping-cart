@@ -8,7 +8,8 @@
   /* The gap above the pill is padding on the sticky element itself, so the
      pill keeps exactly the same clearance from the viewport edge whether the
      page is at rest or scrolled. */
-  padding: var(--space-3) var(--space-3) 0;
+  padding: calc(var(--space-3) + var(--safe-top)) calc(var(--space-3) + var(--safe-right)) 0
+    calc(var(--space-3) + var(--safe-left));
 }
 
 .navbar-inner {
@@ -21,21 +22,12 @@
   gap: var(--space-3);
   color: var(--color-text);
   border-radius: var(--radius-full);
-  /* Semi-transparent over blur: the page tinting through the glass is what
-     sells it as floating. Saturation is pushed back up because blur washes it
-     out. */
-  background-color: color-mix(in srgb, var(--color-surface) 72%, transparent);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--color-hairline);
-}
-
-/* Browsers without backdrop-filter would show text over live content. Fall
-   back to an opaque surface there. */
-@supports not (backdrop-filter: blur(1px)) {
-  .navbar-inner {
-    background-color: var(--color-surface);
-  }
+  /* The bar's glass (glass.css): the page tinting through it is what sells
+     it as floating. */
+  background-color: var(--liquid-fill);
+  -webkit-backdrop-filter: var(--liquid-blur);
+  backdrop-filter: var(--liquid-blur);
+  box-shadow: var(--liquid-rim), var(--liquid-shadow);
 }
 
 .navbar-brand {
@@ -51,8 +43,10 @@
   transition: opacity var(--duration-fast) var(--ease);
 }
 
-.navbar-brand:hover {
-  opacity: 0.7;
+@media (hover: hover) {
+  .navbar-brand:hover {
+    opacity: 0.7;
+  }
 }
 
 .navbar-logo {
@@ -63,7 +57,7 @@
 .navbar-name {
   font-family: var(--font-display);
   font-size: var(--text-lg);
-  font-weight: 400;
+  font-weight: var(--font-display-weight);
   white-space: nowrap;
 }
 
@@ -117,13 +111,20 @@
   transition: color var(--duration-base) var(--ease);
 }
 
-.tab:hover {
-  color: var(--color-text);
+@media (hover: hover) {
+  .tab:hover {
+    color: var(--color-text);
+  }
 }
 
-.tab-active,
-.tab-active:hover {
+.tab-active {
   color: var(--color-on-primary);
+}
+
+@media (hover: hover) {
+  .tab-active:hover {
+    color: var(--color-on-primary);
+  }
 }
 
 .navbar-actions {
@@ -139,21 +140,23 @@
   padding-inline: var(--space-2);
   border-radius: var(--radius-full);
   color: var(--color-text-subtle);
-  font-family: var(--font-mono);
+  font-family: var(--font-figures);
   font-size: var(--text-xs);
   font-weight: 500;
   transition: background-color var(--duration-fast) var(--ease),
     color var(--duration-fast) var(--ease);
 }
 
-.lang-toggle:hover {
-  background-color: var(--color-surface-sunken);
-  color: var(--color-text);
+@media (hover: hover) {
+  .lang-toggle:hover {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-text);
+  }
 }
 
 @media (max-width: 640px) {
   .navbar {
-    padding-inline: var(--space-2);
+    padding-inline: calc(var(--space-2) + var(--safe-left)) calc(var(--space-2) + var(--safe-right));
   }
 
   .navbar-inner {
@@ -171,12 +174,85 @@
     padding-inline: var(--space-1);
   }
 
-  .tab span {
+  /* On a phone the tabs have moved to the bottom of the screen, where the
+     thumb is. What is left up here is an iOS navigation bar: the mark, the
+     page's name once its large title has scrolled away, and the two settings. */
+  .navbar-tabs {
     display: none;
   }
 
-  .tab {
-    width: 46px;
-    padding-inline: 0;
+  .navbar-actions {
+    margin-inline-start: auto;
+  }
+
+  /* Scroll-edge appearance. Clear while the page is at rest, so the top of the
+     screen reads as one surface with the content; glass and a hairline only
+     once something is actually passing underneath. */
+  .navbar-inner {
+    position: relative;
+    background-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    transition: background-color var(--duration-base) var(--ease),
+      box-shadow var(--duration-base) var(--ease),
+      -webkit-backdrop-filter var(--duration-base) var(--ease),
+      backdrop-filter var(--duration-base) var(--ease);
+  }
+
+  [data-scrolled='true'] .navbar-inner {
+    background-color: var(--liquid-fill);
+    -webkit-backdrop-filter: var(--liquid-blur);
+    backdrop-filter: var(--liquid-blur);
+    box-shadow: var(--liquid-rim), var(--liquid-shadow);
+  }
+
+  /* The compact title: centred on the bar, arriving from just below as the
+     large one leaves — the same hand-off iOS makes. Absolutely placed so it
+     centres on the bar, not on the space left between the mark and the
+     settings, which differ in width. */
+  .navbar-title {
+    position: absolute;
+    inset-inline: 72px;
+    top: 50%;
+    display: block;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-weight: var(--font-display-weight);
+    font-size: var(--text-lg);
+    line-height: 1.2;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateY(calc(-50% + 6px));
+    pointer-events: none;
+    transition: opacity var(--duration-base) var(--ease),
+      transform var(--spring-smooth-duration) var(--spring-smooth);
+  }
+
+  [data-title-gone='true'] .navbar-title {
+    opacity: 1;
+    transform: translateY(-50%);
+  }
+}
+
+/* A desktop has the room to show the full tabs, so the compact title stays
+   out of the way. */
+@media (min-width: 641px) {
+  .navbar-title {
+    display: none;
+  }
+}
+
+/* Something was just sent to this tab — a finished purchase to history. The
+   icon answers once, with the same spring a tapped tab gets on a phone. */
+.tab-icon-nudge {
+  animation: tab-nudge var(--spring-bouncy-duration) var(--spring-bouncy);
+}
+
+@keyframes tab-nudge {
+  from {
+    transform: scale(0.72);
   }
 }

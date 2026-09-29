@@ -1,4 +1,5 @@
 @import './tokens.css';
+@import './glass.css';
 
 *,
 *::before,
@@ -14,6 +15,28 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+}
+
+/* Tells the browser which theme is showing, so the parts it draws itself —
+   scrollbars, the city dropdown's list, date pickers — match it. Without it
+   they stayed light on the dark theme: a white scrollbar beside the search
+   suggestions. The scrollbar colour is inherited by every scroller. */
+:root {
+  color-scheme: light;
+  scrollbar-color: color-mix(in srgb, var(--color-text) 28%, transparent) transparent;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+/* The list a <select> opens is drawn by the browser, not the page. It takes
+   the field's text colour but cannot take a translucent background, so on
+   the dark theme it showed light names on a white list, next to invisible.
+   The rows get a solid surface of their own. */
+option {
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
 }
 
 body {
@@ -52,7 +75,7 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: var(--font-display-weight);
   line-height: 1.15;
 }
 
@@ -62,6 +85,12 @@ h3 {
 h1 {
   font-size: var(--text-2xl);
   letter-spacing: 0;
+}
+
+/* The no-tracking rule is about Hebrew. English titles in the system face are
+   tightened the way Apple sets its own large titles. */
+:root[lang='en'] :is(h1, .compare-title, .history-title, .list-title-input, .modal-title, .lead-chain) {
+  letter-spacing: -0.015em;
 }
 
 button,
@@ -124,9 +153,20 @@ a {
 }
 
 /* Every figure in the app — counts, quantities, prices, dates — is set in the
-   ledger mono so columns line up the way they do on a receipt. */
+   device's own face with tabular digits, so columns line up the way they do on
+   a receipt without a monospace pulling the decimal point apart. */
+/* The currency sign sits back from the digits: lighter and greyer, so the eye
+   lands on the amount. Apple Wallet does the same with its dollar sign. */
+.currency-sign {
+  /* Its own room: the figures are tracked tight, and the no-break space the
+     formatter puts before the sign closed up to nothing beside them. */
+  margin-inline: 0.12em;
+  font-weight: 400;
+  color: var(--color-text-subtle);
+}
+
 .tabular {
-  font-family: var(--font-mono);
+  font-family: var(--font-numeric);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
@@ -152,8 +192,27 @@ a {
   width: 100%;
   max-width: var(--content-width);
   margin-inline: auto;
-  padding: var(--space-6) var(--space-4) var(--space-8);
+  /* The side gutters grow into the safe area in landscape on a phone with a
+     notch; everywhere else --safe-* is zero and this is the old 16px. */
+  padding: var(--space-6) calc(var(--space-4) + var(--safe-right))
+    var(--space-8) calc(var(--space-4) + var(--safe-left));
   flex: 1;
+}
+
+/* ---------- Press ---------- */
+
+/* One press, everywhere it is used: in quickly, out on a spring. The release
+   is the part people feel — a control that simply returns reads as a web
+   page; one that settles reads as an object. */
+.pressable {
+  transition: transform var(--spring-snappy-duration) var(--spring-snappy);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pressable:active {
+  transform: scale(0.96);
+  transition-duration: 90ms;
+  transition-timing-function: var(--ease);
 }
 
 /* The column grows once, on a screen wide enough that a fixed 720px starts
@@ -170,9 +229,9 @@ a {
    inside a card may be a card — nesting them is what made the old layout read
    as generated. Grouping without elevation is what GroupedList is for. */
 .card {
-  background-color: var(--color-surface);
+  background-color: var(--liquid-fill-content);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-raised);
+  box-shadow: var(--liquid-rim), var(--shadow-raised);
 }
 
 .btn {
@@ -207,8 +266,10 @@ a {
   color: var(--color-on-primary);
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: var(--color-primary-hover);
+@media (hover: hover) {
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--color-primary-hover);
+  }
 }
 
 .btn-secondary {
@@ -217,9 +278,11 @@ a {
   border: 1px solid var(--color-hairline);
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background-color: var(--color-bg);
-  border-color: var(--color-border-strong);
+@media (hover: hover) {
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--color-fill-hover);
+    border-color: var(--color-border-strong);
+  }
 }
 
 .btn-danger {
@@ -227,8 +290,10 @@ a {
   color: #ffffff;
 }
 
-.btn-danger:hover:not(:disabled) {
-  filter: brightness(0.92);
+@media (hover: hover) {
+  .btn-danger:hover:not(:disabled) {
+    filter: brightness(0.92);
+  }
 }
 
 .icon-btn {
@@ -245,9 +310,11 @@ a {
     transform var(--duration-base) var(--ease-spring);
 }
 
-.icon-btn:hover {
-  background-color: var(--color-surface-sunken);
-  color: var(--color-text);
+@media (hover: hover) {
+  .icon-btn:hover {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-text);
+  }
 }
 
 .icon-btn:active {
@@ -256,9 +323,11 @@ a {
   transition-timing-function: var(--ease);
 }
 
-.icon-btn-danger:hover {
-  background-color: var(--color-destructive-soft);
-  color: var(--color-destructive);
+@media (hover: hover) {
+  .icon-btn-danger:hover {
+    background-color: var(--color-destructive-soft);
+    color: var(--color-destructive);
+  }
 }
 
 /* Recessed field, no outline. A border around every input is the other half of
@@ -281,7 +350,6 @@ a {
 
 .text-input:focus {
   outline: none;
-  background-color: var(--color-surface);
   border-color: var(--color-border-strong);
 }
 
@@ -295,7 +363,36 @@ a {
     animation-timing-function: var(--ease-out);
   }
 
-  .navbar {
+  /* Between tabs the page moves the way the tabs are laid out: a tab further
+     along comes in from its side, and the page left behind drifts the other
+     way (tabs.js sets data-nav). A short drift under a fade, not a full-width
+     push — enough for the eye to read the direction, too little to feel like
+     a slideshow. Theme and language changes carry no data-nav and keep the
+     plain cross-fade above. */
+  :root[data-nav] {
+    --slide: 32px;
+  }
+  :root[data-nav='back'],
+  :root[dir='rtl'][data-nav='forward'] {
+    --slide: -32px;
+  }
+  :root[dir='rtl'][data-nav='back'] {
+    --slide: 32px;
+  }
+
+  :root[data-nav]::view-transition-old(root) {
+    animation: page-leave var(--duration-base) var(--ease-out) both;
+  }
+  :root[data-nav]::view-transition-new(root) {
+    animation: page-enter var(--spring-smooth-duration) var(--spring-smooth) both;
+  }
+
+  /* On the pill, not on the sticky .navbar around it. A view-transition-name
+     makes its element a backdrop root, and backdrop-filter only ever samples
+     what lies inside its nearest backdrop-root ancestor — so with the name on
+     the parent, the pill's blur saw nothing behind it and the page showed
+     through sharp. Named on the pill itself, the blur reaches the page. */
+  .navbar-inner {
     view-transition-name: masthead;
   }
 }
@@ -386,5 +483,19 @@ a {
 
   :focus-visible {
     outline-width: 3px;
+  }
+}
+
+@keyframes page-leave {
+  to {
+    opacity: 0;
+    transform: translateX(calc(var(--slide) * -1));
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateX(var(--slide));
   }
 }

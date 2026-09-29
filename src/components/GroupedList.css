@@ -31,9 +31,14 @@
 }
 
 .grouped {
-  background-color: var(--color-surface);
+  background-color: var(--liquid-fill-content);
+  box-shadow: var(--liquid-rim), var(--liquid-lift);
   border-radius: var(--radius-lg);
-  box-shadow: 0 0 0 1px var(--color-hairline);
+  /* No outline. It was carrying the separation the ground could not — white
+     cards on a near-white page — and now that the page sits a real step below
+     the cards, a line around every group is one frame too many. iOS draws its
+     inset groups exactly this way. Raised contrast still gets a real edge
+     (global.css). */
   overflow: hidden;
 }
 
@@ -68,12 +73,14 @@
   transition: background-color var(--duration-fast) var(--ease);
 }
 
-.grouped-row-button:hover {
-  background-color: var(--color-surface-sunken);
+@media (hover: hover) {
+  .grouped-row-button:hover {
+    background-color: var(--color-surface-sunken);
+  }
 }
 
 .grouped-row-button:active {
-  background-color: var(--color-surface-sunken);
+  background-color: var(--color-fill-hover);
 }
 
 /* A row that is only there to hold something full-width — a chart, an empty

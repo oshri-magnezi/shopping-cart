@@ -5,10 +5,20 @@ dist
 .claude
 *.md
 !README.md
+# Rewritten by the nightly refresh: when the prices were last updated.
+!PRICES.md
 
-# Bot runtime artefacts — the catalogues it produces live in public/ and are
-# committed; everything below is regenerated on each run.
+# The price catalogue is published straight to the site by the nightly
+# refresh and is no longer kept in git. Committing it put a bot in the
+# contributors list and grew the repository by ~20MB a night. Locally,
+# `npm run prices:pull` fetches the live copy into public/.
+public/price-catalog-*.json
+
+# Bot runtime artefacts, regenerated on each run.
 bot/node_modules
 bot/cache
 bot/output
 bot/*.log
+
+# Local test and screenshot scripts; not part of the site.
+scratchpad/

@@ -1,0 +1,124 @@
+/* The phone's tab bar. A capsule of glass floating clear of the bottom edge,
+   rather than a band welded to it — the same move that turned the top bar into
+   a pill, and the way iOS draws its own tab bar now.
+
+   Hidden above the phone breakpoint: on a wider screen the tabs stay in the
+   top bar, exactly where they have always been. */
+.tabbar {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .tabbar {
+    position: fixed;
+    z-index: 50;
+    inset-inline: 0;
+    /* Clear of the home indicator on a phone that has one, and never flush
+       against the edge on one that does not. */
+    bottom: max(var(--safe-bottom), var(--space-3));
+    width: min(100% - var(--space-7), 340px);
+    height: var(--tabbar-height);
+    margin-inline: auto;
+    padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-radius: var(--radius-full);
+    view-transition-name: tabbar;
+    /* Size changes ride the same spring as the selection capsule. Width and
+       height rather than a scale: scaled down, the icons would shrink and
+       blur with the glass; resized, they stay sharp and the capsule tightens
+       around them. */
+    transition: width var(--spring-smooth-duration) var(--spring-smooth),
+      height var(--spring-smooth-duration) var(--spring-smooth);
+  }
+
+  /* Scrolled down: icons only, in a smaller capsule, so the list gets the
+     room. Scrolling up brings the full bar straight back (TabBar.jsx). */
+  .tabbar[data-compact='true'] {
+    width: min(100% - var(--space-7), 212px);
+    height: 48px;
+  }
+
+  /* The selection. One capsule that travels, not three that switch on and
+     off: moving is what tells you where you went. A tint of the brand ink
+     rather than a solid fill — on a bar this size a solid disc would be the
+     loudest thing on every screen, and the answer on each page is louder. */
+  .tabbar-indicator {
+    position: absolute;
+    inset-block: 5px;
+    inset-inline-start: 5px;
+    width: calc((100% - 10px) / 3);
+    border-radius: var(--radius-full);
+    background-color: color-mix(in srgb, var(--color-primary) 14%, transparent);
+    transform: translateX(calc(var(--tab-index) * 100% * var(--tab-dir, 1)));
+    transition: transform var(--spring-smooth-duration) var(--spring-smooth);
+  }
+
+  /* translateX is physical; the order of the tabs is not. */
+  [dir='rtl'] .tabbar-indicator {
+    --tab-dir: -1;
+  }
+
+  .tabbar-item {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    border-radius: var(--radius-full);
+    color: var(--color-text-subtle);
+    transition: color var(--duration-base) var(--ease),
+      transform var(--spring-snappy-duration) var(--spring-snappy);
+  }
+
+  .tabbar-item-active {
+    color: var(--color-primary);
+  }
+
+  .tabbar-icon {
+    display: inline-flex;
+  }
+
+  /* The one flourish: the icon of a tab you just tapped springs back from a
+     slight squeeze. Only on a tap — never on page load — and only once. */
+  .tabbar-icon-bounce {
+    animation: tabbar-bounce var(--spring-bouncy-duration) var(--spring-bouncy);
+  }
+
+  .tabbar-label {
+    max-height: 1em;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1;
+    transition: opacity var(--duration-fast) var(--ease),
+      max-height var(--spring-smooth-duration) var(--spring-smooth);
+  }
+
+  /* The label folds away rather than just fading, so the icon settles into
+     the middle of the smaller capsule instead of staying where it was. */
+  .tabbar[data-compact='true'] .tabbar-label {
+    max-height: 0;
+    opacity: 0;
+  }
+
+  .tabbar[data-compact='true'] .tabbar-item {
+    gap: 0;
+  }
+
+  /* The last row of every page has to scroll clear of the bar, not end up
+     underneath it. */
+  .page {
+    /* iOS sets the large title right under the navigation bar. The 24px above
+       it was a desktop measurement left in place on a phone. */
+    padding-top: var(--space-3);
+    padding-bottom: calc(var(--tabbar-height) + max(var(--safe-bottom), var(--space-3)) + var(--space-7));
+  }
+}
+
+@keyframes tabbar-bounce {
+  from {
+    transform: scale(0.78);
+  }
+}

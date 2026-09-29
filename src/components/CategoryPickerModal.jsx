@@ -51,7 +51,7 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
 
   // The estimate is the whole point of the weight box, and it needs prices.
   useEffect(() => {
-    request();
+    request('chains');
   }, [request]);
 
   // What this costs right now at the cheapest chain in the chosen city — the

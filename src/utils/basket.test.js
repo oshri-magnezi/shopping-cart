@@ -136,3 +136,33 @@ describe('ordering', () => {
     expect(rows.map((row) => row.key)).toEqual(['cheap', 'dear']);
   });
 });
+
+describe('online stores', () => {
+  it('carries the online flag through to the row', () => {
+    // The row decides what to say under the name: "delivery fee not included"
+    // for an online store, the branch name for a shop.
+    const chains = [chain('shop'), { ...chain('shop-online'), online: true }];
+    const { rows } = compareBaskets([line([10, 9])], chains);
+    expect(rows.find((row) => row.key === 'shop-online').online).toBe(true);
+    expect(rows.find((row) => row.key === 'shop').online).toBe(false);
+  });
+});
+
+describe('the typical price of a thinly stocked item', () => {
+  it('is not taken from the one shop in the group that stocks it', () => {
+    // Four chains carry both items; four carry one. Among those four, only
+    // "keshet" has the snack, dear at 24.9 against 19.9 everywhere else. Priced
+    // against itself it looked typical and ranked above "hazi", which is only
+    // a little over on the palm hearts.
+    const chains = ['a', 'b', 'c', 'd', 'shuf', 'shufOnline', 'keshet', 'hazi'].map(chain);
+    const lines = [
+      line([11.9, 11.9, 11.9, 10.7, 12.9, 11.9, null, 13.1]),
+      line([19.9, 19.9, 19.9, 19.7, null, null, 24.9, null]),
+    ];
+
+    const { rows } = compareBaskets(lines, chains);
+    const partialOrder = rows.filter((row) => row.foundCount === 1).map((row) => row.key);
+    expect(partialOrder.indexOf('hazi')).toBeLessThan(partialOrder.indexOf('keshet'));
+    expect(rows.find((row) => row.key === 'keshet').index).toBeCloseTo(24.9 / 19.9, 2);
+  });
+});

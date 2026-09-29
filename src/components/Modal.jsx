@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useTranslation } from '../i18n/useTranslation.js';
 import * as haptics from '../utils/haptics.js';
@@ -43,14 +44,38 @@ export function Modal({ title, onClose, children, footer, labelledBy = 'modal-ti
     });
   }, [onClose]);
 
+  // The page behind a sheet recedes, as it does on an iPhone: it shrinks back
+  // a little around the middle of what is on screen and the ground around it
+  // goes dark. The attribute lives on the root so the stylesheet can do all of
+  // it; the origin is the centre of the visible part of the page, which is not
+  // the centre of the page once it has been scrolled.
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty('--sheet-origin', `${window.scrollY + window.innerHeight / 2}px`);
+    root.dataset.sheet = 'open';
+    return () => {
+      delete root.dataset.sheet;
+    };
+  }, []);
+
+  // Leaving starts the page's way back at the same moment the sheet starts
+  // down, so the two finish together instead of one waiting on the other.
+  useEffect(() => {
+    if (leaving) delete document.documentElement.dataset.sheet;
+  }, [leaving]);
+
   useEffect(() => {
     previouslyFocused.current = document.activeElement;
     const { overflow } = document.body.style;
     document.body.style.overflow = 'hidden';
 
-    const focusTarget = panelRef.current?.querySelector(
-      'input, button, [tabindex]:not([tabindex="-1"])',
-    );
+    // The field the shopper is about to type into, when there is one. One
+    // combined selector returns whichever match comes first in the document,
+    // and the close button sits above every field — so it took the focus, and
+    // with it a focus ring drawn round the X on every open.
+    const focusTarget =
+      panelRef.current?.querySelector('input:not([type=hidden]), textarea, select') ??
+      panelRef.current?.querySelector('button, [tabindex]:not([tabindex="-1"])');
     focusTarget?.focus();
 
     function handleKeyDown(event) {
@@ -118,7 +143,10 @@ export function Modal({ title, onClose, children, footer, labelledBy = 'modal-ti
     }
   }
 
-  return (
+  // Rendered on the body, not where it was called from: the page it was called
+  // from is what shrinks back behind it, and a dialog inside that page would
+  // shrink along with it.
+  return createPortal(
     <div
       className={`modal-scrim${leaving ? ' modal-leaving' : ''}`}
       onMouseDown={(event) => {
@@ -165,6 +193,7 @@ export function Modal({ title, onClose, children, footer, labelledBy = 'modal-ti
 
         {footer ? <div className="modal-footer">{footer}</div> : null}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

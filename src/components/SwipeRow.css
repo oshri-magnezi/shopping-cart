@@ -11,6 +11,14 @@
   inset-block: 0;
   inset-inline-end: 0;
   display: flex;
+  /* Out of sight until the row moves. Under an opaque row they were hidden in
+     principle, and yet the red delete fill bled through the anti-aliased
+     corners of every group as a hairline down the row's edge. */
+  visibility: hidden;
+}
+
+.swipe-row-revealed .swipe-actions {
+  visibility: visible;
 }
 
 .swipe-action {
@@ -34,7 +42,9 @@
   gap: var(--space-2);
   min-height: 52px;
   padding-inline: var(--space-4);
-  background-color: var(--color-surface);
+  /* Clear: the group's glass shows through. The delete action is hidden until
+     the row has slid off it, so there is nothing to show through by mistake. */
+  background-color: transparent;
   /* The browser keeps vertical scrolling; this element claims only the
      horizontal axis. Without it a swipe fights the scroller and both lose. */
   touch-action: pan-y;

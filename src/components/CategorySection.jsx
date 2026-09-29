@@ -4,7 +4,7 @@ import { useTranslation } from '../i18n/useTranslation.js';
 import { categoryLabel } from '../utils/categories.js';
 import './CategorySection.css';
 
-export function CategorySection({ category, items, onEdit, onDelete }) {
+export function CategorySection({ category, items, freshIds, onEdit, onDelete }) {
   const { t } = useTranslation();
   const Icon = category.icon;
 
@@ -22,7 +22,13 @@ export function CategorySection({ category, items, onEdit, onDelete }) {
     >
       <ul className="stagger">
         {items.map((item) => (
-          <ShoppingListItem key={item.id} item={item} onEdit={onEdit} onDelete={onDelete} />
+          <ShoppingListItem
+            key={item.id}
+            item={item}
+            fresh={freshIds?.has(item.id)}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         ))}
       </ul>
     </GroupedList>

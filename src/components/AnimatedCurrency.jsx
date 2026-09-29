@@ -1,5 +1,5 @@
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber.js';
-import { formatCurrency } from '../utils/format.js';
+import { CurrencyText } from './CurrencyText.jsx';
 
 /**
  * A money figure that counts to its new value.
@@ -16,7 +16,7 @@ export function AnimatedCurrency({ value, locale, className = '' }) {
 
   return (
     <span className={className} dir="ltr">
-      {formatCurrency(shown, locale)}
+      <CurrencyText value={shown} locale={locale} />
     </span>
   );
 }

@@ -6,6 +6,13 @@
   font-size: var(--text-xs);
 }
 
+/* Restated at the small size because the slimmer quantity readout
+   (.stepper-sm .stepper-value, 26px) outranks .weight-value on specificity and
+   would squeeze "500 גרם" into the width of a single digit. */
+.stepper-sm .weight-value {
+  min-width: 72px;
+}
+
 .stepper-md .weight-value {
   min-width: 96px;
   font-size: var(--text-sm);

@@ -24,10 +24,16 @@
   inset: -6px;
 }
 
-.row-menu-trigger:hover,
 .row-menu-trigger[aria-expanded='true'] {
   background-color: var(--color-surface-sunken);
   color: var(--color-text);
+}
+
+@media (hover: hover) {
+  .row-menu-trigger:hover {
+    background-color: var(--color-surface-sunken);
+    color: var(--color-text);
+  }
 }
 
 /* Positioned in the body, so it is fixed to the viewport and its coordinates
@@ -37,13 +43,18 @@
   z-index: 120;
   padding: var(--space-1);
   border-radius: var(--radius-md);
-  background-color: var(--color-surface-raised);
-  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--color-hairline);
+  background-color: var(--liquid-fill-menu);
+  -webkit-backdrop-filter: var(--liquid-blur-menu);
+  backdrop-filter: var(--liquid-blur-menu);
+  box-shadow: var(--liquid-rim), var(--shadow-float);
   animation: row-menu-in var(--duration-base) var(--ease-spring);
 }
 
 .row-menu-leaving {
-  animation: row-menu-out var(--duration-fast) var(--ease) forwards;
+  /* Slower than the way in, and eased in: the panel starts shrinking gently,
+     with the tick still readable on the choice just made, and gathers speed
+     as it goes back into the button that opened it. */
+  animation: row-menu-out 300ms cubic-bezier(0.4, 0, 0.8, 0.2) forwards;
   pointer-events: none;
 }
 
@@ -56,10 +67,15 @@
   }
 }
 
+/* Solid, edges and all, for most of the way; it fades only at the end, so
+   the panel never shows the page through it while it is still readable. */
 @keyframes row-menu-out {
+  70% {
+    opacity: 1;
+  }
   to {
     opacity: 0;
-    transform: scale(0.94);
+    transform: scale(0.6);
   }
 }
 
@@ -83,8 +99,10 @@
   transition: background-color var(--duration-fast) var(--ease);
 }
 
-.row-menu-item:hover {
-  background-color: var(--color-surface-sunken);
+@media (hover: hover) {
+  .row-menu-item:hover {
+    background-color: var(--color-surface-sunken);
+  }
 }
 
 .row-menu-item-selected {
@@ -101,6 +119,8 @@
   color: var(--color-destructive);
 }
 
-.row-menu-item-danger:hover {
-  background-color: var(--color-destructive-soft);
+@media (hover: hover) {
+  .row-menu-item-danger:hover {
+    background-color: var(--color-destructive-soft);
+  }
 }

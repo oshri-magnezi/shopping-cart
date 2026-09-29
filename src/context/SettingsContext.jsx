@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 const SETTINGS_KEY = 'shopping-cart-settings';
 const DARK_QUERY = '(prefers-color-scheme: dark)';
@@ -48,13 +56,34 @@ export function SettingsProvider({ children }) {
 
   const resolvedTheme = settings.theme === 'auto' ? system : settings.theme;
 
-  useEffect(() => {
+  // A layout effect: the document's direction and theme have to change in the
+  // same frame React commits, or a theme or language fade (withFade in
+  // tabs.js) photographs the new content still wearing the old colours.
+  useLayoutEffect(() => {
     const root = document.documentElement;
     root.lang = settings.language;
     root.dir = settings.language === 'he' ? 'rtl' : 'ltr';
     // The document only ever carries a real theme; 'auto' is a preference,
     // not a value any stylesheet should have to understand.
     root.dataset.theme = resolvedTheme;
+
+    // The status bar and the browser chrome take their colour from
+    // theme-color. index.html only knows the system's scheme, so a shopper who
+    // picked dark on a light phone got a white status bar over a dark app.
+    // One meta, written from the theme the page is actually showing, and read
+    // back from the same token the page paints its ground with.
+    const ground = getComputedStyle(root).getPropertyValue('--color-bg').trim();
+    if (ground) {
+      document.querySelectorAll('meta[name="theme-color"]').forEach((meta, index) => {
+        if (index === 0) {
+          meta.removeAttribute('media');
+          meta.setAttribute('content', ground);
+        } else {
+          meta.remove();
+        }
+      });
+    }
+
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     } catch {

@@ -34,6 +34,18 @@ export const RowMenu = forwardRef(function RowMenu(
 ) {
   const [at, setAt] = useState(null);
   const [leaving, setLeaving] = useState(false);
+  // The option just picked in a menu of choices, shown ticked while the menu
+  // shrinks away, so the choice is visible on the way out.
+  const [picked, setPicked] = useState(null);
+  // A choice's change waits for the panel to finish closing. Applied at once,
+  // a theme change's page fade drew the top bar over the still-shrinking
+  // panel and faded the panel's edges with the rest of the page.
+  const afterClose = useRef(null);
+  const runAfterClose = () => {
+    const run = afterClose.current;
+    afterClose.current = null;
+    run?.();
+  };
   const triggerRef = useRef(null);
   const panelRef = useRef(null);
   const menuId = useId();
@@ -45,6 +57,7 @@ export const RowMenu = forwardRef(function RowMenu(
   const close = useCallback(() => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       setAt(null);
+      runAfterClose();
       return;
     }
     setLeaving(true);
@@ -158,6 +171,7 @@ export const RowMenu = forwardRef(function RowMenu(
         aria-controls={open ? menuId : undefined}
         onClick={() => {
           anchorPoint.current = null;
+          setPicked(null);
           return open ? close() : place();
         }}
       >
@@ -177,34 +191,54 @@ export const RowMenu = forwardRef(function RowMenu(
                 width: WIDTH,
                 transformOrigin: at.origin,
               }}
-              onAnimationEnd={() => {
-                if (!leaving) return;
+              onAnimationEnd={(event) => {
+                if (!leaving || event.target !== event.currentTarget) return;
                 setLeaving(false);
                 setAt(null);
+                runAfterClose();
               }}
             >
-              {items.map(({ key, label: itemLabel, icon: Icon, danger, selected, onSelect }) => (
-                <button
-                  key={key}
-                  type="button"
-                  // A menu that records a choice is a radio group, not a list
-                  // of commands, and has to say so.
-                  role={selected === undefined ? 'menuitem' : 'menuitemradio'}
-                  aria-checked={selected === undefined ? undefined : selected}
-                  className={`row-menu-item${danger ? ' row-menu-item-danger' : ''}${
-                    selected ? ' row-menu-item-selected' : ''
-                  }`}
-                  onClick={() => {
-                    // The action runs now; the panel sees itself out.
-                    close();
-                    onSelect();
-                  }}
-                >
-                  <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
-                  <span>{itemLabel}</span>
-                  {selected ? <Check className="row-menu-tick" size={15} strokeWidth={2} aria-hidden="true" /> : null}
-                </button>
-              ))}
+              {items.map(
+                ({ key, label: itemLabel, icon: Icon, danger, selected: current, onSelect }) => {
+                  // While a pick is settling, the tick shows on it rather than
+                  // on the option it replaces.
+                  const selected =
+                    current === undefined || picked === null ? current : picked === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      // A menu that records a choice is a radio group, not a
+                      // list of commands, and has to say so.
+                      role={selected === undefined ? 'menuitem' : 'menuitemradio'}
+                      aria-checked={selected === undefined ? undefined : selected}
+                      className={`row-menu-item${danger ? ' row-menu-item-danger' : ''}${
+                        selected ? ' row-menu-item-selected' : ''
+                      }`}
+                      onClick={() => {
+                        // A command runs on the tap. A choice moves the tick
+                        // on the tap and starts closing at once; the change
+                        // itself lands as the panel finishes shrinking back
+                        // into its button (RowMenu.css).
+                        if (current === undefined) {
+                          close();
+                          onSelect();
+                          return;
+                        }
+                        setPicked(key);
+                        afterClose.current = onSelect;
+                        close();
+                      }}
+                    >
+                      <Icon size={16} strokeWidth={1.5} aria-hidden="true" />
+                      <span>{itemLabel}</span>
+                      {selected ? (
+                        <Check className="row-menu-tick" size={15} strokeWidth={2} aria-hidden="true" />
+                      ) : null}
+                    </button>
+                  );
+                },
+              )}
             </div>,
             document.body,
           )

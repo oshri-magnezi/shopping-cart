@@ -26,6 +26,13 @@ const LONG_PRESS_MS = 500;
 export function SwipeRow({ actions, onLongPress, children }) {
   const [offset, setOffset] = useState(0);
   const [dragging, setDragging] = useState(false);
+  // Whether the actions underneath are in play. They stay hidden at rest:
+  // parked under an opaque row they were invisible in theory, but at the
+  // group's rounded corners the red delete button bled through as a hairline
+  // down every row's edge — and a see-through row (glass) would have shown
+  // them outright. Revealed from the first pixel of travel, hidden again only
+  // once the row has finished sliding home.
+  const [revealed, setRevealed] = useState(false);
   const surfaceRef = useRef(null);
   const gesture = useRef(null);
   const warned = useRef(false);
@@ -39,6 +46,7 @@ export function SwipeRow({ actions, onLongPress, children }) {
   function moveTo(next) {
     travelRef.current = next;
     setOffset(next);
+    if (next > 0) setRevealed(true);
   }
 
   // Direction is read from the document, not hard-coded. The actions are
@@ -161,7 +169,7 @@ export function SwipeRow({ actions, onLongPress, children }) {
   const shift = offset * direction.current;
 
   return (
-    <div className="swipe-row">
+    <div className={`swipe-row${revealed ? ' swipe-row-revealed' : ''}`}>
       <div className="swipe-actions" aria-hidden="true">
         {actions.map(({ key, label, icon: Icon, danger, onSelect }) => (
           <button
@@ -188,6 +196,12 @@ export function SwipeRow({ actions, onLongPress, children }) {
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
+        // Home again: tuck the actions away. Checked against the gesture's own
+        // copy of the position, so a transition ending mid-drag cannot hide
+        // them under a finger that is still moving.
+        onTransitionEnd={(event) => {
+          if (event.target === event.currentTarget && travelRef.current === 0) setRevealed(false);
+        }}
       >
         {children}
       </div>

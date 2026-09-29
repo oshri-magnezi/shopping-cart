@@ -16,10 +16,20 @@ const PORTALS = {
   cerberus: (entry) => createCerberusFetcher(entry),
 };
 
+/**
+ * The chains to price, from config.json.
+ *
+ * A chain whose `onlineStore` is set also yields a second entry for that
+ * store: its own key (`ramilevi-online`), a name that says what it is, and the
+ * store pinned. The online store is a separate price list — at Shufersal it
+ * was cheaper on 86% of shared products, by 8.8% on average (2026-09-28) — so
+ * it is compared as a shop in its own right, in every city, since it delivers
+ * to all of them.
+ */
 export function buildChains(config) {
   const declared = Array.isArray(config.chains) ? config.chains : [];
 
-  return declared.map((entry) => {
+  return declared.flatMap((entry) => {
     const build = PORTALS[entry.portal];
     if (!build) {
       throw new Error(
@@ -29,11 +39,46 @@ export function buildChains(config) {
     }
 
     const adapter = build(entry);
-    return {
+    const chain = {
       key: entry.key,
       displayName: entry.displayName,
       fetcher: adapter.fetcher,
       listStores: adapter.listStores,
     };
+    if (!entry.onlineStore) return [chain];
+
+    return [
+      chain,
+      {
+        ...chain,
+        key: `${entry.key}-online`,
+        displayName: `${entry.displayName} אונליין`,
+        online: true,
+        baseKey: entry.key,
+        storeOverride: String(entry.onlineStore),
+      },
+    ];
   });
+}
+
+/**
+ * Drops a branch that is really the online store.
+ *
+ * Where a chain has no branch in the city, its fetcher falls back to the
+ * chain's online store — and when that store is also listed as a chain of its
+ * own, the city would show the same price list twice under two names. The
+ * online entry is kept, because its name says what it is.
+ */
+export function withoutDuplicateOnline(fetched) {
+  const onlineStores = new Set(
+    fetched
+      .filter((entry) => entry?.ok && entry.chain.online)
+      .map((entry) => `${entry.chain.baseKey}:${entry.storeId}`),
+  );
+  return fetched.filter(
+    (entry) =>
+      !entry?.ok ||
+      entry.chain.online ||
+      !onlineStores.has(`${entry.chain.key}:${entry.storeId}`),
+  );
 }

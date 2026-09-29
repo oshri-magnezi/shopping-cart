@@ -61,8 +61,9 @@ function median(values) {
  * list and for those that carry less. Drawing it from everybody let a shop
  * stocking only the cheap staples pull the typical price down on exactly those
  * lines, so every chain carrying the full list looked dearer — on items it had
- * no choice but to include. A group smaller than MIN_GROUP falls back to the
- * whole field, because a median of two is not a typical price.
+ * no choice but to include. A line stocked by fewer than MIN_GROUP chains of
+ * its group falls back to the whole field, because a median of two is not a
+ * typical price — and a median of one is the shop measured against itself.
  */
 // A median needs a few opinions to mean anything. Below this the group is
 // measured against everyone instead, because a "typical price" drawn from two
@@ -84,21 +85,28 @@ export function compareBaskets(lines, chains) {
     (count === maxFound ? full : partial).push(chainIndex);
   });
 
-  // What a line typically costs among a given set of chains.
-  const referenceFrom = (members) =>
+  const pricesAt = (line, members) =>
+    members
+      .map((chainIndex) => line.prices[chainIndex])
+      .filter(Boolean)
+      .map((match) => match.price);
+  const everyone = chains.map((_, chainIndex) => chainIndex);
+
+  // What each line typically costs among a group of chains. The minimum is
+  // counted per line, not per group: a group can be large while a single
+  // item in it is stocked by one shop alone, and that shop was then measured
+  // against itself — Keshet's seaweed at ₪24.90 read as exactly typical while
+  // everyone else charged ₪19.90, and it ranked above a shop that was only a
+  // little dear.
+  const referenceFor = (members) =>
     lines.map((line) => {
-      const prices = members
-        .map((chainIndex) => line.prices[chainIndex])
-        .filter(Boolean)
-        .map((match) => match.price);
-      return prices.length > 0 ? median(prices) : null;
+      const own = pricesAt(line, members);
+      if (own.length >= MIN_GROUP) return median(own);
+      const all = pricesAt(line, everyone);
+      return all.length > 0 ? median(all) : null;
     });
 
-  const everyone = referenceFrom(chains.map((_, chainIndex) => chainIndex));
-  const reference = {
-    full: full.length >= MIN_GROUP ? referenceFrom(full) : everyone,
-    partial: partial.length >= MIN_GROUP ? referenceFrom(partial) : everyone,
-  };
+  const reference = { full: referenceFor(full), partial: referenceFor(partial) };
 
   const rows = chains.map((chain, chainIndex) => {
     const foundCount = foundCounts[chainIndex];
@@ -129,6 +137,7 @@ export function compareBaskets(lines, chains) {
       key: chain.key,
       displayName: chain.displayName,
       storeName: chain.storeName,
+      online: Boolean(chain.online),
       foundCount,
       total: round(total),
       index: typical > 0 ? spend / typical : null,

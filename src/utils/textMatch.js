@@ -3,6 +3,7 @@
 export {
   normalize,
   tokenize,
+  tokenizeNormalized,
   leadCategory,
   similarity,
   credit,

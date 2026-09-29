@@ -31,6 +31,38 @@ describe('buildSuggestionPool', () => {
     expect(pool.pool[0].chains).toBe(1);
   });
 
+  // Rami Levy's files cut names at twenty characters; its online store and
+  // other chains carry the whole name for the same barcode.
+  it('takes the whole name when another chain shows where a cut one stopped', () => {
+    const pool = buildSuggestionPool(
+      catalog([
+        chain('ramilevi', [['לבבות דקל שלמים וילי', 11.9, '7290003578061']]),
+        chain('ramilevi-online', [['לבבות דקל שלמים וילי פוד 220 גרם', 10.7, '7290003578061']]),
+      ]),
+    );
+    expect(pool.pool[0].name).toBe('לבבות דקל שלמים וילי פוד 220 גרם');
+  });
+
+  it('keeps the first name when the other is worded differently, not longer', () => {
+    const pool = buildSuggestionPool(
+      catalog([
+        chain('a', [['חלב תנובה 3% 1 ליטר', 6.9, '7290000000011']]),
+        chain('b', [['ח.תנובה 3% ליטר בקרטון מהדרין', 7.4, '7290000000011']]),
+      ]),
+    );
+    expect(pool.pool[0].name).toBe('חלב תנובה 3% 1 ליטר');
+  });
+
+  it('counts a chain and its online store as one chain', () => {
+    const pool = buildSuggestionPool(
+      catalog([
+        chain('shufersal', [['חלב', 6.9, '7290000000011']]),
+        chain('shufersal-online', [['חלב', 6.5, '7290000000011']]),
+      ]),
+    );
+    expect(pool.pool[0]).toMatchObject({ chains: 1, min: 6.5, max: 6.9 });
+  });
+
   // Spreading tens of thousands of values into Math.max overflows the call
   // stack, which showed up as silently empty suggestions rather than an error.
   it('computes maxChains over a large pool without overflowing', () => {

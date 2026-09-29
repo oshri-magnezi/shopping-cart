@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronDown, Copy, Trash2 } from 'lucide-react';
 import { UndoBar } from '../components/UndoBar.jsx';
 import { AnimatedCurrency } from '../components/AnimatedCurrency.jsx';
+import { CurrencyText } from '../components/CurrencyText.jsx';
 import { EmptyState } from '../components/EmptyState.jsx';
 import { RowMenu } from '../components/RowMenu.jsx';
 import { ReceiptArt } from '../components/EmptyArt.jsx';
@@ -10,7 +11,7 @@ import { SpendingTrend } from '../components/SpendingTrend.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { categoryLabel, findCategory, getAllCategories } from '../utils/categories.js';
-import { formatCurrency, formatDateTime } from '../utils/format.js';
+import { formatDateTime } from '../utils/format.js';
 import './HistoryPage.css';
 
 export function HistoryPage() {
@@ -54,7 +55,7 @@ export function HistoryPage() {
 
   return (
     <main className="page">
-      <h1 className="history-title">{t('history.title')}</h1>
+      <h1 className="history-title" data-large-title>{t('history.title')}</h1>
       <p className="history-subtitle">{t('history.subtitle')}</p>
 
       {history.length === 0 ? (
@@ -66,7 +67,7 @@ export function HistoryPage() {
               <span className="stat-label">{t('history.totalPurchases')}</span>
               <span className="stat-value tabular">{stats.count}</span>
             </div>
-            <div className="stat">
+            <div className="stat stat-total">
               <span className="stat-label">{t('history.totalSpent')}</span>
               <AnimatedCurrency className="stat-value tabular" value={stats.total} locale={locale} />
             </div>
@@ -106,7 +107,7 @@ export function HistoryPage() {
                           {formatDateTime(entry.completedAt, locale)}
                         </span>
                         <span className="history-entry-count">
-                          {t('history.itemsLabel', { count: entry.itemCount })}
+                          {t('history.itemsLabel', { count: entry.itemCount ?? entry.items?.length ?? 0 })}
                         </span>
                       </span>
                       <span
@@ -117,7 +118,7 @@ export function HistoryPage() {
                       >
                         {entry.totalCost === null
                           ? t('history.noAmount')
-                          : formatCurrency(entry.totalCost, locale)}
+                          : <CurrencyText value={entry.totalCost} locale={locale} />}
                       </span>
                     </button>
 

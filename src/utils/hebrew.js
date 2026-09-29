@@ -4,17 +4,24 @@
 // bot (which keeps a generated copy at bot/src/match/hebrew.js). Every rule
 // here exists because a specific wrong match happened without it.
 
-// Unit spellings vary per chain and per shopper.
-const UNIT_REPLACEMENTS = [
-  [/\bמ["״']?ל\b/g, 'מל'],
-  [/\bמיליליטר\b/g, 'מל'],
-  [/\bק["״']?ג\b/g, 'קג'],
-  [/\bקילו(גרם)?\b/g, 'קג'],
-  [/\bגר["״']?\b/g, 'גרם'],
-  [/\bל["״']\b/g, 'ליטר'],
-  [/\bליט\b/g, 'ליטר'],
-  [/\bיח["״']?\b/g, 'יחידות'],
-];
+// Unit spellings vary per chain and per shopper, and are folded to one form.
+// A single pattern with one group per result, in the order the rules were
+// written, run in one pass: as eight separate replacements this was the most
+// expensive part of normalize, which runs on every one of a city's ~125k
+// product names.
+//
+// `\b` is an ASCII word boundary, so these only match beside a digit or a
+// Latin letter — "500מ"ל", "1ליט". That is how they were written and what the
+// matching was tuned against; it is kept exactly.
+const UNITS =
+  /\b(?:(?<ml>מ["״']?ל|מיליליטר)|(?<kg>ק["״']?ג|קילו(?:גרם)?)|(?<grams>גר["״']?)|(?<litres>ל["״']|ליט)|(?<units>יח["״']?))\b/g;
+const UNIT_NAMES = { ml: 'מל', kg: 'קג', grams: 'גרם', litres: 'ליטר', units: 'יחידות' };
+
+function unitName(...args) {
+  const groups = args.at(-1);
+  const found = Object.keys(UNIT_NAMES).find((name) => groups[name] !== undefined);
+  return UNIT_NAMES[found];
+}
 
 // Words that carry no matching signal — only marketing or kashrut.
 const NOISE_WORDS = new Set([
@@ -181,22 +188,24 @@ const GLUED_SIZE = /^([\d.]+)(ליטר|מל|קג|גרם)$/;
 const BASE_SIZE = /^([\d.]+)(מל|גרם)$/;
 
 export function normalize(text) {
-  let result = String(text ?? '');
-  result = result.replace(/[()[\]{}]/g, ' ').replace(/[/\-_,]/g, ' ');
-  // Pack counts are written both ways — "6*330" and "20 * 15". Closing the
-  // gaps first means one rule recognises both, and stops a 20-bag multipack
-  // being offered as the single bag someone asked for.
-  result = result.replace(/(\d)\s*\*\s*(\d)/g, '$1*$2');
+  let result = String(text ?? '').replace(/[()[\]{}/\-_,]/g, ' ');
 
-  // Chains decorate promoted lines as "*מבצע*", and the stars stopped that
-  // ever matching the noise word. Strip those, but keep the star that means
-  // multiplication in a pack count like 6*330 — the tokenizer relies on it.
-  result = result.replace(/\*/g, (star, at, text) =>
-    /\d/.test(text[at - 1] ?? '') && /\d/.test(text[at + 1] ?? '') ? star : ' ',
-  );
-  for (const [pattern, replacement] of UNIT_REPLACEMENTS) {
-    result = result.replace(pattern, replacement);
+  if (result.includes('*')) {
+    // Pack counts are written both ways — "6*330" and "20 * 15". Closing the
+    // gaps first means one rule recognises both, and stops a 20-bag multipack
+    // being offered as the single bag someone asked for.
+    result = result.replace(/(\d)\s*\*\s*(\d)/g, '$1*$2');
+    // Chains decorate promoted lines as "*מבצע*", and the stars stopped that
+    // ever matching the noise word. Strip those, but keep the star that means
+    // multiplication in a pack count like 6*330 — the tokenizer relies on it.
+    result = result.replace(/\*/g, (star, at, whole) =>
+      /\d/.test(whole[at - 1] ?? '') && /\d/.test(whole[at + 1] ?? '') ? star : ' ',
+    );
   }
+
+  // Without a digit or Latin letter in the text no unit pattern can match
+  // (see UNITS), and most names are skipped outright.
+  if (/\w/.test(result)) result = result.replace(UNITS, unitName);
   return result.replace(/["״'׳.]/g, '').replace(/\s+/g, ' ').trim();
 }
 
@@ -237,7 +246,15 @@ function singular(word) {
 }
 
 export function tokenize(text) {
-  const raw = normalize(text).split(' ').filter(Boolean);
+  return tokenizeNormalized(normalize(text));
+}
+
+/**
+ * `tokenize` for text that has already been through `normalize`, so a caller
+ * that needs both does not normalize the same name twice.
+ */
+export function tokenizeNormalized(normalized) {
+  const raw = normalized.split(' ').filter(Boolean);
   const tokens = [];
 
   for (let i = 0; i < raw.length; i += 1) {

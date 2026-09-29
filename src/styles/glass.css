@@ -1,0 +1,98 @@
+/* The glass the floating bars are made of, modelled on Apple's Liquid Glass.
+
+   The rules it follows are Apple's own:
+
+   1. No painted light. The colour seen through the glass is the content
+      scrolling underneath it, nothing else.
+   2. One material everywhere. Bars, menus, sheets, lists and panels all share
+      the same glass and the same lit rim; only the thickness changes, thicker
+      where there is more to read. A mix of glass bars over flat cards read as
+      two apps stitched together.
+   3. Thin glass with a lit edge. More see-through than a frosted panel,
+      a lighter blur so shapes stay readable behind it, saturation pushed up so
+      the content keeps its colour, and a bright line along the top edge as if
+      the glass catches light from above.
+
+   Apple publishes no CSS for it. The web recreations that bend the light
+   (an SVG displacement map fed to backdrop-filter: url()) work only in
+   Chromium; every browser on an iPhone is WebKit and would never see it. So
+   this is Apple's "regular" glass, the variant for bars and controls, built
+   from what Safari can draw: blur, saturation, and a rim in three parts —
+   a specular line on top, a faint glow rising from inside the lower edge
+   that gives the glass its thickness, and a hairline holding the shape.
+
+   It is the look of the bars, not a setting — Apple does not offer it as a
+   choice either. Over a plain page it is barely there; it shows itself when
+   the list scrolls under a bar, which is exactly when it should. */
+
+:root {
+  --liquid-fill: color-mix(in srgb, var(--color-surface-raised) 46%, transparent);
+  --liquid-blur: blur(14px) saturate(190%);
+  --liquid-rim: inset 0 1px 1px rgba(255, 255, 255, 0.75), inset 0 -8px 20px rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(22, 21, 15, 0.07);
+  --liquid-shadow: 0 10px 32px -12px rgba(40, 34, 14, 0.28);
+  /* Menus carry text to be read, so they are thicker than the bars. */
+  --liquid-fill-thick: color-mix(in srgb, var(--color-surface-raised) 74%, transparent);
+  /* Lists and panels: the same glass and the same lit rim, so the whole app
+     is one material. No blur — only the plain page sits behind them, and a
+     blur over nothing costs a phone something for no change on screen. */
+  --liquid-fill-content: color-mix(in srgb, var(--color-surface-raised) 88%, transparent);
+  /* Pop-ups over the list: menus and search suggestions. Nearly opaque with a
+     heavy blur, because rows of text over rows of text is the one place glass
+     must not show what is underneath — iOS menus are drawn the same way. */
+  --liquid-fill-menu: color-mix(in srgb, var(--color-surface-raised) 98%, transparent);
+  --liquid-blur-menu: blur(30px) saturate(180%);
+  /* Lists and panels need a lift of their own on the light theme: a light
+     glass on a light page has nothing to show through, so without a shadow it
+     simply disappears into the page. */
+  --liquid-lift: 0 1px 2px rgba(40, 34, 14, 0.06), 0 6px 18px -8px rgba(40, 34, 14, 0.16);
+}
+
+:root[data-theme='dark'] {
+  --liquid-fill: color-mix(in srgb, var(--color-surface-raised) 42%, transparent);
+  --liquid-rim: inset 0 1px 1px rgba(255, 255, 255, 0.18), inset 0 -8px 20px rgba(255, 255, 255, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  --liquid-shadow: 0 10px 32px -12px rgba(0, 0, 0, 0.7);
+  --liquid-fill-thick: color-mix(in srgb, var(--color-surface-raised) 72%, transparent);
+  --liquid-fill-content: color-mix(in srgb, var(--color-surface-raised) 66%, transparent);
+  --liquid-fill-menu: color-mix(in srgb, var(--color-surface-raised) 98%, transparent);
+  --liquid-lift: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Reduce Transparency: solid bars. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --liquid-fill: var(--color-surface-raised);
+    --liquid-fill-thick: var(--color-surface-raised);
+    --liquid-fill-content: var(--color-surface-raised);
+    --liquid-fill-menu: var(--color-surface-raised);
+    --liquid-blur: none;
+    --liquid-blur-menu: none;
+  }
+}
+
+/* Increase Contrast: the glass gets a border you can actually see, as it does
+   on iOS with the setting on. */
+@media (prefers-contrast: more) {
+  :root {
+    --liquid-fill: var(--liquid-fill-thick);
+    --liquid-rim: inset 0 0 0 1px var(--color-text-muted);
+  }
+}
+
+/* Where the browser cannot blur, clear glass would put text straight over
+   live content. Fall back to solid. */
+@supports not (backdrop-filter: blur(1px)) {
+  :root {
+    --liquid-fill: var(--color-surface-raised);
+    --liquid-fill-thick: var(--color-surface-raised);
+    --liquid-fill-menu: var(--color-surface-raised);
+  }
+}
+
+.glass {
+  background-color: var(--liquid-fill);
+  -webkit-backdrop-filter: var(--liquid-blur);
+  backdrop-filter: var(--liquid-blur);
+  box-shadow: var(--liquid-rim), var(--liquid-shadow);
+}

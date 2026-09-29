@@ -10,9 +10,12 @@ permissions:
   pages: write
   id-token: write
 
+# Same group as the nightly price refresh, which publishes the same site. Not
+# cancelled in progress: cancelling here would also be able to cancel a
+# refresh half-way through its downloads.
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -24,6 +27,15 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      # The catalogue is not in git any more — the nightly refresh publishes it
+      # to the site directly. Without this a code push would rebuild the site
+      # with no prices, or with whatever stale copy was on disk, and roll every
+      # price back. The script only ever moves forward: a local copy newer than
+      # the live one is kept. With neither, it fails the deploy rather than
+      # shipping a comparison page with nothing to compare.
+      - name: Bring in the live price catalogue
+        run: node bot/src/pull-live-catalog.js public
 
       - run: npm ci
 

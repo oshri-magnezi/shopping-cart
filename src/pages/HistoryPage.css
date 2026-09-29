@@ -1,7 +1,7 @@
 .history-title {
   font-family: var(--font-display);
   font-size: var(--text-2xl);
-  font-weight: 400;
+  font-weight: var(--font-display-weight);
   letter-spacing: 0;
   padding-top: var(--space-4);
 }
@@ -13,25 +13,25 @@
   font-size: var(--text-sm);
 }
 
-/* Ledger strip: three figures divided by hairlines, no card chrome. Three
-   elevated tiles side by side would be three claims of equal importance,
-   which is one more than the page has. */
+/* Three glass tiles, the way Health lays out its summary figures: a small
+   label over a large number, no rules between them. The ruled strip this
+   replaced cut the figures into cells, and on the glass it read as a table
+   left over from another app. */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
   margin-bottom: var(--space-6);
-  border-block: 1px solid var(--color-hairline);
 }
 
 .stat {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  padding: var(--space-4) var(--space-3);
-}
-
-.stat + .stat {
-  border-inline-start: 1px solid var(--color-hairline);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--liquid-fill-content);
+  box-shadow: var(--liquid-rim), var(--liquid-lift);
 }
 
 .stat-label {
@@ -40,9 +40,10 @@
 }
 
 .stat-value {
-  font-family: var(--font-mono);
-  font-size: var(--text-lg);
-  font-weight: 500;
+  font-family: var(--font-numeric);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.03em;
 }
@@ -71,8 +72,10 @@
   transition: background-color var(--duration-fast) var(--ease);
 }
 
-.history-entry-toggle:hover {
-  background-color: var(--color-surface-sunken);
+@media (hover: hover) {
+  .history-entry-toggle:hover {
+    background-color: var(--color-surface-sunken);
+  }
 }
 
 .history-chevron {
@@ -118,7 +121,7 @@
 
 .history-entry-cost {
   flex: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-numeric);
   font-size: var(--text-base);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -201,20 +204,15 @@
 }
 
 @media (max-width: 560px) {
+  /* Two columns on a phone, with what was spent across the top: the one
+     figure people come to this page for gets the full width. */
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 
-  .stat {
-    flex-direction: row;
-    align-items: baseline;
-    justify-content: space-between;
-    padding-block: var(--space-3);
-  }
-
-  .stat + .stat {
-    border-inline-start: none;
-    border-top: 1px solid var(--color-hairline);
+  .stat-total {
+    grid-column: 1 / -1;
+    order: -1;
   }
 
   .history-item-category {

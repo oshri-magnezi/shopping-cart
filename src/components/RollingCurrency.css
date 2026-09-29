@@ -1,0 +1,50 @@
+/* The rolling figure. Every glyph sits in a box exactly one --roll-height tall,
+   so a digit column (ten glyphs stacked) and a plain character (₪, the point)
+   share one baseline without any vertical-align arithmetic. A little taller
+   than 1em, so no face clips the tops of its figures. */
+.rolling {
+  --roll-height: 1.12em;
+}
+
+.rolling-figure {
+  display: inline-flex;
+  align-items: flex-start;
+  height: var(--roll-height);
+  line-height: var(--roll-height);
+}
+
+.rolling-char,
+.rolling-digit {
+  display: inline-block;
+  height: var(--roll-height);
+  line-height: var(--roll-height);
+}
+
+/* The column's edges fade out, so a digit passing through arrives and leaves
+   softly instead of being sliced by a hard edge. The fade stays in the
+   leading above and below the figures, so a digit at rest is untouched. */
+.rolling-digit {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent);
+  mask-image: linear-gradient(transparent, #000 16%, #000 84%, transparent);
+}
+
+.rolling-strip {
+  display: flex;
+  flex-direction: column;
+  transform: translateY(calc(var(--digit, 0) * var(--roll-height) * -1));
+  /* A snappy spring, and the columns set off a moment apart starting from the
+     units — the figure turns over like a counter rather than all at once. */
+  transition: transform var(--spring-snappy-duration) var(--spring-snappy);
+  transition-delay: calc((var(--column, 1) - 1) * 28ms);
+}
+
+.rolling-strip > span {
+  height: var(--roll-height);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rolling-strip {
+    transition: none;
+  }
+}
