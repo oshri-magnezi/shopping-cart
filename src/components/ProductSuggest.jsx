@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Store } from 'lucide-react';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
-import { suggest } from '../utils/suggest.js';
 import { formatCurrency } from '../utils/format.js';
 import './ProductSuggest.css';
 
@@ -13,9 +12,16 @@ import './ProductSuggest.css';
  * guesswork from the comparison entirely: "חלב" can mean 3% in a carton or
  * goat's milk, and no amount of scoring can tell which was meant.
  */
-export function ProductSuggest({ value, onChange, onPick, onSubmit = () => {}, inputProps, inputRef }) {
+export function ProductSuggest({
+  value,
+  onChange,
+  onPick,
+  onSubmit = () => {},
+  inputProps,
+  inputRef,
+}) {
   const { t, locale } = useTranslation();
-  const { suggestions: pool, status, request } = useCatalog();
+  const { suggest, status, request } = useCatalog();
 
   const [open, setOpen] = useState(false);
   // -1 means "nothing chosen yet", so Enter submits what was actually typed
@@ -23,10 +29,24 @@ export function ProductSuggest({ value, onChange, onPick, onSubmit = () => {}, i
   const [active, setActive] = useState(-1);
   const containerRef = useRef(null);
 
-  const options = useMemo(() => {
-    if (!pool || value.trim().length < 2) return [];
-    return suggest(pool, value);
-  }, [pool, value]);
+  // Answered by the catalogue engine, off this thread, so a keystroke is
+  // never held up by the search it starts. Answers can arrive out of order;
+  // only the one for the text now in the box is kept.
+  const [options, setOptions] = useState([]);
+  useEffect(() => {
+    const query = value.trim();
+    if (query.length < 2) {
+      setOptions([]);
+      return undefined;
+    }
+    let cancelled = false;
+    suggest(value).then((found) => {
+      if (!cancelled) setOptions(found);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [suggest, value]);
 
   useEffect(() => {
     setActive(-1);

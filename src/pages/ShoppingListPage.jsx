@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { Pencil, Plus } from 'lucide-react';
+import { Check, Pencil, Plus, Share2 } from 'lucide-react';
 import { CategoryPickerModal } from '../components/CategoryPickerModal.jsx';
 import { CategorySection } from '../components/CategorySection.jsx';
 import { CompletePurchaseModal } from '../components/CompletePurchaseModal.jsx';
@@ -9,18 +9,24 @@ import { LiveRegion } from '../components/LiveRegion.jsx';
 import { ShelfTicketArt } from '../components/EmptyArt.jsx';
 import { ProductSuggest } from '../components/ProductSuggest.jsx';
 import { UndoBar } from '../components/UndoBar.jsx';
+import { InstallHint } from '../components/InstallHint.jsx';
 import { nudgeTab } from '../components/tabs.js';
 import { collapse, shrinkAway } from '../utils/motion.js';
+import { favorites } from '../utils/favorites.js';
+import { encodeList, listAsText } from '../utils/share.js';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { classify, nameSignature } from '../utils/classify.js';
 import { useTranslation } from '../i18n/useTranslation.js';
-import { getAllCategories, FALLBACK_CATEGORY_ID } from '../utils/categories.js';
-import { formatDateTime } from '../utils/format.js';
+import { categoryLabel, getAllCategories, FALLBACK_CATEGORY_ID } from '../utils/categories.js';
+import { formatDateTime, formatWeight } from '../utils/format.js';
 import './ShoppingListPage.css';
+
+// The staples an empty list offers before there is any history to learn from.
+const STARTERS = ['חלב', 'לחם', 'ביצים', 'עגבניות', 'מלפפונים', 'גבינה צהובה', 'קוטג'];
 
 export function ShoppingListPage() {
   const { t, language, locale } = useTranslation();
-  const { activeList, customCategories, categoryMemory, dispatch } = useAppData();
+  const { activeList, history, customCategories, categoryMemory, dispatch } = useAppData();
   const inputRef = useRef(null);
 
   const [draftName, setDraftName] = useState('');
@@ -99,6 +105,20 @@ export function ShoppingListPage() {
       }))
       .filter((group) => group.items.length > 0);
   }, [categories, items]);
+
+  // One sweep of light across the progress bar as the list is finished. Held
+  // in state for the length of the sweep, because finishing also opens the
+  // cost prompt, and the render that causes must not cut the sweep short.
+  const [sheen, setSheen] = useState(false);
+  const wasFinished = useRef(allPurchased);
+  useEffect(() => {
+    const justFinished = allPurchased && !wasFinished.current;
+    wasFinished.current = allPurchased;
+    if (!justFinished) return undefined;
+    setSheen(true);
+    const timer = setTimeout(() => setSheen(false), 1200);
+    return () => clearTimeout(timer);
+  }, [allPurchased]);
 
   // Finishing the last item opens the cost prompt on its own.
   useEffect(() => {
@@ -211,6 +231,87 @@ export function ShoppingListPage() {
     });
   }
 
+  // The shopper's regulars, one tap from the list. Only categories that still
+  // exist: a regular filed under a category since deleted goes to "other".
+  const regulars = useMemo(
+    () =>
+      favorites(history, items).map((entry) => ({
+        ...entry,
+        categoryId: categories.some((category) => category.id === entry.categoryId)
+          ? entry.categoryId
+          : FALLBACK_CATEGORY_ID,
+      })),
+    [history, items, categories],
+  );
+
+  // A first-time shopper has no regulars yet, and is offered the staples
+  // instead until the first purchase is done — each one leaving the row once
+  // it is on the list. Filed by the same classifier the add box uses, and in
+  // Hebrew only, because they have to match a Hebrew catalogue.
+  const starters = useMemo(() => {
+    if (language !== 'he' || history.length > 0) return [];
+    const onList = new Set(items.map((item) => item.name));
+    return STARTERS.filter((name) => !onList.has(name)).map((name) => ({
+      key: name,
+      name,
+      code: '',
+      unit: 'unit',
+      quantity: 1,
+      categoryId: classify(name)?.categoryId ?? FALLBACK_CATEGORY_ID,
+    }));
+  }, [language, history.length, items]);
+  const chips = regulars.length > 0 ? regulars : starters;
+
+  function addRegular(entry) {
+    dispatch({
+      type: 'add-item',
+      name: entry.name,
+      code: entry.code,
+      categoryId: entry.categoryId,
+      quantity: entry.quantity,
+      unit: entry.unit,
+      weight: entry.weight,
+    });
+    setAnnouncement(t('live.itemAdded', { name: entry.name }));
+  }
+
+  // Sharing sends the list as readable text with a link under it that opens
+  // the same list in the app. On a phone that is the system share sheet; where
+  // there is none, the message is copied and the button says so.
+  const [copied, setCopied] = useState(false);
+  async function handleShare() {
+    const text = listAsText({
+      title: activeList.name || t('list.title'),
+      groups: grouped.map((group) => ({
+        label: categoryLabel(group.category, t),
+        items: group.items,
+      })),
+      amountOf: (item) =>
+        item.unit === 'kg'
+          ? formatWeight(item.weight ?? 0, t)
+          : item.quantity > 1
+            ? `×${item.quantity}`
+            : '',
+    });
+    const page = `${window.location.origin}${window.location.pathname}`;
+    const url = `${page}#/import?d=${encodeList(activeList)}`;
+    const message = `${text}\n\n${t('share.openInApp')}\n${url}`;
+
+    if (navigator.share) {
+      // Dismissing the share sheet rejects; that is a choice, not an error.
+      await navigator.share({ text: message }).catch(() => {});
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(message);
+      setCopied(true);
+      setAnnouncement(t('share.copied'));
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      /* no clipboard either — nothing to offer on this browser */
+    }
+  }
+
   function handleComplete(totalCost) {
     dispatch({ type: 'complete-purchase', totalCost });
     setCompleting(false);
@@ -246,9 +347,29 @@ export function ShoppingListPage() {
             />
             <Pencil className="list-title-pencil" size={16} strokeWidth={2} aria-hidden="true" />
           </span>
-          <p className="list-meta">
-            {t('list.createdAt', { date: formatDateTime(activeList.createdAt, locale) })}
-          </p>
+          {/* The date and, at the row's far end, sharing: on the title's own
+              line it would crowd the name, and on a row of its own it cost a
+              phone a whole line for one icon. */}
+          <div className="list-meta-row">
+            <p className="list-meta">
+              {t('list.createdAt', { date: formatDateTime(activeList.createdAt, locale) })}
+            </p>
+            {items.length > 0 ? (
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={handleShare}
+                aria-label={copied ? t('share.copied') : t('share.button')}
+                title={copied ? t('share.copied') : t('share.button')}
+              >
+                {copied ? (
+                  <Check size={18} strokeWidth={2} aria-hidden="true" />
+                ) : (
+                  <Share2 size={18} strokeWidth={1.75} aria-hidden="true" />
+                )}
+              </button>
+            ) : null}
+          </div>
         </div>
         {allPurchased ? (
           <button type="button" className="btn btn-primary" onClick={() => setCompleting(true)}>
@@ -269,7 +390,9 @@ export function ShoppingListPage() {
               basket and you got gaps, which reads as a fault rather than as
               progress. The count is what the bar is reporting, so the count is
               what it draws: each tick advances it by one more segment. */}
-          <div className="tally-marks" aria-hidden="true">
+          {/* The bar gives one sweep of light the moment the last item goes
+              in — not when a finished list is opened. */}
+          <div className={`tally-marks${sheen ? ' tally-marks-done' : ''}`} aria-hidden="true">
             {/* Keyed by position, not by item: the bar shows a count, so
                 it is always the last segment that comes or goes. */}
             {items.map((item, index) => (
@@ -312,6 +435,33 @@ export function ShoppingListPage() {
           <span className="add-form-label">{t('list.addButton')}</span>
         </button>
       </form>
+
+      {chips.length > 0 ? (
+        <section
+          className="regulars"
+          aria-label={regulars.length > 0 ? t('regulars.title') : t('regulars.starters')}
+        >
+          <h2 className="regulars-title">
+            {regulars.length > 0 ? t('regulars.title') : t('regulars.starters')}
+          </h2>
+          <ul className="regulars-row">
+            {chips.map((entry) => (
+              <li key={entry.key}>
+                <button
+                  type="button"
+                  className="regular pressable"
+                  onClick={() => addRegular(entry)}
+                >
+                  <Plus size={14} strokeWidth={2.5} aria-hidden="true" />
+                  <span>{entry.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
+      <InstallHint ready={history.length >= 2} />
 
       {items.length === 0 ? (
         <EmptyState art={ShelfTicketArt} title={t('list.emptyTitle')} text={t('list.emptyText')} />

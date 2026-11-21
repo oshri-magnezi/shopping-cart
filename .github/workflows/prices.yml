@@ -44,7 +44,7 @@ permissions:
 jobs:
   refresh:
     runs-on: ubuntu-latest
-    # Nine portals, four cities, several hundred megabytes of XML. A normal
+    # Nine portals, eight cities, several hundred megabytes of XML. A normal
     # run is well inside this; the cap is here so a hung portal cannot burn
     # the whole job allowance.
     timeout-minutes: 40
@@ -53,9 +53,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -82,7 +82,7 @@ jobs:
       # and skipped, and the other chains still produce a catalogue.
       - name: Build the catalogues
         working-directory: bot
-        run: node src/index.js --catalog ../public --cities "תל אביב,ראשון לציון,חיפה,ירושלים"
+        run: node src/index.js --catalog ../public --cities "תל אביב,ראשון לציון,חיפה,ירושלים,באר שבע,פתח תקווה,נתניה,אשדוד"
 
       # Which is exactly why this step exists. Fail-soft plus an automatic
       # publish would quietly ship a two-chain catalogue on a night when five
@@ -96,6 +96,13 @@ jobs:
           node bot/src/pull-live-catalog.js --index-only /tmp/published-index.json
           node bot/src/verify-catalog.js /tmp/published-index.json public/price-catalog-index.json $ALLOW_CHAIN_LOSS
 
+      # What moved since last night, added to the history the site already
+      # holds. Runs after the guard, so it only ever describes a catalogue that
+      # is going out, and never fails the run: prices matter more than their
+      # history.
+      - name: Update the price history
+        run: node bot/src/price-history.js public
+
       # The same checks a code push goes through: a site that fails its own
       # tests is not published, whatever the prices say.
       - name: Install site dependencies
@@ -107,15 +114,15 @@ jobs:
       - name: Build the site
         run: npm run build
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
       - name: Publish
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       # One small commit a night, in the owner's name, so the repository shows
       # every update — and only the owner in its contributors. The commit
@@ -136,7 +143,7 @@ jobs:
           for attempt in 1 2 3; do
             git fetch --quiet --depth=1 origin main
             git checkout --quiet -B record-update FETCH_HEAD
-            node bot/src/record-update.js public PRICES.md
+            node bot/src/record-update.js public PRICES.md /tmp/published-index.json
             git add PRICES.md
             if git diff --cached --quiet; then
               echo "PRICES.md is unchanged; nothing to record."
@@ -150,6 +157,20 @@ jobs:
             sleep 5
           done
           exit 1
+
+      # One quiet night is normal; the same store gone three nights running
+      # is a fetcher that needs fixing. PRICES.md counts the nights (see
+      # record-update.js), and the third one raises a single issue.
+      - name: Raise an issue for a store missing three nights
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gone=$(grep "לילה 3 ברצף" PRICES.md || true)
+          if [ -z "$gone" ]; then exit 0; fi
+          title='A store has been missing from the nightly prices for three nights'
+          open=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then exit 0; fi
+          gh issue create --title "$title" --body "$gone"
 
       # This job ran and failed nineteen nights in a row without anyone
       # noticing, because the only signal was a notification email. An open

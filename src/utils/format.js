@@ -1,11 +1,34 @@
+/**
+ * One formatter per set of options, made once and kept.
+ *
+ * Building an Intl formatter is expensive — it loads locale data — and these
+ * run for every amount on every render: the comparison draws dozens of them.
+ * Made afresh each time, they were the heaviest work on the page, half a
+ * second on a slow phone the moment the comparison opened and most of the
+ * dropped frames when its filter changed. Using one is cheap.
+ */
+const formatters = new Map();
+function cached(Kind, locale, options) {
+  const key = `${Kind.name}|${locale}|${JSON.stringify(options)}`;
+  let formatter = formatters.get(key);
+  if (!formatter) {
+    formatter = new Kind(locale, options);
+    formatters.set(key, formatter);
+  }
+  return formatter;
+}
+
+const DATE_TIME = {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+};
+const TIME = { hour: '2-digit', minute: '2-digit' };
+
 export function formatDateTime(timestamp, locale) {
-  return new Intl.DateTimeFormat(locale, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(timestamp));
+  return cached(Intl.DateTimeFormat, locale, DATE_TIME).format(new Date(timestamp));
 }
 
 /**
@@ -33,10 +56,13 @@ export function formatFreshness(timestamp, locale, now = Date.now()) {
   };
   const daysAgo = Math.round((startOfDay(now) - startOfDay(then)) / 86_400_000);
 
-  const time = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(then);
+  const time = cached(Intl.DateTimeFormat, locale, TIME).format(then);
 
   if (daysAgo === 0 || daysAgo === 1) {
-    const day = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(-daysAgo, 'day');
+    const day = cached(Intl.RelativeTimeFormat, locale, { numeric: 'auto' }).format(
+      -daysAgo,
+      'day',
+    );
     return `${day}, ${time}`;
   }
   return formatDateTime(timestamp, locale);
@@ -55,13 +81,21 @@ export function formatWeight(kg, t) {
 }
 
 // Prices are always in shekels; only the digit/symbol layout follows the locale.
+const WHOLE = {
+  style: 'currency',
+  currency: 'ILS',
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+};
+const CENTS = {
+  style: 'currency',
+  currency: 'ILS',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+};
+
 function currencyFormat(amount, locale) {
-  return new Intl.NumberFormat(locale, {
-    style: 'currency',
-    currency: 'ILS',
-    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
+  return cached(Intl.NumberFormat, locale, amount % 1 === 0 ? WHOLE : CENTS);
 }
 
 export function formatCurrency(amount, locale) {

@@ -7,6 +7,7 @@ import { AppDataProvider } from './context/AppDataContext.jsx';
 import { CatalogProvider } from './context/CatalogContext.jsx';
 import { ShoppingListPage } from './pages/ShoppingListPage.jsx';
 import { HistoryPage } from './pages/HistoryPage.jsx';
+import { ImportPage } from './pages/ImportPage.jsx';
 import { ComparePage } from './pages/ComparePage.jsx';
 
 export default function App() {
@@ -28,6 +29,7 @@ export default function App() {
                   <Route path="/" element={<ShoppingListPage />} />
                   <Route path="/compare" element={<ComparePage />} />
                   <Route path="/history" element={<HistoryPage />} />
+                  <Route path="/import" element={<ImportPage />} />
                   <Route path="*" element={<ShoppingListPage />} />
                 </Routes>
               </AppErrorBoundary>

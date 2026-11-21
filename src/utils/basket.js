@@ -197,3 +197,70 @@ function savingsBetween(lines, chains, winner, runnerUp) {
   });
   return round(Math.max(0, difference));
 }
+
+// A second shop is a second trip. Below these the saving is not worth it, and
+// offering it would only make the answer on the page less clear.
+const MIN_SPLIT_SAVING = 10;
+const MIN_SPLIT_SHARE = 0.04;
+
+/**
+ * The cheapest way to buy the winner's basket across two shops, if it beats
+ * buying it all at the winner by enough to matter. Otherwise null.
+ *
+ * Every pair of shops is tried, each item bought wherever of the two it is
+ * cheaper. Only the items the winner stocks are counted, so the split is
+ * compared with the winner like for like, and a pair must carry all of them.
+ * A "pair" in which one shop ends up with nothing is not a split and is
+ * skipped — that is just another single shop.
+ */
+export function bestSplit(lines, chains, winner) {
+  if (!winner || chains.length < 2) return null;
+  const home = chains.findIndex((chain) => chain.key === winner.key);
+  if (home < 0) return null;
+
+  const basket = lines.filter((line) => line.prices[home]);
+  const single = basket.reduce((sum, line) => sum + line.prices[home].price * line.amount, 0);
+  if (basket.length < 2 || single <= 0) return null;
+
+  let best = null;
+  for (let a = 0; a < chains.length; a += 1) {
+    for (let b = a + 1; b < chains.length; b += 1) {
+      let total = 0;
+      let complete = true;
+      const picks = [];
+      for (const line of basket) {
+        const atA = line.prices[a];
+        const atB = line.prices[b];
+        if (!atA && !atB) {
+          complete = false;
+          break;
+        }
+        const useA = atA && (!atB || atA.price <= atB.price);
+        picks.push(useA ? a : b);
+        total += (useA ? atA : atB).price * line.amount;
+      }
+      if (!complete || !picks.includes(a) || !picks.includes(b)) continue;
+      if (best === null || total < best.total) best = { a, b, total, picks };
+    }
+  }
+  if (!best) return null;
+
+  const saving = single - best.total;
+  if (saving < MIN_SPLIT_SAVING || saving / single < MIN_SPLIT_SHARE) return null;
+
+  const part = (index) => {
+    const items = basket
+      .filter((_, position) => best.picks[position] === index)
+      .map((line) => ({
+        name: line.name,
+        price: round(line.prices[index].price * line.amount),
+      }));
+    return {
+      chain: chains[index],
+      items,
+      subtotal: round(items.reduce((sum, item) => sum + item.price, 0)),
+    };
+  };
+
+  return { total: round(best.total), saving: round(saving), parts: [part(best.a), part(best.b)] };
+}

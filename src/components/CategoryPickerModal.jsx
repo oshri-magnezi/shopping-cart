@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Check, Plus, Trash2, X } from 'lucide-react';
 import { Modal } from './Modal.jsx';
 import { QuantityStepper } from './QuantityStepper.jsx';
@@ -7,7 +7,6 @@ import { useAppData } from '../context/AppDataContext.jsx';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { categoryLabel, getAllCategories, FALLBACK_CATEGORY_ID } from '../utils/categories.js';
-import { cheapestPrice } from '../utils/catalogIndex.js';
 import { createId, DEFAULT_WEIGHT } from '../utils/storage.js';
 import { formatCurrency, formatWeight } from '../utils/format.js';
 import './CategoryPickerModal.css';
@@ -29,7 +28,7 @@ const SHEET_SETTLE_MS = 550;
 export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
   const { t, language, locale } = useTranslation();
   const { customCategories, dispatch } = useAppData();
-  const { chains, request } = useCatalog();
+  const { cheapest, request } = useCatalog();
 
   const categories = getAllCategories(customCategories, language);
   const [name, setName] = useState(initialItem.name);
@@ -66,14 +65,22 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
   // figure a shopper is trying to work out while standing at the counter.
   // Null until the catalogue arrives, and then the row simply appears rather
   // than reserving empty space for itself.
-  const match = useMemo(() => {
-    if (chains.length === 0 || !trimmedName) return null;
-    return cheapestPrice(chains, {
-      name: trimmedName,
-      code: initialItem.code ?? '',
-      unit: byWeight ? 1 : 0,
-    });
-  }, [chains, trimmedName, initialItem.code, byWeight]);
+  const [match, setMatch] = useState(null);
+  useEffect(() => {
+    if (!trimmedName) {
+      setMatch(null);
+      return undefined;
+    }
+    let cancelled = false;
+    cheapest({ name: trimmedName, code: initialItem.code ?? '', unit: byWeight ? 1 : 0 }).then(
+      (found) => {
+        if (!cancelled) setMatch(found);
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [cheapest, trimmedName, initialItem.code, byWeight]);
 
   // A product the catalogue sells loose should open on the weight box, so the
   // shopper is never asked how many tomatoes they want when the shop counts
@@ -238,7 +245,6 @@ export function CategoryPickerModal({ mode, initialItem, onConfirm, onClose }) {
                       <Trash2 size={14} strokeWidth={2} />
                     </button>
                   ) : null}
-
                 </div>
               );
             })}

@@ -2,7 +2,7 @@ import { readFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildChains, withoutDuplicateOnline } from './chains.js';
+import { buildChains, inLanes, laneGroups, withoutDuplicateOnline } from './chains.js';
 import { launchBrowser } from './fetch/browser.js';
 import { readCacheEntry, writeCacheEntry, dropCacheEntry } from './cache.js';
 import { parsePricesFile } from './parse/prices.js';
@@ -91,7 +91,12 @@ async function collectChainFiles(config, args, chains) {
   for (const chain of chains) {
     const cached = args.refresh
       ? null
-      : await readCacheEntry(CACHE_DIR, chain.key, cacheCityOf(chain, config.city), config.cacheHours);
+      : await readCacheEntry(
+          CACHE_DIR,
+          chain.key,
+          cacheCityOf(chain, config.city),
+          config.cacheHours,
+        );
 
     if (cached) {
       log(`${chain.displayName}: נטען מהמטמון`);
@@ -103,38 +108,64 @@ async function collectChainFiles(config, args, chains) {
 
   if (pending.length > 0) {
     const browser = await launchBrowser(args.headful ? false : config.headless);
-    try {
-      for (const chain of pending) {
-        try {
-          // A portal that times out once is having a moment, not going away.
-          // Without this a single stumble dropped the chain for the whole
-          // night — and because the run is fail-soft it still reported
-          // success, so the shop just quietly vanished from every basket.
-          const fetched = await withRetries(
-            () =>
-              chain.fetcher({
-                browser,
-                city: config.city,
-                storeOverride: chain.storeOverride ?? config.storeOverrides?.[chain.key] ?? null,
-                cacheDir: CACHE_DIR,
-                log,
-              }),
-            {
-              shouldRetry: isTransient,
-              onRetry: (error, attempt, waitMs) =>
-                log(
-                  `${chain.displayName}: ניסיון ${attempt} נכשל (${error.message}) — ` +
-                    `מנסה שוב בעוד ${Math.round(waitMs / 1000)} שניות`,
-                ),
-            },
-          );
-          await writeCacheEntry(CACHE_DIR, chain.key, cacheCityOf(chain, config.city), fetched);
-          results.push({ chain, ...fetched, ok: true, fromCache: false });
-        } catch (error) {
-          log(`${chain.displayName}: נכשל — ${error.message}`);
-          results.push({ chain, ok: false, error: error.message });
-        }
+    // meta.json is read, changed and written back on every save; two saves
+    // at once would lose one. They queue here instead.
+    let saving = Promise.resolve();
+    const save = (chain, fetched) => {
+      saving = saving.then(() =>
+        writeCacheEntry(CACHE_DIR, chain.key, cacheCityOf(chain, config.city), fetched),
+      );
+      return saving;
+    };
+
+    const fetchOne = async (chain, context) => {
+      try {
+        // A portal that times out once is having a moment, not going away.
+        // Without this a single stumble dropped the chain for the whole
+        // night — and because the run is fail-soft it still reported
+        // success, so the shop just quietly vanished from every basket.
+        const fetched = await withRetries(
+          () =>
+            chain.fetcher({
+              browser: context,
+              city: config.city,
+              storeOverride: chain.storeOverride ?? config.storeOverrides?.[chain.key] ?? null,
+              cacheDir: CACHE_DIR,
+              log,
+            }),
+          {
+            shouldRetry: isTransient,
+            onRetry: (error, attempt, waitMs) =>
+              log(
+                `${chain.displayName}: ניסיון ${attempt} נכשל (${error.message}) — ` +
+                  `מנסה שוב בעוד ${Math.round(waitMs / 1000)} שניות`,
+              ),
+          },
+        );
+        await save(chain, fetched);
+        results.push({ chain, ...fetched, ok: true, fromCache: false });
+      } catch (error) {
+        log(`${chain.displayName}: נכשל — ${error.message}`);
+        results.push({ chain, ok: false, error: error.message });
       }
+    };
+
+    try {
+      // Several chains at a time rather than one after another: the run is
+      // almost all waiting on portals, and eight cities in a row would not
+      // fit the nightly job's time. A chain and its online store stay in one
+      // lane, one after the other — they log in to the same account and
+      // write the same store list. Each lane gets a browser context of its
+      // own, because most chains share one portal and would otherwise share
+      // its login cookie.
+      await inLanes(laneGroups(pending), config.concurrency ?? 3, async (group) => {
+        const context = await browser.createBrowserContext();
+        try {
+          for (const chain of group) await fetchOne(chain, context);
+        } finally {
+          await context.close().catch(() => {});
+        }
+      });
     } finally {
       await browser.close();
     }
@@ -204,7 +235,9 @@ async function main() {
     return;
   }
 
-  const outputPath = args.out ? path.resolve(ROOT, args.out) : path.join(OUTPUT_DIR, 'results.json');
+  const outputPath = args.out
+    ? path.resolve(ROOT, args.out)
+    : path.join(OUTPUT_DIR, 'results.json');
 
   if (args.watch) {
     await runWatch({ items, config, args, chains, outputPath });

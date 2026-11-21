@@ -631,3 +631,148 @@
     grid-template-columns: minmax(56px, auto) 1fr auto;
   }
 }
+
+/* ---------- Split between two shops ---------- */
+
+.split {
+  margin-bottom: var(--space-5);
+}
+
+.split-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 60px;
+  padding: var(--space-3) var(--space-4);
+  text-align: start;
+}
+
+.split-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.split-title {
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.split-saving {
+  font-size: var(--text-xs);
+  color: var(--color-primary);
+}
+
+.split-total {
+  flex: none;
+  font-family: var(--font-numeric);
+  font-weight: 700;
+}
+
+.split-chevron {
+  flex: none;
+  color: var(--color-text-subtle);
+  transition: transform var(--duration-base) var(--ease-spring);
+}
+
+.split-open .split-chevron {
+  transform: rotate(180deg);
+}
+
+.split-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-slow) var(--ease-out);
+}
+
+.split-open .split-collapse {
+  grid-template-rows: 1fr;
+}
+
+.split-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.split-part {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-hairline);
+}
+
+.split-part-head,
+.split-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.split-part-head {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.split-item {
+  padding-block: 3px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.split-item > :first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.split-part-note {
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .split-collapse,
+  .split-chevron {
+    transition: none;
+  }
+}
+
+/* ---------- Price trend ---------- */
+
+.breakdown-trend-mark {
+  flex: none;
+  color: var(--color-primary);
+}
+
+.breakdown-trend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4) var(--space-3);
+  font-size: var(--text-xs);
+  color: var(--color-text-subtle);
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease);
+}
+
+.breakdown-open .breakdown-trend {
+  opacity: 1;
+}
+
+.breakdown-trend-down {
+  color: var(--color-primary);
+}
+
+.breakdown-trend > span {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The chart reads left to right, oldest first, in either language. */
+.sparkline {
+  flex: none;
+  direction: ltr;
+  opacity: 0.8;
+}

@@ -6,6 +6,7 @@ import {
   isPromoFile,
   newestByName,
   pickStore,
+  branchLabel,
   storeIdFromName,
   storeNotFoundError,
 } from './shared.js';
@@ -85,8 +86,8 @@ export async function fetchHaziHinam({ browser, city, storeOverride, cacheDir, l
     const picked = pickStore(stores, city, storeOverride);
     if (!picked) throw storeNotFoundError('hazihinam', CHAIN_NAME, city);
 
-    const { store, viaOnline } = picked;
-    log(`${CHAIN_NAME}: סניף ${store.name || store.storeId}${viaOnline ? ' (משלוחים ארצי)' : ''}`);
+    const { store, viaOnline, nearby } = picked;
+    log(`${CHAIN_NAME}: סניף ${store.name || store.storeId}${viaOnline ? ' (משלוחים ארצי)' : nearby ? ` (אין סניף בעיר — ${nearby})` : ''}`);
 
     // Walk the paged listing until this branch's full catalogue turns up.
     const candidates = [];
@@ -140,7 +141,7 @@ export async function fetchHaziHinam({ browser, city, storeOverride, cacheDir, l
       pricesPath: destination,
       promosPath,
       storeId: store.storeId,
-      storeName: store.name || store.city,
+      storeName: branchLabel(store, nearby),
       // No branch in the city, so this is the chain's delivery store: the
       // catalogue has to say so, or it reads as a shop down the road.
       viaOnline,

@@ -193,6 +193,12 @@ export function suggest({ pool, byToken, vocabulary, maxChains }, query, limit =
     if (category && category !== queryCategory) continue;
 
     let score = 0;
+    // A word typed in full counts for more than the start of a longer one:
+    // "סוכר" means sugar, and was being answered with סוכרזית and סוכריות
+    // because more chains stock those.
+    for (const word of words) {
+      if (entry.tokens.some((token) => token.value === word)) score += 2;
+    }
     if (normalize(entry.name).startsWith(normalize(query))) score += 3;
     if (entry.tokens[0]?.value.startsWith(words[0])) score += 2;
 

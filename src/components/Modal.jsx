@@ -85,7 +85,10 @@ export function Modal({ title, onClose, children, footer, labelledBy = 'modal-ti
       ? panelRef.current
       : (panelRef.current?.querySelector('input:not([type=hidden]), textarea, select') ??
         panelRef.current?.querySelector('button, [tabindex]:not([tabindex="-1"])'));
-    focusTarget?.focus({ preventScroll: true });
+    // A frame later, not now: focusing makes the browser compute styles and
+    // layout on the spot, and doing it in the same frame the sheet appears
+    // in added that work to the first frame of its animation.
+    const focusFrame = requestAnimationFrame(() => focusTarget?.focus({ preventScroll: true }));
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') {
@@ -116,6 +119,7 @@ export function Modal({ title, onClose, children, footer, labelledBy = 'modal-ti
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
+      cancelAnimationFrame(focusFrame);
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = overflow;
       previouslyFocused.current?.focus?.();

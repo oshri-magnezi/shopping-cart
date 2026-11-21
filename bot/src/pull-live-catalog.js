@@ -36,7 +36,9 @@ export function filesFor(index) {
     throw new Error('The live index lists no cities.');
   }
   const files = index.cities.map((city) => city?.file);
-  const bad = files.filter((file) => typeof file !== 'string' || !/^price-catalog-\d+\.json$/.test(file));
+  const bad = files.filter(
+    (file) => typeof file !== 'string' || !/^price-catalog-\d+\.json$/.test(file),
+  );
   if (bad.length > 0) {
     throw new Error(`The live index names files this will not write: ${bad.join(', ')}`);
   }
@@ -106,10 +108,28 @@ export async function pullLiveCatalog({
 
   for (const file of files) {
     // eslint-disable-next-line no-await-in-loop -- one at a time is kind to Pages
-    const city = await fetchJson(new URL(`${file}?v=${encodeURIComponent(index.generatedAt ?? '')}`, base), fetchImpl);
+    const city = await fetchJson(
+      new URL(`${file}?v=${encodeURIComponent(index.generatedAt ?? '')}`, base),
+      fetchImpl,
+    );
     // eslint-disable-next-line no-await-in-loop
     await write(path.join(outDir, file), JSON.stringify(city));
   }
+  // The price history published beside each city file comes too, so a code
+  // deploy republishes it instead of wiping it. It is optional: a site that
+  // has none yet, or one file that will not download, costs only the history.
+  for (const file of files) {
+    const history = file.replace('price-catalog-', 'price-history-');
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const data = await fetchJson(new URL(history, base), fetchImpl);
+      // eslint-disable-next-line no-await-in-loop
+      await write(path.join(outDir, history), JSON.stringify(data));
+    } catch {
+      /* no history for this city yet */
+    }
+  }
+
   await write(path.join(outDir, INDEX_FILE), JSON.stringify(index));
 
   return { generatedAt: index.generatedAt, files, kept: false };
@@ -147,7 +167,9 @@ if (process.argv[1] && process.argv[1].endsWith('pull-live-catalog.js')) {
       // prices on it, and that must fail loudly instead.
       const onDisk = await readLocalIndex(outDir);
       if (onDisk) {
-        console.log(`Live catalogue unavailable (${error.message}); keeping ${onDisk.generatedAt} from ${outDir}.`);
+        console.log(
+          `Live catalogue unavailable (${error.message}); keeping ${onDisk.generatedAt} from ${outDir}.`,
+        );
       } else {
         console.error(`No live catalogue and none in ${outDir}: ${error.message}`);
         process.exitCode = 1;

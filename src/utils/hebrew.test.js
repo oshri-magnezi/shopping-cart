@@ -192,3 +192,22 @@ describe('a percentage written in words', () => {
     expect(normalize('מיץ לימון 100% אחוז טבעי')).toBe('מיץ לימון 100% אחוז טבעי');
   });
 });
+
+describe('potatoes are not apples', () => {
+  it('reads every spelling of potato as one word', () => {
+    for (const name of ['תפוח אדמה', 'תפוחי אדמה', 'תפו"א', 'תפוד', 'תפודים']) {
+      expect(normalize(name)).toBe('תפוחאדמה');
+    }
+  });
+
+  it('drops the qualifier from an apple', () => {
+    expect(normalize('תפוח עץ גאלה')).toBe('תפוח גאלה');
+    expect(normalize('מיץ תפוחי עץ')).toBe('מיץ תפוחי');
+  });
+
+  it('no longer answers apples with potatoes', () => {
+    expect(similarity('תפוחים', 'תפוח אדמה למיקרוגל')).toBe(0);
+    expect(similarity('תפוחים', 'תפוח עץ גאלה')).toBeGreaterThan(0.5);
+    expect(similarity('תפוחי אדמה', 'תפו"א למיקרו')).toBeGreaterThan(0.5);
+  });
+});

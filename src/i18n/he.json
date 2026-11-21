@@ -1,6 +1,5 @@
 {
   "app.name": "רשימת קניות",
-
   "nav.home": "חזרה לרשימת הקניות",
   "tab.list": "רשימה",
   "tab.compare": "השוואה",
@@ -13,7 +12,6 @@
   "theme.dark": "כהה",
   "theme.auto": "אוטומטי",
   "nav.toggleLanguage": "החלפת שפה",
-
   "list.title": "הרשימה שלי",
   "list.nameLabel": "שם הסל",
   "suggest.loading": "טוען מוצרים...",
@@ -24,7 +22,6 @@
   "list.finishPurchase": "סיום הקנייה",
   "list.emptyTitle": "הרשימה ריקה",
   "list.emptyText": "הוסיפו את המוצר הראשון והוא ישויך לקטגוריה שתבחרו.",
-
   "item.quantity": "כמות",
   "item.increase": "הגדלת הכמות",
   "item.decrease": "הקטנת הכמות",
@@ -33,7 +30,6 @@
   "item.markPurchased": "סימון כנרכש",
   "item.markNotPurchased": "ביטול סימון הרכישה",
   "item.more": "פעולות נוספות עבור {name}",
-
   "picker.addTitle": "שיוך לקטגוריה",
   "picker.editTitle": "עריכת פריט",
   "picker.itemName": "שם המוצר",
@@ -52,7 +48,6 @@
   "picker.confirmAdd": "הוספה לרשימה",
   "picker.confirmEdit": "שמירת השינויים",
   "picker.close": "סגירה",
-
   "complete.title": "הקנייה הושלמה",
   "complete.subtitle": "כל הפריטים ברשימה סומנו. בכמה עלתה הקנייה?",
   "complete.amountLabel": "סכום הקנייה",
@@ -60,7 +55,6 @@
   "complete.save": "שמירה בהיסטוריה",
   "complete.skip": "שמירה בלי סכום",
   "complete.invalidAmount": "יש להזין מספר חיובי.",
-
   "history.title": "היסטוריית קניות",
   "history.subtitle": "עיינו בקניות הקודמות וגלו איפה אפשר לחסוך.",
   "history.totalPurchases": "סך הקניות",
@@ -78,21 +72,17 @@
   "history.trendSummary": "מגמת הוצאה על פני {count} קניות, מ־{first} ל־{last}",
   "history.emptyTitle": "עדיין אין קניות שהושלמו",
   "history.emptyText": "בסיום הרשימה הראשונה, הקנייה תופיע כאן עם הסכום שלה.",
-
   "live.itemAdded": "{name} נוסף לרשימה",
   "live.itemRemoved": "{name} הוסר מהרשימה",
   "live.comparisonReady_one": "ההשוואה מוכנה: חנות אחת",
   "live.comparisonReady_other": "ההשוואה מוכנה: {count} חנויות",
-
   "error.title": "התצוגה נעצרה",
   "error.text": "הרשימה וההיסטוריה שמורות במכשיר ולא נפגעו. רענון הדף אמור להחזיר את התצוגה.",
   "error.details": "פרטים טכניים",
   "error.reload": "רענון הדף",
-
   "undo.action": "ביטול",
   "undo.itemDeleted": "״{name}״ נמחק",
   "undo.purchaseDeleted": "הקנייה נמחקה",
-
   "unit.grams": "{n} גרם",
   "unit.kg": "{n} ק\"ג",
   "picker.soldBy": "אופן המכירה",
@@ -104,7 +94,6 @@
   "picker.estimate": "{weight} ≈ {total}",
   "item.increaseWeight": "הגדלת המשקל",
   "item.decreaseWeight": "הקטנת המשקל",
-
   "compare.title": "השוואת מחירים",
   "compare.subtitle": "בדקו באיזו רשת הסל שלכם יוצא הכי זול.",
   "compare.updatedAt": "עודכן {date}",
@@ -150,7 +139,6 @@
   "compare.emptyCartTitle": "אין עדיין מה להשוות",
   "compare.emptyCart": "הוסיפו פריטים לרשימה, וכאן תראו באיזו חנות הסל יוצא הכי זול.",
   "compare.toList": "לרשימת הקניות",
-
   "category.produce": "ירקות ופירות",
   "category.dairy": "מוצרי חלב וביצים",
   "category.meat": "בשר ודגים",
@@ -161,5 +149,27 @@
   "category.snacks": "חטיפים ומתוקים",
   "category.cleaning": "ניקיון",
   "category.care": "היגיינה וטיפוח",
-  "category.other": "אחר"
+  "category.other": "אחר",
+  "share.button": "שיתוף הרשימה",
+  "share.copied": "הרשימה הועתקה",
+  "share.openInApp": "לפתיחת הרשימה באפליקציה:",
+  "regulars.title": "הקבועים שלך",
+  "import.title": "רשימה ששותפה איתך",
+  "import.count_one": "פריט אחד",
+  "import.count_other": "{count} פריטים",
+  "import.add": "הוספה לרשימה",
+  "import.skip": "לא עכשיו",
+  "import.note": "פריטים שכבר נמצאים ברשימה שלך לא יתווספו שוב.",
+  "import.invalidTitle": "הקישור לא תקין",
+  "import.invalidText": "לא הצלחנו לקרוא רשימה מהקישור הזה. בקשו מהשולח לשתף אותה שוב.",
+  "import.toList": "לרשימת הקניות",
+  "compare.splitTitle": "בפיצול בין {first} ל{second}",
+  "compare.splitSaving": "{amount} פחות מקנייה בחנות אחת",
+  "compare.trendDown": "המחיר הזול בעיר ירד ב־{amount} בחודש האחרון",
+  "compare.trendUp": "המחיר הזול בעיר עלה ב־{amount} בחודש האחרון",
+  "regulars.starters": "להתחלה מהירה",
+  "install.text": "אפשר להוסיף את האפליקציה למסך הבית ולפתוח אותה כמו כל אפליקציה.",
+  "install.iosText": "להוספה למסך הבית: כפתור השיתוף בספארי, ואז ״הוספה למסך הבית״.",
+  "install.button": "התקנה",
+  "install.dismiss": "לא להציג שוב"
 }

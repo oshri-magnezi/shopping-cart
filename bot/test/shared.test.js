@@ -1,7 +1,9 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  branchLabel,
   cityMatches,
+  pickStore,
   isFullPriceFile,
   isPromoFile,
   isStoresFile,
@@ -144,3 +146,44 @@ describe('storeNotFoundError', () => {
     assert.match(error.message, /storeOverrides\.victory/);
   });
 });
+
+describe('pickStore', () => {
+  const store = (storeId, name, city = '') => ({ storeId, name, city });
+  const usableExcept = (...ids) => (s) => !ids.includes(s.storeId);
+
+  it('takes a branch in the city first', () => {
+    const stores = [store('1', 'רמת גן'), store('2', 'תל אביב'), store('9', 'משלוחים ארצי')];
+    assert.equal(pickStore(stores, 'תל אביב', null).store.storeId, '2');
+  });
+
+  it('prefers the delivery store to a neighbouring town', () => {
+    const picked = pickStore([store('1', 'רמת גן'), store('9', 'אתר אינטרנט')], 'תל אביב', null);
+    assert.equal(picked.store.storeId, '9');
+    assert.equal(picked.viaOnline, true);
+  });
+
+  it('falls back to a neighbouring town, in the order listed', () => {
+    const stores = [store('5', 'סניף חולון'), store('1', 'סניף רמת גן'), store('2', 'תל אביב')];
+    // The Tel Aviv branch publishes nothing.
+    const picked = pickStore(stores, 'תל אביב', null, usableExcept('2'));
+    assert.equal(picked.store.storeId, '1');
+    assert.equal(picked.nearby, 'רמת גן');
+  });
+
+  it('knows a neighbour by its municipality code too', () => {
+    const picked = pickStore([store('7', 'מרכז', '8600')], 'תל אביב', null);
+    assert.deepEqual([picked.store.storeId, picked.nearby], ['7', 'רמת גן']);
+  });
+
+  it('goes no further than the listed towns', () => {
+    assert.equal(pickStore([store('1', 'סניף הרצליה'), store('2', 'אילת')], 'תל אביב', null), null);
+    assert.equal(pickStore([store('1', 'רמת גן')], 'אילת', null), null);
+  });
+
+  it('labels a neighbouring branch with its town, once', () => {
+    assert.equal(branchLabel(store('1', 'קניון איילון', '8600'), 'רמת גן'), 'קניון איילון · רמת גן');
+    assert.equal(branchLabel(store('1', 'רמת גן'), 'רמת גן'), 'רמת גן');
+    assert.equal(branchLabel(store('1', 'תל אביב')), 'תל אביב');
+  });
+});
+

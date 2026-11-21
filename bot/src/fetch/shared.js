@@ -113,6 +113,37 @@ function abbreviation(letters) {
  * against the next real branch beats dropping the chain from the comparison.
  * Returns null only when nothing usable exists.
  */
+/**
+ * Towns close enough to stand in for a city whose own branch is missing, in
+ * order of preference. Only places a shopper there would plausibly drive to —
+ * the same metropolitan area, a few kilometres off — never "the nearest
+ * branch" at any distance.
+ */
+export const NEIGHBOURS = {
+  'תל אביב': ['רמת גן', 'גבעתיים', 'בני ברק', 'חולון', 'בת ים'],
+  'ראשון לציון': ['חולון', 'בת ים', 'נס ציונה', 'רחובות'],
+  'חיפה': ['נשר', 'קרית ביאליק', 'קרית מוצקין', 'קרית אתא', 'טירת כרמל'],
+  'ירושלים': ['מבשרת ציון', 'מעלה אדומים'],
+  'באר שבע': ['עומר', 'להבים'],
+  'פתח תקווה': ['גבעת שמואל', 'ראש העין', 'בני ברק', 'רמת גן'],
+  'נתניה': ['קדימה', 'אבן יהודה', 'כפר יונה'],
+  'אשדוד': ['יבנה', 'גן יבנה'],
+};
+
+/**
+ * Picks the branch to price against, in this order: one in the city itself;
+ * the chain's nationwide delivery store; a branch in a neighbouring town.
+ *
+ * Delivery comes before a neighbour because it is the chain's own answer for
+ * a city it has no shop in, and it is labelled as delivery on the site. A
+ * neighbour is what is left when there is neither: Keshet's only Tel Aviv
+ * branch publishes nothing, but its Ramat Gan one does, and leaving the chain
+ * out of Tel Aviv altogether helped no one. Such a pick carries `nearby`, the
+ * town it is in, so the site can say where the prices are from.
+ *
+ * `isUsable` excludes branches that publish no full price file. Returns null
+ * only when nothing usable exists.
+ */
 export function pickStore(stores, city, storeOverride, isUsable = () => true) {
   if (storeOverride) {
     const forced = stores.find((store) => store.storeId === String(storeOverride));
@@ -120,12 +151,28 @@ export function pickStore(stores, city, storeOverride, isUsable = () => true) {
   }
 
   const usable = stores.filter(isUsable);
+  const inTown = (town) => (store) => cityMatches(`${cityName(store.city)} ${store.name}`, town);
 
-  const local = usable.find((store) => cityMatches(`${cityName(store.city)} ${store.name}`, city));
+  const local = usable.find((store) => !isOnlineStore(store) && inTown(city)(store));
   if (local) return { store: local, viaOnline: false };
 
   const online = usable.find(isOnlineStore);
-  return online ? { store: online, viaOnline: true } : null;
+  if (online) return { store: online, viaOnline: true };
+
+  for (const town of NEIGHBOURS[city] ?? []) {
+    const near = usable.find((store) => !isOnlineStore(store) && inTown(town)(store));
+    if (near) return { store: near, viaOnline: false, nearby: town };
+  }
+  return null;
+}
+
+/**
+ * The name a branch is shown under: its own, plus the town when it was picked
+ * from a neighbouring one and does not already say so.
+ */
+export function branchLabel(store, nearby) {
+  const name = store.name || store.city || '';
+  return nearby && !cityMatches(name, nearby) ? `${name} · ${nearby}` : name;
 }
 
 /**

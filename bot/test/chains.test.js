@@ -1,10 +1,16 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildChains, withoutDuplicateOnline } from '../src/chains.js';
+import { buildChains, inLanes, laneGroups, withoutDuplicateOnline } from '../src/chains.js';
 
 const config = {
   chains: [
-    { key: 'ramilevi', displayName: 'רמי לוי', portal: 'cerberus', username: 'RamiLevi', onlineStore: '039' },
+    {
+      key: 'ramilevi',
+      displayName: 'רמי לוי',
+      portal: 'cerberus',
+      username: 'RamiLevi',
+      onlineStore: '039',
+    },
     { key: 'osherad', displayName: 'אושר עד', portal: 'cerberus', username: 'osherad' },
   ],
 };
@@ -55,10 +61,38 @@ describe('withoutDuplicateOnline', () => {
   });
 
   it('keeps the branch when the online store failed to download', () => {
-    const kept = withoutDuplicateOnline([entry(ramilevi, '039'), entry(ramileviOnline, undefined, false)]);
+    const kept = withoutDuplicateOnline([
+      entry(ramilevi, '039'),
+      entry(ramileviOnline, undefined, false),
+    ]);
     assert.deepEqual(
       kept.map((e) => e.chain.key),
       ['ramilevi', 'ramilevi-online'],
     );
+  });
+});
+
+describe('fetching side by side', () => {
+  it('keeps a chain and its online store in one lane', () => {
+    const groups = laneGroups(buildChains(config));
+    assert.deepEqual(
+      groups.map((group) => group.map((chain) => chain.key)),
+      [['ramilevi', 'ramilevi-online'], ['osherad']],
+    );
+  });
+
+  it('never runs more than the width at once, and finishes everything', async () => {
+    let running = 0;
+    let most = 0;
+    const done = [];
+    await inLanes([1, 2, 3, 4, 5, 6, 7], 3, async (n) => {
+      running += 1;
+      most = Math.max(most, running);
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      running -= 1;
+      done.push(n);
+    });
+    assert.equal(most, 3);
+    assert.deepEqual(done.sort(), [1, 2, 3, 4, 5, 6, 7]);
   });
 });

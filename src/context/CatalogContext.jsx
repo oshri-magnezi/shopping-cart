@@ -1,35 +1,30 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { buildIndexInSlices } from '../utils/catalogIndex.js';
-import { buildSuggestionPoolInSlices } from '../utils/suggest.js';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { createCatalogClient } from '../utils/catalogClient.js';
 
 const INDEX_FILE = `${import.meta.env.BASE_URL}price-catalog-index.json`;
 const CITY_KEY = 'shopping-cart-city';
 
 const CatalogContext = createContext(null);
+const EMPTY = [];
 
-/**
- * Hands the main thread back so the browser can paint and read the keyboard.
- *
- * `scheduler.yield` is exactly this and resumes with priority, so the build
- * does not lose its place behind every other pending task; where it is not
- * available a zero timeout does the same job a little less politely.
- */
-const breathe = () => {
-  if (globalThis.scheduler?.yield) return globalThis.scheduler.yield();
+// One engine for the app's lifetime. Created on first use, so a visit that
+// never needs prices never starts a worker.
+let sharedClient = null;
+const client = () => (sharedClient ??= createCatalogClient());
 
-  // Not `setTimeout(0)`. Browsers clamp timers in a backgrounded tab to about
-  // a second, which would stretch a build with a dozen yields in it across
-  // fifteen seconds — so a shopper returning to the tab would find it still
-  // loading. A message port is a task like any other and is not clamped.
-  return new Promise((resolve) => {
-    const channel = new MessageChannel();
-    channel.port1.onmessage = () => {
-      channel.port1.close();
-      resolve();
-    };
-    channel.port2.postMessage(null);
-  });
-};
+/** True on a connection the shopper has asked us to go easy on. */
+function onMeteredConnection() {
+  const connection = navigator.connection;
+  return Boolean(connection?.saveData) || /(^|-)2g$/.test(connection?.effectiveType ?? '');
+}
 
 /**
  * Holds the price catalogue for the selected city.
@@ -91,24 +86,39 @@ export function CatalogProvider({ children }) {
     setWanted(true);
   }, []);
 
+  // Warm the catalogue while the browser is idle, so the comparison and the
+  // autocomplete are ready before they are asked for. The download and the
+  // indexing both happen in a worker, so this costs the page nothing — but it
+  // does cost data, so not on a connection marked as metered.
   useEffect(() => {
-    if (!wanted || !index || !city) return;
+    if (!index || wanted || onMeteredConnection()) return undefined;
+    const idle = window.requestIdleCallback ?? ((run) => setTimeout(run, 1500));
+    const cancel = window.cancelIdleCallback ?? clearTimeout;
+    const handle = idle(() => setWanted(true), { timeout: 4000 });
+    return () => cancel(handle);
+  }, [index, wanted]);
+
+  useEffect(() => {
+    if (!wanted || !index || !city) return undefined;
 
     const entry = index.cities.find((item) => item.city === city);
-    if (!entry) return;
+    if (!entry) return undefined;
 
     let cancelled = false;
     setStatus('loading');
     setCatalog(null);
 
-    fetch(`${import.meta.env.BASE_URL}${entry.file}?v=${index.generatedAt ?? ''}`)
-      .then((response) => {
-        if (!response.ok) throw new Error('missing');
-        return response.json();
-      })
-      .then((data) => {
+    // Absolute, because a worker resolves relative URLs against its own file.
+    const url = new URL(
+      `${import.meta.env.BASE_URL}${entry.file}?v=${index.generatedAt ?? ''}`,
+      window.location.href,
+    ).href;
+
+    client()
+      .load(url, firstNeed.current)
+      .then((loaded) => {
         if (cancelled) return;
-        setCatalog(data);
+        setCatalog(loaded);
         setStatus('ready');
       })
       .catch(() => {
@@ -120,64 +130,21 @@ export function CatalogProvider({ children }) {
     };
   }, [index, city, wanted]);
 
-  /**
-   * Tokenizing ~80k product names is the expensive part, and both the
-   * comparison and the autocomplete need it — so it is done once, here.
-   *
-   * **After paint, and in slices.** As two `useMemo` calls this was about
-   * 1.2 seconds of unbroken main-thread work — measured on a mid-range
-   * desktop, so several times that on a phone — running inside the render that
-   * follows the download. The app locked up exactly when the shopper had
-   * started typing in the add box, and their first keystrokes went nowhere.
-   *
-   * The work is unchanged and so is the result. What changed is when and how
-   * it runs: after the browser has painted rather than during the commit, and
-   * a chain at a time with a yield in between, so no single task is long
-   * enough to be felt. Whichever index the screen asked for is built and
-   * published first: opening the comparison used to wait for the whole
-   * autocomplete pool before its own index even started.
-   */
-  const [derived, setDerived] = useState({ chains: [], suggestions: null });
-
-  useEffect(() => {
-    if (!catalog) {
-      setDerived({ chains: [], suggestions: null });
-      return undefined;
-    }
-
-    let cancelled = false;
-    // A macrotask, so this lands after the browser has painted rather than in
-    // the commit that scheduled it.
-    const handle = setTimeout(async () => {
-      const builds = {
-        suggestions: () => buildSuggestionPoolInSlices(catalog, breathe),
-        chains: () => buildIndexInSlices(catalog, breathe),
-      };
-      const order =
-        firstNeed.current === 'chains' ? ['chains', 'suggestions'] : ['suggestions', 'chains'];
-
-      for (const name of order) {
-        // eslint-disable-next-line no-await-in-loop -- one after the other is the point
-        const built = await builds[name]();
-        if (cancelled) return;
-        // Published as soon as it exists, with a frame let through before the
-        // next one starts.
-        setDerived((current) => ({ ...current, [name]: built }));
-      }
-    }, 0);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(handle);
-    };
-  }, [catalog]);
-
-  const { chains, suggestions } = derived;
-
-  // True between the catalogue arriving and its indexes being ready. Screens
-  // that render from `chains` must keep showing progress across that gap, or
-  // they flash an empty comparison for a frame or two.
-  const indexing = Boolean(catalog) && chains.length === 0;
+  // The questions the screens ask. Each waits for the catalogue it was asked
+  // about; the identity changes with the catalogue, so an effect that depends
+  // on one re-runs when the city or the night's prices change.
+  const ready = Boolean(catalog);
+  const api = useMemo(
+    () => ({
+      matchItems: (items) => (ready ? client().match(items) : Promise.resolve(null)),
+      cheapest: (item) => (ready ? client().cheapest(item) : Promise.resolve(null)),
+      suggest: (query, limit) => (ready ? client().suggest(query, limit) : Promise.resolve([])),
+      priceHistory: (keys) =>
+        ready ? client().priceHistory(keys) : Promise.resolve({ today: null, series: {} }),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the catalogue itself
+    [catalog],
+  );
 
   const value = useMemo(
     () => ({
@@ -185,15 +152,16 @@ export function CatalogProvider({ children }) {
       cities: index ? index.cities.map((entry) => entry.city) : [],
       city,
       setCity: setCityState,
+      // The loaded catalogue's date and stores — not its products, which stay
+      // with the engine.
       catalog,
-      chains,
-      suggestions,
-      indexing,
+      chains: catalog?.chains ?? EMPTY,
+      ...api,
       status,
       request,
       reload: loadIndex,
     }),
-    [index, city, catalog, chains, suggestions, indexing, status, request, loadIndex],
+    [index, city, catalog, api, status, request, loadIndex],
   );
 
   return <CatalogContext.Provider value={value}>{children}</CatalogContext.Provider>;

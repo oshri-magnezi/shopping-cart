@@ -7,6 +7,7 @@ import {
   isStoresFile,
   newestByName,
   pickStore,
+  branchLabel,
   storeIdFromName,
   storeNotFoundError,
 } from './shared.js';
@@ -144,8 +145,8 @@ export function createCerberusFetcher({ key, displayName, username }) {
       const picked = pickStore(stores, city, storeOverride, isUsable);
       if (!picked) throw storeNotFoundError(key, displayName, city, stores, isUsable);
 
-      const { store, viaOnline } = picked;
-      log(`${displayName}: סניף ${store.name || store.storeId}${viaOnline ? ' (משלוחים ארצי)' : ''}`);
+      const { store, viaOnline, nearby } = picked;
+      log(`${displayName}: סניף ${store.name || store.storeId}${viaOnline ? ' (משלוחים ארצי)' : nearby ? ` (אין סניף בעיר — ${nearby})` : ''}`);
 
       const branchFiles = files.filter(
         (file) => isFullPriceFile(file.name) && storeIdFromName(file.name) === store.storeId,
@@ -176,7 +177,7 @@ export function createCerberusFetcher({ key, displayName, username }) {
         pricesPath: destination,
         promosPath,
         storeId: store.storeId,
-        storeName: store.name || store.city,
+        storeName: branchLabel(store, nearby),
         // No branch in the city, so this is the chain's delivery store: the
         // catalogue has to say so, or it reads as a shop down the road.
         viaOnline,

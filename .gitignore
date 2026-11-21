@@ -13,6 +13,7 @@ dist
 # contributors list and grew the repository by ~20MB a night. Locally,
 # `npm run prices:pull` fetches the live copy into public/.
 public/price-catalog-*.json
+public/price-history-*.json
 
 # Bot runtime artefacts, regenerated on each run.
 bot/node_modules

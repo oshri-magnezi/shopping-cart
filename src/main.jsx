@@ -3,6 +3,14 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './styles/global.css';
 
+// A phone with little memory pays for every blurred surface on every frame.
+// Those get the same glass without the blur (glass.css reads data-perf) — the
+// look holds, the scrolling stays smooth. Only where the browser reports its
+// memory, which is Android; an iPhone composites blur natively and keeps it.
+if (navigator.deviceMemory !== undefined && navigator.deviceMemory <= 2) {
+  document.documentElement.dataset.perf = 'lite';
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

@@ -1,0 +1,32 @@
+.install-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block: var(--space-3);
+  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+  border-radius: var(--radius-lg);
+  background-color: var(--liquid-fill-content);
+  box-shadow: var(--liquid-rim), var(--liquid-lift);
+  animation: rise-in var(--duration-slow) var(--ease-out) backwards;
+}
+
+[dir='rtl'] .install-hint {
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+}
+
+.install-hint-text {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.install-hint-action {
+  flex: none;
+  min-height: 40px;
+  padding-inline: var(--space-4);
+}
+
+.install-hint-close {
+  flex: none;
+}

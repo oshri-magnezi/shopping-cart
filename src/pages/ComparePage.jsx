@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, ChevronDown, MapPin, RefreshCw } from 'lucide-react';
+import { Check, ChevronDown, MapPin, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react';
 import { CityPicker } from '../components/CityPicker.jsx';
 import { CurrencyText } from '../components/CurrencyText.jsx';
 import { RollingCurrency } from '../components/RollingCurrency.jsx';
@@ -11,9 +11,9 @@ import { BalanceArt } from '../components/EmptyArt.jsx';
 import { useAppData } from '../context/AppDataContext.jsx';
 import { useTranslation } from '../i18n/useTranslation.js';
 import { formatCurrency, formatFreshness, formatWeight } from '../utils/format.js';
-import { findByCode, findInChain } from '../utils/catalogIndex.js';
 import { useFlipList } from '../utils/motion.js';
-import { compareBaskets } from '../utils/basket.js';
+import { historyKey, stepPoints, trendOf } from '../utils/trend.js';
+import { bestSplit, compareBaskets } from '../utils/basket.js';
 import { useCatalog } from '../context/CatalogContext.jsx';
 import './ComparePage.css';
 
@@ -32,8 +32,18 @@ export function ComparePage() {
   const { t, locale } = useTranslation();
   const { activeList } = useAppData();
 
-  const { cities, city, setCity, catalog, chains: indexed, indexing, status, request, reload } =
-    useCatalog();
+  const {
+    cities,
+    city,
+    setCity,
+    catalog,
+    chains: indexed,
+    matchItems,
+    priceHistory,
+    status,
+    request,
+    reload,
+  } = useCatalog();
   const [prefs, setPrefs] = useState(loadPrefs);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -59,32 +69,66 @@ export function ComparePage() {
 
   const items = activeList.items;
 
+  // What the engine is asked: only what identifies a product. Quantities and
+  // weights are left out, so tapping a stepper re-prices the table here
+  // without another round trip.
+  const wantedKey = JSON.stringify(items.map((item) => [item.name, item.code ?? '', item.unit]));
+  const wanted = useMemo(
+    () =>
+      JSON.parse(wantedKey).map(([name, code, unit]) => ({
+        name,
+        code,
+        unit: unit === 'kg' ? 1 : 0,
+      })),
+    [wantedKey],
+  );
+
+  // Every item priced at every store of the city, from the catalogue engine.
+  // `for` remembers which question the answer belongs to, so a stale answer
+  // is never drawn against a newer list.
+  const [matched, setMatched] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    matchItems(wanted).then((prices) => {
+      if (!cancelled && prices) setMatched({ for: wanted, chains: indexed, prices });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [matchItems, wanted, indexed]);
+  const matches = matched && matched.for === wanted && matched.chains === indexed ? matched : null;
+
   // The heart of the page: every cart line priced at every selected chain.
   const table = useMemo(() => {
-    if (selected.length === 0 || items.length === 0) return null;
+    if (!matches || selected.length === 0 || items.length === 0) return null;
+    const chainAt = selected.map((chain) => indexed.indexOf(chain));
 
-    const lines = items.map((item) => {
+    const lines = items.map((item, itemIndex) => {
       const byWeight = item.unit === 'kg';
       // Loose goods are priced per kilogram, so the line is the weight the
       // shopper asked for; everything else multiplies by the count.
       const amount = byWeight ? (item.weight ?? 0) : item.quantity;
 
-      // A barcode identifies the same product at every chain, so it is looked
-      // up directly. Only free text has to be guessed.
-      const prices = selected.map((chain) => {
-        // With a barcode the answer is exact, and a miss means the chain
-        // genuinely does not stock it — unless the catalogue predates
-        // barcodes entirely, in which case text is all we have.
-        if (item.code && chain.hasCodes) return findByCode(chain, item.code);
-        return findInChain(chain, item.name, { unit: byWeight ? 1 : 0 });
-      });
-      const exact = Boolean(item.code) && selected.every((chain) => chain.hasCodes) && prices.some(Boolean);
+      const prices = chainAt.map((chainIndex) => matches.prices[itemIndex][chainIndex]);
+      // With a barcode the answer is exact — unless a store's catalogue
+      // predates barcodes, in which case text is all there was to go on.
+      const exact =
+        Boolean(item.code) && selected.every((chain) => chain.hasCodes) && prices.some(Boolean);
 
       // A threefold spread for one product usually means different products
       // were matched — but only when matching was by wording. With a barcode
       // the gap is a genuine price difference and must not be flagged.
       const values = prices.filter(Boolean).map((match) => match.price);
       const spread = values.length > 1 ? Math.max(...values) / Math.min(...values) : 1;
+
+      // Whose price history to show: the product itself when it has a
+      // barcode, otherwise the cheapest product the wording matched.
+      const cheapestMatch = prices
+        .filter(Boolean)
+        .reduce((low, match) => (low === null || match.price < low.price ? match : low), null);
+      const trendKey = item.code
+        ? historyKey(item.code, byWeight ? 1 : 0)
+        : historyKey(cheapestMatch?.code, cheapestMatch?.unit);
 
       return {
         name: item.name,
@@ -95,6 +139,7 @@ export function ComparePage() {
         prices,
         exact,
         suspect: !exact && spread >= 3,
+        trendKey,
       };
     });
 
@@ -107,9 +152,29 @@ export function ComparePage() {
       winner,
       runnerUp,
       savings,
+      split: bestSplit(lines, selected, winner),
       chains: selected,
     };
-  }, [selected, items]);
+  }, [matches, selected, indexed, items]);
+
+  // The price history of what is on the list, asked for once the table is
+  // there — a small file, read in the worker, needed by nothing above it.
+  const trendKeys = table ? table.lines.map((line) => line.trendKey).join('|') : '';
+  const [history, setHistory] = useState({ today: null, series: {} });
+  useEffect(() => {
+    if (!trendKeys) return undefined;
+    let cancelled = false;
+    priceHistory(trendKeys.split('|').filter(Boolean)).then((found) => {
+      if (!cancelled) setHistory(found);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [priceHistory, trendKeys]);
+
+  // Prices are on their way: the catalogue is loading, or it has loaded and
+  // this list has not been priced against it yet.
+  const pricing = items.length > 0 && !matches;
 
   function toggleChain(key) {
     setPrefs((prev) => {
@@ -123,15 +188,17 @@ export function ComparePage() {
   return (
     <main className="page">
       <header className="compare-header">
-        <h1 className="compare-title" data-large-title>{t('compare.title')}</h1>
+        <h1 className="compare-title" data-large-title>
+          {t('compare.title')}
+        </h1>
         <p className="compare-subtitle">{t('compare.subtitle')}</p>
       </header>
 
       {/* 'idle' still means work is pending — the index has not arrived yet —
-          so it must show progress rather than an empty page. `indexing` covers
-          the gap after it: the catalogue is here but has not been tokenized
-          yet, and rendering from an empty index would flash "0 chains". */}
-      {(!catalog || indexing) && status !== 'missing' ? (
+          so it must show progress rather than an empty page. `pricing` covers
+          the gap after it: the catalogue is here but this list has not been
+          priced against it yet. */}
+      {(!catalog || pricing) && status !== 'missing' ? (
         <CompareSkeleton label={t('compare.loading')} />
       ) : null}
 
@@ -147,7 +214,7 @@ export function ComparePage() {
         </EmptyState>
       ) : null}
 
-      {catalog && !indexing ? (
+      {catalog && !pricing ? (
         <>
           {/* Collapsed by default. Expanded, this panel used to fill half a
               phone screen before a single price was visible; the answer has to
@@ -172,7 +239,12 @@ export function ComparePage() {
                 })}
               </span>
               <span className="filter-summary-action">{t('compare.filterEdit')}</span>
-              <ChevronDown className="filter-chevron" size={16} strokeWidth={1.5} aria-hidden="true" />
+              <ChevronDown
+                className="filter-chevron"
+                size={16}
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
             </button>
 
             {/* Always mounted so its height can be animated in both
@@ -181,54 +253,58 @@ export function ComparePage() {
             <div className="filter-collapse" inert={filtersOpen ? undefined : ''}>
               <div className="filter-clip">
                 <div className="filter-body">
-                <div className="city-picker">
-                  <span id="city-picker-label" className="city-picker-label">
-                    {t('compare.cityLabel')}
-                  </span>
-                  <CityPicker
-                    labelId="city-picker-label"
-                    value={city}
-                    options={cities}
-                    onChange={setCity}
-                  />
-                </div>
+                  <div className="city-picker">
+                    <span id="city-picker-label" className="city-picker-label">
+                      {t('compare.cityLabel')}
+                    </span>
+                    <CityPicker
+                      labelId="city-picker-label"
+                      value={city}
+                      options={cities}
+                      onChange={setCity}
+                    />
+                  </div>
 
-                <div className="chain-chips" role="group" aria-label={t('compare.filterTitle')}>
-                  {indexed.map((chain) => {
-                    const active = !excluded.has(chain.key);
-                    return (
-                      <button
-                        type="button"
-                        key={chain.key}
-                        className={`chain-chip${active ? ' chain-chip-on' : ''}`}
-                        aria-pressed={active}
-                        onClick={() => toggleChain(chain.key)}
-                      >
-                        <span className="chain-chip-box" aria-hidden="true">
-                          {active ? <Check size={11} strokeWidth={3} /> : null}
-                        </span>
-                        {chain.displayName}
-                      </button>
-                    );
-                  })}
-                </div>
+                  <div className="chain-chips" role="group" aria-label={t('compare.filterTitle')}>
+                    {indexed.map((chain) => {
+                      const active = !excluded.has(chain.key);
+                      return (
+                        <button
+                          type="button"
+                          key={chain.key}
+                          className={`chain-chip${active ? ' chain-chip-on' : ''}`}
+                          aria-pressed={active}
+                          onClick={() => toggleChain(chain.key)}
+                        >
+                          <span className="chain-chip-box" aria-hidden="true">
+                            {active ? <Check size={11} strokeWidth={3} /> : null}
+                          </span>
+                          {chain.displayName}
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                <div className="filter-controls">
-                  <button
-                    type="button"
-                    className="compare-link"
-                    onClick={() => setPrefs((prev) => ({ ...prev, excluded: [] }))}
-                  >
-                    {t('compare.selectAll')}
-                  </button>
-                </div>
+                  <div className="filter-controls">
+                    <button
+                      type="button"
+                      className="compare-link"
+                      onClick={() => setPrefs((prev) => ({ ...prev, excluded: [] }))}
+                    >
+                      {t('compare.selectAll')}
+                    </button>
+                  </div>
 
-                <div className="filter-meta">
-                  <span>{t('compare.updatedAt', { date: formatFreshness(catalog.generatedAt, locale) })}</span>
-                  <button type="button" className="compare-link" onClick={reload}>
-                    <RefreshCw size={13} strokeWidth={1.5} aria-hidden="true" />
-                    {t('compare.refreshData')}
-                  </button>
+                  <div className="filter-meta">
+                    <span>
+                      {t('compare.updatedAt', {
+                        date: formatFreshness(catalog.generatedAt, locale),
+                      })}
+                    </span>
+                    <button type="button" className="compare-link" onClick={reload}>
+                      <RefreshCw size={13} strokeWidth={1.5} aria-hidden="true" />
+                      {t('compare.refreshData')}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -284,19 +360,126 @@ export function ComparePage() {
                 </div>
               ) : null}
 
+              {table.split ? <SplitOffer split={table.split} locale={locale} t={t} /> : null}
+
               {/* Two readings of the same figures. On a wide screen they sit
                   side by side and the ladder sticks, so the ranking stays in
                   view while the per-item detail — much the longer of the two —
                   scrolls past it. */}
               <div className="compare-columns">
                 <ChainLadder table={table} items={items} locale={locale} t={t} />
-                <Breakdown table={table} locale={locale} t={t} />
+                <Breakdown table={table} history={history} locale={locale} t={t} />
               </div>
             </>
           ) : null}
         </>
       ) : null}
     </main>
+  );
+}
+
+/**
+ * Sixty days of a price as a small step line: flat while the price held,
+ * a step where it changed. Decoration beside the sentence that says the
+ * same thing, so it is hidden from assistive technology.
+ */
+function Sparkline({ points }) {
+  const width = 64;
+  const height = 18;
+  // Room for the end dot inside the box.
+  const pad = 3;
+  const days = points.map(([day]) => day);
+  const prices = points.map(([, price]) => price);
+  const [first, last] = [Math.min(...days), Math.max(...days)];
+  const [low, high] = [Math.min(...prices), Math.max(...prices)];
+  const x = (day) => pad + ((day - first) / Math.max(1, last - first)) * (width - 2 * pad);
+  const y = (price) =>
+    high === low ? height / 2 : pad + ((high - price) / (high - low)) * (height - 2 * pad);
+  const path = points
+    .map(([day, price], index) =>
+      index === 0 ? `M${x(day)},${y(price)}` : `H${x(day)}V${y(price)}`,
+    )
+    .join('');
+  return (
+    <svg
+      className="sparkline"
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
+      aria-hidden="true"
+    >
+      <path d={path} fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      {/* Today's price, so the line reads as arriving somewhere. */}
+      <circle cx={x(last)} cy={y(prices.at(-1))} r="2.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+/**
+ * The two-shop alternative, when one exists that is worth a second trip.
+ *
+ * One line under the answer, closed by default: the page's answer is still
+ * the single cheapest shop, and this is an aside to it. Opened, it says what
+ * to buy where.
+ */
+function SplitOffer({ split, locale, t }) {
+  const [open, setOpen] = useState(false);
+  const [first, second] = split.parts;
+
+  return (
+    <section className={`split grouped${open ? ' split-open' : ''}`}>
+      <button
+        type="button"
+        className="split-summary"
+        aria-expanded={open}
+        aria-controls="split-detail"
+        onClick={() => setOpen((value) => !value)}
+      >
+        <span className="split-text">
+          <span className="split-title">
+            {t('compare.splitTitle', {
+              first: first.chain.displayName,
+              second: second.chain.displayName,
+            })}
+          </span>
+          <span className="split-saving">
+            {t('compare.splitSaving', { amount: formatCurrency(split.saving, locale) })}
+          </span>
+        </span>
+        <span className="split-total tabular" dir="ltr">
+          <CurrencyText value={split.total} locale={locale} />
+        </span>
+        <ChevronDown className="split-chevron" size={18} strokeWidth={1.5} aria-hidden="true" />
+      </button>
+
+      <div id="split-detail" className="split-collapse" inert={open ? undefined : ''}>
+        <div className="split-clip">
+          {split.parts.map((part) => (
+            <div key={part.chain.key} className="split-part">
+              <p className="split-part-head">
+                <span>{part.chain.displayName}</span>
+                <span className="tabular" dir="ltr">
+                  <CurrencyText value={part.subtotal} locale={locale} />
+                </span>
+              </p>
+              <ul>
+                {part.items.map((item, index) => (
+                  <li key={index} className="split-item">
+                    <span>{item.name}</span>
+                    <span className="tabular" dir="ltr">
+                      <CurrencyText value={item.price} locale={locale} />
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              {part.chain.online ? (
+                <p className="split-part-note">{t('compare.onlineStore')}</p>
+              ) : null}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -325,7 +508,12 @@ function ChainLadder({ table, items, locale, t }) {
         </>
       }
     >
-      <div ref={ladderRef} className="ladder stagger" role="table" aria-label={t('compare.resultsTitle')}>
+      <div
+        ref={ladderRef}
+        className="ladder stagger"
+        role="table"
+        aria-label={t('compare.resultsTitle')}
+      >
         {/* The column names still exist for assistive technology; on screen the
             row labels its own figures, so a header strip is dead weight. */}
         <div role="row" className="sr-only">
@@ -390,11 +578,13 @@ function ChainLadder({ table, items, locale, t }) {
                       {t('compare.unavailable')}
                     </span>
                   ) : (
-                    <RollingCurrency
-                      className="ladder-total tabular"
-                      value={row.total}
-                      locale={locale}
-                    />
+                    // Plain text, not rolling digits: ten rows of digit
+                    // columns were a third of the page's elements and most of
+                    // the half-second it took to lay out on a phone. A change
+                    // of order still shows, as the rows slide.
+                    <span className="ladder-total tabular" dir="ltr">
+                      <CurrencyText value={row.total} locale={locale} />
+                    </span>
                   )}
                   {/* Plain money, and only against a basket holding the same
                       items. The leader has nothing to be more expensive than. */}
@@ -425,16 +615,23 @@ function ChainLadder({ table, items, locale, t }) {
  * disclosure iOS uses, and the heading-wraps-button pattern screen readers
  * expect of an accordion.
  */
-function Breakdown({ table, locale, t }) {
+function Breakdown({ table, history, locale, t }) {
   const [open, setOpen] = useState(() => new Set());
+  // Rows that have ever been opened. A row's per-store prices are built the
+  // first time it opens and kept after, so closing still animates; built for
+  // every row up front, they were most of the page's elements while nobody
+  // was looking at them.
+  const [built, setBuilt] = useState(() => new Set());
 
-  const toggle = (index) =>
+  const toggle = (index) => {
+    setBuilt((current) => (current.has(index) ? current : new Set(current).add(index)));
     setOpen((current) => {
       const next = new Set(current);
       if (next.has(index)) next.delete(index);
       else next.add(index);
       return next;
     });
+  };
 
   return (
     <GroupedList label={t('compare.itemsTitle')}>
@@ -445,9 +642,18 @@ function Breakdown({ table, locale, t }) {
         const isOpen = open.has(index);
         const panelId = `breakdown-${index}`;
         const price = (value) =>
-          line.byWeight
-            ? t('compare.perKg', { price: formatCurrency(value, locale) })
-            : <CurrencyText value={value} locale={locale} />;
+          line.byWeight ? (
+            t('compare.perKg', { price: formatCurrency(value, locale) })
+          ) : (
+            <CurrencyText value={value} locale={locale} />
+          );
+        const series = history.series[line.trendKey];
+        const trend = history.today === null ? null : trendOf(series, history.today);
+        const trendText = trend
+          ? t(trend.change < 0 ? 'compare.trendDown' : 'compare.trendUp', {
+              amount: formatCurrency(Math.abs(trend.change), locale),
+            })
+          : '';
 
         return (
           <div
@@ -495,6 +701,16 @@ function Breakdown({ table, locale, t }) {
                     <span className="breakdown-summary-chain">
                       {table.chains[bestIndex]?.displayName}
                     </span>
+                    {/* A fall is worth seeing before the row is opened; a rise
+                        is said inside, where it can be read in full. */}
+                    {trend && trend.change < 0 ? (
+                      <TrendingDown
+                        className="breakdown-trend-mark"
+                        size={15}
+                        strokeWidth={2}
+                        aria-label={trendText}
+                      />
+                    ) : null}
                     <span className="breakdown-summary-amount tabular" dir="ltr">
                       {price(cheapest)}
                     </span>
@@ -512,43 +728,67 @@ function Breakdown({ table, locale, t }) {
             {found.length > 0 ? (
               <div className="breakdown-collapse" id={panelId}>
                 <div className="breakdown-clip">
-                  <ul className="breakdown-prices" inert={isOpen ? undefined : ''}>
-                    {table.chains.map((chain, chainIndex) => {
-                      const match = line.prices[chainIndex];
-                      if (!match) return null;
-                      const best = match.price === cheapest;
-                      return (
-                        <li
-                          key={chain.key}
-                          className={`breakdown-price${best ? ' breakdown-price-best' : ''}`}
-                        >
-                          <span className="breakdown-chain">{chain.displayName}</span>
-                          <span className="breakdown-product">
-                            {match.name}
-                            {match.promo ? (
-                              <span
-                                className="tag tag-promo"
-                                title={t(
-                                  match.promo === 1 ? 'compare.promoPriceHint' : 'compare.promoHint',
-                                )}
-                              >
-                                {t(match.promo === 1 ? 'compare.promoPrice' : 'compare.promo')}
-                                <span className="sr-only">
-                                  {' — '}
-                                  {t(match.promo === 1 ? 'compare.promoPriceHint' : 'compare.promoHint')}
-                                </span>
+                  {built.has(index) ? (
+                    <>
+                      <ul className="breakdown-prices" inert={isOpen ? undefined : ''}>
+                        {table.chains.map((chain, chainIndex) => {
+                          const match = line.prices[chainIndex];
+                          if (!match) return null;
+                          const best = match.price === cheapest;
+                          return (
+                            <li
+                              key={chain.key}
+                              className={`breakdown-price${best ? ' breakdown-price-best' : ''}`}
+                            >
+                              <span className="breakdown-chain">{chain.displayName}</span>
+                              <span className="breakdown-product">
+                                {match.name}
+                                {match.promo ? (
+                                  <span
+                                    className="tag tag-promo"
+                                    title={t(
+                                      match.promo === 1
+                                        ? 'compare.promoPriceHint'
+                                        : 'compare.promoHint',
+                                    )}
+                                  >
+                                    {t(match.promo === 1 ? 'compare.promoPrice' : 'compare.promo')}
+                                    <span className="sr-only">
+                                      {' — '}
+                                      {t(
+                                        match.promo === 1
+                                          ? 'compare.promoPriceHint'
+                                          : 'compare.promoHint',
+                                      )}
+                                    </span>
+                                  </span>
+                                ) : null}
                               </span>
-                            ) : null}
-                          </span>
-                          <span className="breakdown-amount tabular" dir="ltr">
-                            {/* A per-kilogram figure has to say so, or it reads
-                                as the price of what is actually being bought. */}
-                            {price(match.price)}
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
+                              <span className="breakdown-amount tabular" dir="ltr">
+                                {/* A per-kilogram figure has to say so, or it reads
+                                  as the price of what is actually being bought. */}
+                                {price(match.price)}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                      {trend ? (
+                        <p
+                          className={`breakdown-trend${trend.change < 0 ? ' breakdown-trend-down' : ''}`}
+                          inert={isOpen ? undefined : ''}
+                        >
+                          {trend.change < 0 ? (
+                            <TrendingDown size={15} strokeWidth={2} aria-hidden="true" />
+                          ) : (
+                            <TrendingUp size={15} strokeWidth={2} aria-hidden="true" />
+                          )}
+                          <span>{trendText}</span>
+                          <Sparkline points={stepPoints(series, history.today)} />
+                        </p>
+                      ) : null}
+                    </>
+                  ) : null}
                 </div>
               </div>
             ) : null}

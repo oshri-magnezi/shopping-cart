@@ -118,12 +118,16 @@ export function Navbar() {
           style={{ '--tab-index': activeIndex }}
         >
           <span className="tab-indicator" aria-hidden="true" />
-          {TABS.map(({ to, end, icon: Icon, label }) => (
+          {/* Styled from the same index the indicator slides to, not from the
+              link's own idea of being active. On a page that belongs to a tab
+              without being its route — a shared list, which opens on the list
+              tab — the two disagreed, and the label sat grey on the green. */}
+          {TABS.map(({ to, end, icon: Icon, label }, index) => (
             <NavLink
               key={to}
               to={to}
               end={end}
-              className={({ isActive }) => `tab${isActive ? ' tab-active' : ''}`}
+              className={`tab${index === activeIndex ? ' tab-active' : ''}`}
               onClick={(event) => crossFade(event, to)}
             >
               {/* Keyed on the nudge, so each one restarts the bounce. */}

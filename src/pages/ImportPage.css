@@ -1,0 +1,49 @@
+.import-header {
+  padding-block: var(--space-4) var(--space-4);
+}
+
+.import-title {
+  font-size: var(--text-2xl);
+  overflow-wrap: anywhere;
+}
+
+.import-subtitle {
+  margin-top: var(--space-1);
+  color: var(--color-text-subtle);
+  font-size: var(--text-sm);
+}
+
+.import-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding-inline: var(--space-4);
+}
+
+.import-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.import-amount {
+  flex: none;
+  color: var(--color-text-subtle);
+  font-size: var(--text-sm);
+}
+
+.import-note {
+  margin-top: var(--space-3);
+  color: var(--color-text-subtle);
+  font-size: var(--text-xs);
+}
+
+/* Two equal buttons, the one that changes something second — where the thumb
+   lands in either writing direction once the row is full width. */
+.import-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}

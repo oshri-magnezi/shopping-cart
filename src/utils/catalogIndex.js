@@ -71,8 +71,8 @@ function finishChainIndex({ byToken, byCode }, chain) {
  * simply has none, and every row reads as priced per item.
  */
 function readProduct(products, index) {
-  const [name, price, , promo, unit] = products[index];
-  return { name, price, promo: promo ?? 0, unit: unit ?? 0 };
+  const [name, price, code, promo, unit] = products[index];
+  return { name, price, code: code ?? '', promo: promo ?? 0, unit: unit ?? 0 };
 }
 
 /** Exact lookup by barcode, or null when this chain does not stock it. */
@@ -124,7 +124,8 @@ export async function buildIndexInSlices(catalog, breathe, options) {
 export function cheapestPrice(chains, { name, code = '', unit = 0 }) {
   let best = null;
   for (const chain of chains) {
-    const match = code && chain.hasCodes ? findByCode(chain, code) : findInChain(chain, name, { unit });
+    const match =
+      code && chain.hasCodes ? findByCode(chain, code) : findInChain(chain, name, { unit });
     if (match && (best === null || match.price < best.price)) best = match;
   }
   return best;

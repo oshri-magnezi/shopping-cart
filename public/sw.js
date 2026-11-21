@@ -19,13 +19,21 @@
 // v2: v1 kept every night's city catalogue, eight megabytes a night. The bump
 // clears what v1 piled up; storeCatalogue below stops it piling up again.
 const VERSION = 'v2';
+// Filled in by the build (vite.config.js) with this build's own files.
+const PRECACHE = [];
 const SHELL = `shell-${VERSION}`;
 const DATA = `data-${VERSION}`;
 
 self.addEventListener('install', (event) => {
-  // Nothing is precached: the asset names are hashed at build time and are not
-  // knowable here. The first visit populates the caches as it goes.
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    (async () => {
+      // The whole app, stored up front. One file failing must not stop the
+      // worker installing — it will simply be fetched when first needed.
+      const cache = await caches.open(SHELL);
+      await Promise.all(PRECACHE.map((file) => cache.add(file).catch(() => {})));
+      await self.skipWaiting();
+    })(),
+  );
 });
 
 self.addEventListener('activate', (event) => {
@@ -35,6 +43,17 @@ self.addEventListener('activate', (event) => {
       await Promise.all(
         keys.filter((key) => key !== SHELL && key !== DATA).map((key) => caches.delete(key)),
       );
+      // Hashed files from earlier builds are never asked for again.
+      if (PRECACHE.length > 0) {
+        const current = new Set(PRECACHE.map((file) => new URL(file, self.registration.scope).href));
+        const shell = await caches.open(SHELL);
+        const stored = await shell.keys();
+        await Promise.all(
+          stored
+            .filter((request) => request.url.includes('/assets/') && !current.has(request.url))
+            .map((request) => shell.delete(request)),
+        );
+      }
       await self.clients.claim();
     })(),
   );
@@ -119,7 +138,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.includes('price-catalog-')) {
+  // A city's prices and their history: both versioned per night by ?v=.
+  if (url.pathname.includes('price-catalog-') || url.pathname.includes('price-history-')) {
     event.respondWith(staleWhileRevalidate(request, DATA));
     return;
   }

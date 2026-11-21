@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { compareBaskets } from './basket.js';
+import { bestSplit, compareBaskets } from './basket.js';
 
 const chain = (key) => ({ key, displayName: key, storeName: '' });
 
@@ -15,11 +15,7 @@ describe('compareBaskets', () => {
     // model that single item decided the winner outright; here the two items
     // "a" is cheap on still count.
     const chains = [chain('a'), chain('b')];
-    const lines = [
-      line([10, null]),
-      line([10, null]),
-      line([6.6, 6.7]),
-    ];
+    const lines = [line([10, null]), line([10, null]), line([6.6, 6.7])];
 
     const { winner, maxFound } = compareBaskets(lines, chains);
     expect(maxFound).toBe(3);
@@ -85,10 +81,7 @@ describe('compareBaskets', () => {
     // for the second line down and make the full-coverage chains look dearer
     // on a line they had no choice but to include.
     const chains = ['f1', 'f2', 'f3', 'p1', 'p2', 'p3'].map(chain);
-    const lines = [
-      line([10, 10, 10, null, null, null]),
-      line([10, 10, 10, 2, 2, 2]),
-    ];
+    const lines = [line([10, 10, 10, null, null, null]), line([10, 10, 10, 2, 2, 2])];
 
     const { rows, maxFound } = compareBaskets(lines, chains);
     expect(maxFound).toBe(2);
@@ -164,5 +157,75 @@ describe('the typical price of a thinly stocked item', () => {
     const partialOrder = rows.filter((row) => row.foundCount === 1).map((row) => row.key);
     expect(partialOrder.indexOf('hazi')).toBeLessThan(partialOrder.indexOf('keshet'));
     expect(rows.find((row) => row.key === 'keshet').index).toBeCloseTo(24.9 / 19.9, 2);
+  });
+});
+
+describe('bestSplit', () => {
+  const stores = [chain('a'), chain('b'), chain('c')];
+  const winner = { key: 'a' };
+  const named = (name, prices, amount = 1) => ({ name, ...line(prices, amount) });
+
+  it('offers the cheapest pair when it saves enough', () => {
+    const lines = [
+      named('חלב', [10, 30, 30]),
+      named('לחם', [40, 12, 40]),
+      named('ביצים', [20, 20, 9]),
+    ];
+    // Alone at "a": 70. a+b: 10+12+20 = 42. a+c: 10+40+9 = 59. b+c: 30+12+9 = 51.
+    const split = bestSplit(lines, stores, winner);
+    expect(split.total).toBe(42);
+    expect(split.saving).toBe(28);
+    expect(
+      split.parts.map((part) => [part.chain.key, part.items.map((item) => item.name)]),
+    ).toEqual([
+      ['a', ['חלב', 'ביצים']],
+      ['b', ['לחם']],
+    ]);
+    expect(split.parts[0].subtotal + split.parts[1].subtotal).toBe(42);
+  });
+
+  it('says nothing when the saving is not worth a second trip', () => {
+    // 9.5 saved on 200: under both floors.
+    expect(
+      bestSplit([named('x', [100, 90.5, 500]), named('y', [100, 500, 500])], stores, winner),
+    ).toBeNull();
+    // 12 saved, but on a 400 basket that is 3%.
+    expect(
+      bestSplit([named('x', [200, 188, 900]), named('y', [200, 900, 900])], stores, winner),
+    ).toBeNull();
+  });
+
+  it('multiplies by the amount bought', () => {
+    const split = bestSplit([named('x', [10, 4, 99], 3), named('y', [10, 99, 99])], stores, winner);
+    expect(split.saving).toBe(18);
+    expect(split.parts[1].items[0].price).toBe(12);
+  });
+
+  it('counts only what the winner stocks, and needs the pair to carry all of it', () => {
+    const lines = [
+      named('x', [50, 20, null]),
+      named('y', [50, null, null]),
+      named('not at a', [null, 1, 1]),
+    ];
+    const split = bestSplit(lines, stores, winner);
+    // "y" is only at "a", so a+b is the only pair; "not at a" is left out.
+    expect(split.parts.flatMap((part) => part.items.map((item) => item.name)).sort()).toEqual([
+      'x',
+      'y',
+    ]);
+    expect(split.saving).toBe(30);
+  });
+
+  it('is not a split when one shop would get nothing', () => {
+    // "b" is cheaper on everything: that is another shop, not two.
+    expect(
+      bestSplit([named('x', [50, 20, 60]), named('y', [50, 20, 60])], stores, winner),
+    ).toBeNull();
+  });
+
+  it('needs a winner, two shops and two items', () => {
+    expect(bestSplit([named('x', [50, 20, 60])], stores, winner)).toBeNull();
+    expect(bestSplit([named('x', [50]), named('y', [50])], [chain('a')], winner)).toBeNull();
+    expect(bestSplit([named('x', [50, 20, 60])], stores, null)).toBeNull();
   });
 });

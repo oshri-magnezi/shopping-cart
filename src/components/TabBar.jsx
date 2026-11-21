@@ -98,16 +98,15 @@ export function TabBar() {
       style={{ '--tab-index': activeIndex }}
     >
       <span className="tabbar-indicator" aria-hidden="true" />
-      {TABS.map(({ to, end, icon: Icon, short }) => {
+      {TABS.map(({ to, end, icon: Icon, short }, index) => {
         const bouncing = tapped.to === to;
         return (
           <NavLink
             key={to}
             to={to}
             end={end}
-            className={({ isActive }) =>
-              `tabbar-item pressable${isActive ? ' tabbar-item-active' : ''}`
-            }
+            // From the indicator's index, as in Navbar.jsx.
+            className={`tabbar-item pressable${index === activeIndex ? ' tabbar-item-active' : ''}`}
             onClick={(event) => {
               haptics.tap();
               setTapped((previous) => ({ to, count: previous.count + 1 }));

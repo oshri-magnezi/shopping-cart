@@ -211,7 +211,21 @@ export function normalize(text) {
   // Without a digit or Latin letter in the text no unit pattern can match
   // (see UNITS), and most names are skipped outright.
   if (/\w/.test(result)) result = result.replace(UNITS, unitName);
-  return result.replace(/["״'׳.]/g, '').replace(/\s+/g, ' ').trim();
+  result = result
+    .replace(/["״'׳.]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Two-word names that are one thing. A potato is not a kind of apple, but
+  // "תפוח אדמה" shares its first word with one, and "תפוחים" was answered with
+  // microwave potatoes at four chains. Joined into one word, the two stop
+  // meeting; "תפוח עץ" is simply an apple, so the qualifier goes.
+  if (result.includes('תפו')) {
+    result = result
+      .replace(/(^| )(?:תפוחי? אדמה|תפוא|תפוד|תפודים)(?= |$)/g, '$1תפוחאדמה')
+      .replace(/(^| )(תפוחי?) עץ(?= |$)/g, '$1$2');
+  }
+  return result;
 }
 
 /** Millilitres for liquids, grams for solids — one scale per kind. */

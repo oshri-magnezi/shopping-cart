@@ -77,8 +77,32 @@ export function withoutDuplicateOnline(fetched) {
   );
   return fetched.filter(
     (entry) =>
-      !entry?.ok ||
-      entry.chain.online ||
-      !onlineStores.has(`${entry.chain.key}:${entry.storeId}`),
+      !entry?.ok || entry.chain.online || !onlineStores.has(`${entry.chain.key}:${entry.storeId}`),
   );
+}
+
+/**
+ * Chains grouped for fetching side by side: each chain together with its own
+ * online store, in the order given.
+ */
+export function laneGroups(chains) {
+  const groups = new Map();
+  for (const chain of chains) {
+    const key = chain.baseKey ?? chain.key;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(chain);
+  }
+  return [...groups.values()];
+}
+
+/**
+ * Runs `work(item)` over the items, at most `width` at a time. Resolves when
+ * all are done; `work` is expected to handle its own failures.
+ */
+export async function inLanes(items, width, work) {
+  const queue = [...items];
+  const lane = async () => {
+    while (queue.length > 0) await work(queue.shift());
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(width, queue.length)) }, lane));
 }

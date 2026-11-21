@@ -40,6 +40,30 @@ export function reducer(state, action) {
       };
     }
 
+    // A shared list arriving from a link. Items already on the list — the same
+    // barcode, or the same name — are left alone rather than doubled.
+    case 'add-items': {
+      const has = new Set(
+        state.activeList.items.flatMap((item) => [item.code, item.name]).filter(Boolean),
+      );
+      const added = action.items
+        .filter((item) => !has.has(item.code) && !has.has(item.name))
+        .map((item) => ({
+          id: createId(),
+          name: item.name,
+          code: item.code ?? '',
+          categoryId: item.categoryId,
+          quantity: item.quantity ?? 1,
+          unit: item.unit ?? 'unit',
+          weight: item.weight ?? DEFAULT_WEIGHT,
+          purchased: false,
+        }));
+      return {
+        ...state,
+        activeList: { ...state.activeList, items: [...state.activeList.items, ...added] },
+      };
+    }
+
     case 'update-item': {
       const items = state.activeList.items.map((item) =>
         item.id === action.id ? { ...item, ...action.changes } : item,
